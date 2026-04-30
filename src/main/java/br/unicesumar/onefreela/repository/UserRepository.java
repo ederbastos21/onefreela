@@ -1,0 +1,7 @@
+package br.unicesumar.onefreela.repository;
+
+import br.unicesumar.onefreela.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+}
