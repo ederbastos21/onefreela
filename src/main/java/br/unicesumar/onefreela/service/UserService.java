@@ -4,7 +4,10 @@ import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 public class UserService {
@@ -21,5 +24,163 @@ public class UserService {
 
     public User save(User user) {
         return repository.save(user);
+    }
+
+    public Boolean hasUppercase(String value){
+        if (value == null){
+            return false;
+        }
+
+        for (char c : value.toCharArray()){
+            if (Character.isUpperCase(c)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Boolean hasNumber (String value){
+        if (value == null){
+            return false;
+        }
+
+        for (char c : value.toCharArray()){
+            if (Character.isDigit(c)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Boolean hasSpecialCharacter (String value){
+        if (value == null){
+            return false;
+        }
+
+        if (value.matches(".*[^a-zA-Z0-9].*")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean isValidName(String value){
+
+        if (hasNumber(value) || hasSpecialCharacter(value) || value.length()<2 || value.length()>100){
+            return false;
+        }
+        return true;
+    }
+
+    public Boolean isValidEmailFormat (String email) {
+        Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+        if (email == null) return false;
+        return EMAIL_PATTERN.matcher(email).matches();
+    }
+
+    public Boolean isValidCPF(String cpf) {
+        if (cpf == null) return false;
+
+        cpf = cpf.replaceAll("\\D", "");
+
+        if (cpf.length() != 11) {
+            return false;
+        }
+
+        if (cpf.matches("(\\d)\\1{10}")) {
+            return false;
+        }
+
+        try {
+            int sum = 0;
+            for (int i = 0; i < 9; i++) {
+                sum += (cpf.charAt(i) - '0') * (10 - i);
+            }
+            int firstDigit = 11 - (sum % 11);
+            if (firstDigit >= 10) firstDigit = 0;
+
+            sum = 0;
+            for (int i = 0; i < 10; i++) {
+                sum += (cpf.charAt(i) - '0') * (11 - i);
+            }
+            int secondDigit = 11 - (sum % 11);
+            if (secondDigit >= 10) secondDigit = 0;
+
+            return firstDigit == (cpf.charAt(9) - '0') && secondDigit == (cpf.charAt(10) - '0');
+
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Boolean isValidBirthday(LocalDate value){
+        if (value == null){
+            return false;
+        }
+        int age = Period.between(value,LocalDate.now()).getYears();
+        if (age < 18 || age > 120){
+            return false;
+        }
+        return true;
+    }
+
+    public Boolean isValidPhoneNumber(String value){
+        if (value.length()!=13){
+            return false;
+        }
+
+        for (Character c: value.toCharArray()){
+            if (!Character.isDigit(c)){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public Boolean isValidPassword (String value){
+        if (value == null){
+            return false;
+        }
+        if (value.length()<8 || value.length()>100 || !hasNumber(value) || !hasUppercase(value) || !hasSpecialCharacter(value)){
+            return false;
+        }
+        return true;
+    }
+
+    public Boolean validateRegisterData(User user){
+
+        String name = user.getName();
+        String password = user.getPassword();
+        String email = user.getEmail();
+        String cpf = user.getCpf();
+        LocalDate birthday = user.getBirthday();
+        String phoneNumber = user.getPhoneNumber();
+
+        if (!isValidName(name)){
+            return false;
+        }
+
+        if (!isValidPassword(password)){
+            return false;
+        }
+
+        if (repository.existsByEmail(email) || !isValidEmailFormat(email)){
+            return false;
+        }
+
+        if (!isValidCPF(cpf)){
+            return false;
+        }
+
+        if (!isValidBirthday(birthday)){
+            return false;
+        }
+
+        if (!isValidPhoneNumber(phoneNumber)){
+            return false;
+        }
+
+        return true;
     }
 }
