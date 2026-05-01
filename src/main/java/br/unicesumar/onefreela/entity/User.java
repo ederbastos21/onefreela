@@ -3,6 +3,7 @@ package br.unicesumar.onefreela.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.util.Date;
@@ -30,7 +31,7 @@ public class User {
     @NotBlank(message = "cpf não pode ser vazio")
     private String cpf;
 
-    @NotBlank(message = "data não pode ser vazio")
+    @NotNull(message = "data não pode ser vazio")
     private LocalDate birthday;
 
     @NotBlank(message = "numero de telefone não pode ser vazio")
