@@ -1,6 +1,7 @@
 package br.unicesumar.onefreela.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.Date;
@@ -20,6 +21,7 @@ public class User {
     @NotBlank(message = "senha não pode ser vazio")
     private String password;
 
+    @Email(message = "formato de email invalido")
     @NotBlank(message = "email não pode ser vazio")
     private String email;
 
