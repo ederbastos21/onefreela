@@ -1,6 +1,7 @@
 package br.unicesumar.onefreela.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 
 import java.util.Date;
 
@@ -12,12 +13,25 @@ public class User {
     private Long id;
 
     private Boolean isAdmin;
+
+    @NotBlank
     private String name;
+
+    @NotBlank
     private String password;
+
+    @NotBlank
     private String email;
+
+    @NotBlank
+    private String cpf;
+
+    @NotBlank
+    private String birthday;
+
     private String phoneNumber;
     private String profilePicturePath;
-    private Date registerDate;
+    private String registerDate;
     private Boolean verified;
 
     public Long getId() {
@@ -60,6 +74,22 @@ public class User {
         this.email = email;
     }
 
+    public String getCpf() {
+        return cpf;
+    }
+
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
+    }
+
+    public String getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(String birthday) {
+        this.birthday = birthday;
+    }
+
     public String getPhoneNumber() {
         return phoneNumber;
     }
@@ -76,11 +106,11 @@ public class User {
         this.profilePicturePath = profilePicturePath;
     }
 
-    public Date getRegisterDate() {
+    public String getRegisterDate() {
         return registerDate;
     }
 
-    public void setRegisterDate(Date registerDate) {
+    public void setRegisterDate(String registerDate) {
         this.registerDate = registerDate;
     }
 
