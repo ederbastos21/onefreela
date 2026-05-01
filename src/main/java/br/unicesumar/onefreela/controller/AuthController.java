@@ -18,8 +18,13 @@ public class AuthController {
     @Autowired
     private UserService userService;
     @PostMapping
-    public ResponseEntity<User> createUser (@Valid @RequestBody User user){
-        User savedUser = userService.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    public ResponseEntity<?> createUser (@Valid @RequestBody User user){
+        user.setAdmin(false);
+        if (userService.isValidUserData(user)){
+            User savedUser = userService.save(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("error: couldn't validate user");
+        }
     }
 }
