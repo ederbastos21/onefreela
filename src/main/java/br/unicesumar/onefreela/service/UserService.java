@@ -26,7 +26,7 @@ public class UserService {
         return repository.save(user);
     }
 
-    public Boolean hasUppercase(String value){
+    private Boolean hasUppercase(String value){
         if (value == null){
             return false;
         }
@@ -39,7 +39,7 @@ public class UserService {
         return false;
     }
 
-    public Boolean hasNumber (String value){
+    private Boolean hasNumber (String value){
         if (value == null){
             return false;
         }
@@ -52,7 +52,7 @@ public class UserService {
         return false;
     }
 
-    public Boolean hasSpecialCharacter (String value){
+    private Boolean hasSpecialCharacter (String value){
         if (value == null){
             return false;
         }
@@ -64,7 +64,7 @@ public class UserService {
         return false;
     }
 
-    public boolean isValidName(String value){
+    private boolean isValidName(String value){
 
         if (hasNumber(value) || hasSpecialCharacter(value) || value.length()<2 || value.length()>100){
             return false;
@@ -72,13 +72,13 @@ public class UserService {
         return true;
     }
 
-    public Boolean isValidEmailFormat (String email) {
+    private Boolean isValidEmailFormat (String email) {
         Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
         if (email == null) return false;
         return EMAIL_PATTERN.matcher(email).matches();
     }
 
-    public Boolean isValidCPF(String cpf) {
+    private Boolean isValidCPF(String cpf) {
         if (cpf == null) return false;
 
         cpf = cpf.replaceAll("\\D", "");
@@ -113,7 +113,7 @@ public class UserService {
         }
     }
 
-    public Boolean isValidBirthday(LocalDate value){
+    private Boolean isValidBirthday(LocalDate value){
         if (value == null){
             return false;
         }
@@ -124,7 +124,7 @@ public class UserService {
         return true;
     }
 
-    public Boolean isValidPhoneNumber(String value){
+    private Boolean isValidPhoneNumber(String value){
         if (value.length()!=13){
             return false;
         }
@@ -138,7 +138,7 @@ public class UserService {
         return true;
     }
 
-    public Boolean isValidPassword (String value){
+    private Boolean isValidPassword (String value){
         if (value == null){
             return false;
         }
@@ -148,7 +148,7 @@ public class UserService {
         return true;
     }
 
-    public Boolean validateRegisterData(User user){
+    public Boolean isValidUserData(User user){
 
         String name = user.getName();
         String password = user.getPassword();
