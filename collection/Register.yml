@@ -1,0 +1,25 @@
+info:
+  name: Register
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://localhost:8080/register
+  body:
+    type: json
+    data: |-
+      {
+        "name" : "123",
+        "email": "exemplo@gmail.com",
+        "password": "12345",
+        "cpf" : "12345",
+        "birthday": "12345"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
