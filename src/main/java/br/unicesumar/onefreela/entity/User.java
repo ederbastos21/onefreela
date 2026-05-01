@@ -31,6 +31,7 @@ public class User {
     @NotBlank(message = "data não pode ser vazio")
     private String birthday;
 
+    @NotBlank(message = "numero de telefone não pode ser vazio")
     private String phoneNumber;
     private String profilePicturePath;
     private String registerDate;
