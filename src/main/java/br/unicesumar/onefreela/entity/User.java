@@ -14,19 +14,19 @@ public class User {
 
     private Boolean isAdmin;
 
-    @NotBlank
+    @NotBlank(message = "nome não pode ser vazio")
     private String name;
 
-    @NotBlank
+    @NotBlank(message = "senha não pode ser vazio")
     private String password;
 
-    @NotBlank
+    @NotBlank(message = "email não pode ser vazio")
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "cpf não pode ser vazio")
     private String cpf;
 
-    @NotBlank
+    @NotBlank(message = "data não pode ser vazio")
     private String birthday;
 
     private String phoneNumber;
