@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
@@ -21,6 +22,7 @@ public class User {
     @NotBlank(message = "senha não pode ser vazio")
     private String password;
 
+    @Column(unique = true)
     @Email(message = "formato de email invalido")
     @NotBlank(message = "email não pode ser vazio")
     private String email;
@@ -29,7 +31,7 @@ public class User {
     private String cpf;
 
     @NotBlank(message = "data não pode ser vazio")
-    private String birthday;
+    private LocalDate birthday;
 
     @NotBlank(message = "numero de telefone não pode ser vazio")
     private String phoneNumber;
