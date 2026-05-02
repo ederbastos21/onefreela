@@ -23,4 +23,9 @@ public class SessionService {
              return false;
          }
     }
+
+    public String getSession (String token){
+         return redisTemplate.opsForValue().get(token);
+    }
+    
 }
