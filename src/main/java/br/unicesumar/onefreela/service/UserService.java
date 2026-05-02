@@ -26,6 +26,14 @@ public class UserService {
         return repository.save(user);
     }
 
+    public User findByEmail(String email){
+        return repository.findByEmail(email);
+    }
+
+    public Boolean existsByEmail (String email){
+        return repository.existsByEmail(email);
+    }
+
     private Boolean hasUppercase(String value){
         if (value == null){
             return false;
