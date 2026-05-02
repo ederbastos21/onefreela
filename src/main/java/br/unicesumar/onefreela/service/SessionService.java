@@ -1,10 +1,12 @@
 package br.unicesumar.onefreela.service;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+@Service
 public class SessionService {
     private final RedisTemplate<String,String> redisTemplate;
 
@@ -27,5 +29,5 @@ public class SessionService {
     public String getSession (String token){
          return redisTemplate.opsForValue().get(token);
     }
-    
+
 }

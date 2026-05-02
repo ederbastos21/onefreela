@@ -220,6 +220,7 @@ public class UserService {
             User user = findByEmail(request.getEmail());
 
             if (passwordEncoder.matches(request.getPassword(), user.getPassword())){
+                sessionService.storeSession(user.getId());
                 return ResponseEntity.status(HttpStatus.ACCEPTED).body("deu certo o login pelas credenciais");
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("erro: nao deu certo o login");
