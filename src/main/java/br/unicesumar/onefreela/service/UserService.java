@@ -18,10 +18,12 @@ public class UserService {
 
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final SessionService sessionService;
 
-    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder,SessionService sessionService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.sessionService = sessionService;
     }
 
     public List<User> findAll() {
@@ -210,11 +212,15 @@ public class UserService {
     }
 
     public ResponseEntity<?> checkLoginCredentials (LoginRequest request){
+        if (sessionService.getSession(request.getToken())!= null){
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body("deu certo o login pelo token");
+        }
+
         if (existsByEmail(request.getEmail())){
             User user = findByEmail(request.getEmail());
 
             if (passwordEncoder.matches(request.getPassword(), user.getPassword())){
-                return ResponseEntity.status(HttpStatus.ACCEPTED).body("deu certo o login");
+                return ResponseEntity.status(HttpStatus.ACCEPTED).body("deu certo o login pelas credenciais");
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("erro: nao deu certo o login");
         }
