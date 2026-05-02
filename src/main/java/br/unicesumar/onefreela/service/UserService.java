@@ -5,6 +5,7 @@ import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,9 +17,11 @@ import java.util.regex.Pattern;
 public class UserService {
 
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<User> findAll() {
@@ -198,6 +201,7 @@ public class UserService {
     public ResponseEntity<?> createUser (User user){
         user.setAdmin(false);
         if (isValidUserData(user)){
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
             User savedUser = save(user);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
         } else {
@@ -207,11 +211,14 @@ public class UserService {
 
     public ResponseEntity<?> checkLoginCredentials (LoginRequest request){
         if (existsByEmail(request.getEmail())){
-            if (findByEmail(request.getEmail()).getPassword().equals(request.getPassword())){
-                return ResponseEntity.status(HttpStatus.ACCEPTED).body(request.getEmail() + request.getPassword());
+            User user = findByEmail(request.getEmail());
+
+            if (passwordEncoder.matches(request.getPassword(), user.getPassword())){
+                return ResponseEntity.status(HttpStatus.ACCEPTED).body("deu certo o login");
             }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("erro: nao deu certo o login");
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(request.getEmail() + request.getPassword());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("erro: email nao existe no sistema");
     }
 
 }
