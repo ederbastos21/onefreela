@@ -16,12 +16,7 @@ public class AuthController {
     @Autowired
     private UserService userService;
     @PostMapping
-    public ResponseEntity<?> login (@RequestBody LoginRequest request){
-        if (userService.existsByEmail(request.getEmail())){
-            if (userService.findByEmail(request.getEmail()).getPassword().equals(request.getPassword())){
-                return ResponseEntity.status(HttpStatus.ACCEPTED).body(request.getEmail() + request.getPassword());
-            }
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(request.getEmail() + request.getPassword());
+    public ResponseEntity<?> login (@RequestBody LoginRequest request) {
+        return userService.checkLoginCredentials(request);
     }
 }

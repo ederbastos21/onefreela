@@ -1,7 +1,10 @@
 package br.unicesumar.onefreela.service;
 
+import br.unicesumar.onefreela.dto.LoginRequest;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.repository.UserRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -191,4 +194,24 @@ public class UserService {
 
         return true;
     }
+
+    public ResponseEntity<?> createUser (User user){
+        user.setAdmin(false);
+        if (isValidUserData(user)){
+            User savedUser = save(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("error: couldn't validate user");
+        }
+    }
+
+    public ResponseEntity<?> checkLoginCredentials (LoginRequest request){
+        if (existsByEmail(request.getEmail())){
+            if (findByEmail(request.getEmail()).getPassword().equals(request.getPassword())){
+                return ResponseEntity.status(HttpStatus.ACCEPTED).body(request.getEmail() + request.getPassword());
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(request.getEmail() + request.getPassword());
+    }
+
 }

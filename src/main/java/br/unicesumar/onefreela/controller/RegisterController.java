@@ -18,22 +18,7 @@ public class RegisterController {
     @Autowired
     private UserService userService;
     @PostMapping
-    public ResponseEntity<?> createUser (@Valid @RequestBody User user){
-        user.setAdmin(false);
-        if (userService.isValidUserData(user)){
-            User savedUser = userService.save(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("error: couldn't validate user");
-        }
-    }
-    @PostMapping("/noDB")
-    public ResponseEntity<?> createUserNoSaveDb (@Valid @RequestBody User user){
-        user.setAdmin(false);
-        if (userService.isValidUserData(user)){
-            return ResponseEntity.status(HttpStatus.CREATED).body(user);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("error: couldn't validate user");
-        }
+    public ResponseEntity<?> registerUser (@Valid @RequestBody User user){
+        return userService.createUser(user);
     }
 }
