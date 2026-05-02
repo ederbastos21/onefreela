@@ -1,7 +1,7 @@
 info:
-  name: Register
+  name: valid
   type: http
-  seq: 3
+  seq: 1
 
 http:
   method: POST
@@ -10,11 +10,12 @@ http:
     type: json
     data: |-
       {
-        "name" : "123",
-        "email": "exemplo@gmail.com",
-        "password": "12345",
-        "cpf" : "12345",
-        "birthday": "12345"
+        "birthday": "2005-10-10",
+        "cpf": "11144477735",
+        "email": "exemploab@gmail.com",
+        "name": "ederbastos",
+        "password": "Abc123!232",
+        "phoneNumber": "5542123456789"
       }
   auth: inherit
 
