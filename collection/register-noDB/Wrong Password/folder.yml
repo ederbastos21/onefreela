@@ -1,0 +1,7 @@
+info:
+  name: Wrong Password
+  type: folder
+  seq: 5
+
+request:
+  auth: inherit

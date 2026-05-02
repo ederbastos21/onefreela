@@ -1,0 +1,26 @@
+info:
+  name: under 18 years old (1)
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:8080/register/noDB
+  body:
+    type: json
+    data: |-
+      {
+        "birthday": "2020-10-10",
+        "cpf": "11144477735",
+        "email": "exemploa@gmail.com",
+        "name": "ederbastos",
+        "password": "Abc123!232",
+        "phoneNumber": "5542123456789"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

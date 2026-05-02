@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Teste API</title>
+</head>
+<body>
+
+<h1>Teste de comunicação</h1>
+
+<button onclick="chamarAPI()">Testar</button>
+
+<pre id="output"></pre>
+
+<script>
+    async function chamarAPI() {
+      try {
+        const res = await fetch("/api/test");
+        const data = await res.json();
+
+        document.getElementById("output").textContent =
+          JSON.stringify(data, null, 2);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+</script>
+
+</body>
+</html>
