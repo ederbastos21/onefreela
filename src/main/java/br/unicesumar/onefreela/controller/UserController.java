@@ -26,6 +26,7 @@ public class UserController {
         LoginRequestDTO loginRequestDTO = new LoginRequestDTO();
         loginRequestDTO.setEmail(userUpdateDTO.getOldEmail());
         loginRequestDTO.setPassword(userUpdateDTO.getOldPassword());
+        loginRequestDTO.setToken("123");
 
         userService.authenticateUser(loginRequestDTO);
         userService.updateUser(userUpdateDTO, id);

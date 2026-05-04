@@ -75,30 +75,21 @@ public class UserService {
 
         List <ErrorDetail> errors = new ArrayList<>();
         errors.addAll(userValidator.validateUpdate(userUpdateDTO));
-        Optional<User> existingUserOptional = findById(userId);
-        User existingUser = existingUserOptional.get();
 
         if (repository.findByEmail(userUpdateDTO.getNewEmail()) != null){
             errors.add(new ErrorDetail(ErrorCode.EMAIL_ALREADY_EXISTS, "email", "email já registrado no sistema"));
         }
 
         if (errors.isEmpty()){
-            User savedUser = userMapper.toUser(userUpdateDTO);
+            User newUser = userMapper.toUser(userUpdateDTO);
 
-            savedUser.setId(existingUser.getId());
-            savedUser.setAdmin(existingUser.getAdmin());
-            savedUser.setCpf(existingUser.getCpf());
-            savedUser.setProfilePicturePath(existingUser.getProfilePicturePath());
-
-            if (userUpdateDTO.getNewEmail() == null){
-                savedUser.setEmail(existingUser.getEmail());
+            if (findById(userId).isPresent()){
+                newUser.setId(findById(userId).get().getId());
+                newUser.setAdmin(findById(userId).get().getAdmin());
+                newUser.setVerified(findById(userId).get().getVerified());
+                newUser.setCpf(findById(userId).get().getCpf());
+                save(newUser);
             }
-
-            if (userUpdateDTO.getNewPassword() == null){
-                savedUser.setPassword(existingUser.getPassword());
-            }
-
-            save(savedUser);
         } else {
             throw new ValidationException(errors);
         }

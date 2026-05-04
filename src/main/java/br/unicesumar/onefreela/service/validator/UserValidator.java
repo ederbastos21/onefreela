@@ -198,13 +198,7 @@ public class UserValidator {
         return errors;
     }
 
-    private List<ErrorDetail> validateBaseUserData(
-            String name,
-            LocalDate birthday,
-            String password,
-            String phoneNumber,
-            String email
-    ){
+    private List<ErrorDetail> validateBaseUserData(String name, LocalDate birthday, String password, String phoneNumber, String email){
         List<ErrorDetail> errors = new ArrayList<>();
 
         errors.addAll(isValidName(name));
@@ -216,31 +210,31 @@ public class UserValidator {
         return errors;
     }
 
-    public List<ErrorDetail> validateRegister(UserRegisterDTO dto) {
+    public List<ErrorDetail> validateRegister(UserRegisterDTO userRegisterDTO) {
         List<ErrorDetail> errors = new ArrayList<>();
 
         errors.addAll(validateBaseUserData(
-                dto.getName(),
-                dto.getBirthday(),
-                dto.getPassword(),
-                dto.getPhoneNumber(),
-                dto.getEmail()
+                userRegisterDTO.getName(),
+                userRegisterDTO.getBirthday(),
+                userRegisterDTO.getPassword(),
+                userRegisterDTO.getPhoneNumber(),
+                userRegisterDTO.getEmail()
         ));
 
-        errors.addAll(isValidCPF(dto.getCpf()));
+        errors.addAll(isValidCPF(userRegisterDTO.getCpf()));
 
         return errors;
     }
 
-    public List<ErrorDetail> validateUpdate(UserUpdateDTO dto) {
+    public List<ErrorDetail> validateUpdate(UserUpdateDTO userUpdateDTO) {
         List<ErrorDetail> errors = new ArrayList<>();
 
         errors.addAll(validateBaseUserData(
-                dto.getName(),
-                dto.getBirthday(),
-                dto.getNewPassword(),
-                dto.getPhoneNumber(),
-                dto.getOldEmail()
+                userUpdateDTO.getName(),
+                userUpdateDTO.getBirthday(),
+                userUpdateDTO.getNewPassword(),
+                userUpdateDTO.getPhoneNumber(),
+                userUpdateDTO.getOldEmail()
         ));
         return errors;
     }
