@@ -1,10 +1,15 @@
 package br.unicesumar.onefreela.exception;
 
+import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.dto.ErrorDetail;
+import br.unicesumar.onefreela.dto.ErrorResponse;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -19,6 +24,19 @@ public class GlobalExceptionHandler {
         });
 
         return errors;
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> handleValidation (ValidationException ex){
+        ErrorResponse response = new ErrorResponse();
+
+        ErrorCode code = response.getCode();
+        List<ErrorDetail> errors = ex.getErrors();
+
+        response.setCode(code);
+        response.setErrors(errors);
+
+        return ResponseEntity.badRequest().body(response);
     }
 
 }
