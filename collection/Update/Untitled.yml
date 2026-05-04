@@ -4,19 +4,19 @@ info:
   seq: 1
 
 http:
-  method: POST
-  url: /users/1
+  method: PUT
+  url: http://localhost:8080/users/updateUser/1
   body:
     type: json
     data: |-
       {
-        "name": "João Silva",
-        "oldPassword": "senhaAntiga123",
-        "newPassword": "senhaNova456",
+        "name": "Joaosilva",
+        "oldPassword": "Abc123!232",
+        "newPassword": "CarlosGay123!",
         "oldEmail": "exemploab@gmail.com",
-        "newEmail": "",
+        "newEmail": "carlosgay@gmail.com",
         "birthday": "2000-05-20",
-        "phoneNumber": "+55 42 99999-9999",
+        "phoneNumber": "5542999999999",
         "profilePicturePath": "/images/profiles/joao.png"
       }
   auth: inherit

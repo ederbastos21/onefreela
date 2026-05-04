@@ -65,7 +65,9 @@ public class UserService {
         }
 
         if (errors.isEmpty()){
-            save(userMapper.toUser(userRegisterDTO));
+            User newUser = userMapper.toUser(userRegisterDTO);
+            newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
+            save(newUser);
         } else {
             throw new ValidationException(errors);
         }
@@ -88,6 +90,7 @@ public class UserService {
                 newUser.setAdmin(findById(userId).get().getAdmin());
                 newUser.setVerified(findById(userId).get().getVerified());
                 newUser.setCpf(findById(userId).get().getCpf());
+                newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
                 save(newUser);
             }
         } else {
