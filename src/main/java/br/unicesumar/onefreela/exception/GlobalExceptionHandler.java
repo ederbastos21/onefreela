@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleValidation (ValidationException ex){
         ErrorResponse response = new ErrorResponse();
 
-        ErrorCode code = response.getCode();
+        ErrorCode code = ex.getCode();
         List<ErrorDetail> errors = ex.getErrors();
 
         response.setCode(code);
