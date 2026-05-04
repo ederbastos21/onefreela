@@ -40,7 +40,6 @@ public class GlobalExceptionHandler {
 
         response.setCode(code);
         response.setErrors(errors);
-        response.setPath(request.getRequestURI());
         response.setMethod(request.getMethod());
         response.setPath(request.getRequestURI());
         response.setTimestamp(ZonedDateTime.now(ZoneId.of("America/Sao_Paulo")).toLocalDateTime().toString());
