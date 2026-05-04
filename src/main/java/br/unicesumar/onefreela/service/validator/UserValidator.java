@@ -4,6 +4,7 @@ import br.unicesumar.onefreela.dto.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.dto.UserUpdateDTO;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -13,6 +14,7 @@ import java.util.regex.Pattern;
 
 import static br.unicesumar.onefreela.utils.StringFunctions.*;
 
+@Component
 public class UserValidator {
     private List<ErrorDetail> isValidName(String value){
         List<ErrorDetail> errors = new ArrayList<>();
@@ -236,9 +238,9 @@ public class UserValidator {
         errors.addAll(validateBaseUserData(
                 dto.getName(),
                 dto.getBirthday(),
-                dto.getPassword(),
+                dto.getNewPassword(),
                 dto.getPhoneNumber(),
-                dto.getEmail()
+                dto.getOldEmail()
         ));
         return errors;
     }

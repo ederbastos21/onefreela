@@ -12,11 +12,18 @@ public class UserUpdateDTO {
     private String name;
 
     @NotBlank(message = "senha não pode ser vazio")
-    private String password;
+    private String oldPassword;
+
+    @NotBlank(message = "senha não pode ser vazio")
+    private String newPassword;
 
     @Email(message = "formato de email invalido")
     @NotBlank(message = "email não pode ser vazio")
-    private String email;
+    private String oldEmail;
+
+    @Email(message = "formato de email invalido")
+    @NotBlank(message = "email não pode ser vazio")
+    private String newEmail;
 
     @NotNull(message = "data não pode ser vazio")
     private LocalDate birthday;
@@ -34,20 +41,36 @@ public class UserUpdateDTO {
         this.name = name;
     }
 
-    public String getPassword() {
-        return password;
+    public String getOldPassword() {
+        return oldPassword;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setOldPassword(String oldPassword) {
+        this.oldPassword = oldPassword;
     }
 
-    public String getEmail() {
-        return email;
+    public String getNewPassword() {
+        return newPassword;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
+    }
+
+    public String getOldEmail() {
+        return oldEmail;
+    }
+
+    public void setOldEmail(String oldEmail) {
+        this.oldEmail = oldEmail;
+    }
+
+    public String getNewEmail() {
+        return newEmail;
+    }
+
+    public void setNewEmail(String newEmail) {
+        this.newEmail = newEmail;
     }
 
     public LocalDate getBirthday() {

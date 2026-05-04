@@ -1,8 +1,6 @@
 package br.unicesumar.onefreela.dto;
 
-import jakarta.persistence.Id;
-
-public class LoginRequest {
+public class LoginRequestDTO {
     String email;
     String password;
     String token;

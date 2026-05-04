@@ -1,0 +1,28 @@
+info:
+  name: Untitled
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: /users/1
+  body:
+    type: json
+    data: |-
+      {
+        "name": "João Silva",
+        "oldPassword": "senhaAntiga123",
+        "newPassword": "senhaNova456",
+        "oldEmail": "exemploab@gmail.com",
+        "newEmail": "",
+        "birthday": "2000-05-20",
+        "phoneNumber": "+55 42 99999-9999",
+        "profilePicturePath": "/images/profiles/joao.png"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

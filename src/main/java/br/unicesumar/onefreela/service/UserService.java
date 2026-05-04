@@ -2,11 +2,13 @@ package br.unicesumar.onefreela.service;
 
 import br.unicesumar.onefreela.dto.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
-import br.unicesumar.onefreela.dto.LoginRequest;
+import br.unicesumar.onefreela.dto.LoginRequestDTO;
 import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.UserRepository;
+import br.unicesumar.onefreela.service.mapper.UserMapper;
+import br.unicesumar.onefreela.service.validator.UserValidator;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import br.unicesumar.onefreela.dto.UserUpdateDTO;
@@ -22,11 +24,15 @@ public class UserService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
+    private final UserValidator userValidator;
+    private final UserMapper userMapper;
 
-    public UserService(UserRepository repository, PasswordEncoder passwordEncoder,SessionService sessionService) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder,SessionService sessionService, UserValidator userValidator, UserMapper userMapper) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.sessionService = sessionService;
+        this.userValidator = userValidator;
+        this.userMapper = userMapper;
     }
 
     public List<User> findAll() {
@@ -49,18 +55,56 @@ public class UserService {
         return repository.existsByEmail(email);
     }
 
-    public void createUser (UserRegisterDTO user){
+    public void registerUser(UserRegisterDTO userRegisterDTO){
 
+        List<ErrorDetail> errors = new ArrayList<>();
+        errors.addAll(userValidator.validateRegister(userRegisterDTO));
+
+        if (repository.findByEmail(userRegisterDTO.getEmail()) != null){
+            errors.add(new ErrorDetail(ErrorCode.EMAIL_ALREADY_EXISTS, "email", "email já registrado no sistema"));
+        }
 
         if (errors.isEmpty()){
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            save(user);
+            save(userMapper.toUser(userRegisterDTO));
         } else {
             throw new ValidationException(errors);
         }
     }
 
-    public void checkLoginCredentials (LoginRequest request){
+    public void updateUser (UserUpdateDTO userUpdateDTO, Long userId){
+
+        List <ErrorDetail> errors = new ArrayList<>();
+        errors.addAll(userValidator.validateUpdate(userUpdateDTO));
+        Optional<User> existingUserOptional = findById(userId);
+        User existingUser = existingUserOptional.get();
+
+        if (repository.findByEmail(userUpdateDTO.getNewEmail()) != null){
+            errors.add(new ErrorDetail(ErrorCode.EMAIL_ALREADY_EXISTS, "email", "email já registrado no sistema"));
+        }
+
+        if (errors.isEmpty()){
+            User savedUser = userMapper.toUser(userUpdateDTO);
+
+            savedUser.setId(existingUser.getId());
+            savedUser.setAdmin(existingUser.getAdmin());
+            savedUser.setCpf(existingUser.getCpf());
+            savedUser.setProfilePicturePath(existingUser.getProfilePicturePath());
+
+            if (userUpdateDTO.getNewEmail() == null){
+                savedUser.setEmail(existingUser.getEmail());
+            }
+
+            if (userUpdateDTO.getNewPassword() == null){
+                savedUser.setPassword(existingUser.getPassword());
+            }
+
+            save(savedUser);
+        } else {
+            throw new ValidationException(errors);
+        }
+    }
+
+    public void authenticateUser (LoginRequestDTO request){
         List<ErrorDetail> errors = new ArrayList<>();
 
         if (sessionService.getSession(request.getToken())!= null){
@@ -81,48 +125,5 @@ public class UserService {
         errors.add(new ErrorDetail(ErrorCode.EMAIL_DOES_NOT_EXIST, "login", "Email nao existe no sistema"));
     }
 
-    public void isValidUpdateData (UserUpdateDTO data, Long userId){
-    
-        String name = data.getName();
-        String password = data.getPassword();
-        String email = data.getEmail();
-        LocalDate birthday = data.getBirthday();
-        String phoneNumber = data.getPhoneNumber();
 
-        List <ErrorDetail> errors = new ArrayList<>();
-
-        errors.addAll(isValidName(name));
-        errors.addAll(isValidBirthday(birthday));
-        errors.addAll(isValidPassword(password));
-        errors.addAll(isValidPhoneNumber(phoneNumber));
-        errors.addAll(isValidEmailFormat(email));
-    
-        if (repository.existsByEmailAndIdNot(email, userId)){
-            errors.add(new ErrorDetail(ErrorCode.EMAIL_ALREADY_EXISTS, "email", "email já registrado no sistema"));
-        }
-
-        if (errors.isEmpty()){
-            data.setPassword(passwordEncoder.encode(data.getPassword()));
-            User createdUser = new User();
-            createdUser.setEmail(data.getEmail());
-            createdUser.setPassword(data.getPassword());
-            createdUser.setName(data.getName());
-            createdUser.setBirthday(data.getBirthday());
-            createdUser.setPhoneNumber(data.getPhoneNumber());
-
-            save(createdUser);
-        } else {
-            throw new ValidationException(errors);
-        }
-    }
-    
-    public User applyUpdate (User existing, UserUpdateDTO data){
-        existing.setName(data.getName());
-        existing.setPassword(data.getPassword());
-        existing.setEmail(data.getEmail());
-        existing.setBirthday(data.getBirthday());
-        existing.setPhoneNumber(data.getPhoneNumber());
-        existing.setProfilePicturePath(data.getProfilePicturePath());
-        return repository.save(existing);
-    }
 }
