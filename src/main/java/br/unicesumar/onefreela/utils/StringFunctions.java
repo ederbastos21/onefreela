@@ -1,7 +1,7 @@
 package br.unicesumar.onefreela.utils;
 
 public class StringFunctions {
-    private boolean hasUppercase(String value){
+    public static boolean hasUppercase(String value){
         if (value == null){
             return false;
         }
@@ -14,7 +14,7 @@ public class StringFunctions {
         return false;
     }
 
-    private boolean hasNumber (String value){
+    public static boolean hasNumber (String value){
         if (value == null){
             return false;
         }
@@ -27,7 +27,7 @@ public class StringFunctions {
         return false;
     }
 
-    private boolean hasSpecialCharacter (String value){
+    public static boolean hasSpecialCharacter (String value){
         if (value == null){
             return false;
         }
