@@ -11,7 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+/*
 @RestController
 @RequestMapping("/works")
 public class WorkController {
@@ -29,3 +29,4 @@ public class WorkController {
         return ResponseEntity.ok(response);
     }
 }
+*/
