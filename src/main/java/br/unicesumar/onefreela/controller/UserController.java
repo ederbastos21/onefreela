@@ -1,6 +1,7 @@
 package br.unicesumar.onefreela.controller;
 
 import br.unicesumar.onefreela.dto.LoginRequestDTO;
+import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.dto.UserResponse;
 import br.unicesumar.onefreela.dto.UserUpdateDTO;
 import br.unicesumar.onefreela.entity.User;
@@ -21,7 +22,7 @@ public class UserController {
     private UserService userService;
 
     @PutMapping("/updateUser/{id}")
-    public ResponseEntity<?> updateUser (@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDTO){
+    public ResponseEntity<?> updateUser (@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDTO) {
         LoginRequestDTO loginRequestDTO = new LoginRequestDTO();
         loginRequestDTO.setEmail(userUpdateDTO.getOldEmail());
         loginRequestDTO.setPassword(userUpdateDTO.getOldPassword());
@@ -31,5 +32,17 @@ public class UserController {
 
         return ResponseEntity.ok().body("Alteração de dados realizada com sucesso");
 
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser (@Valid @RequestBody UserRegisterDTO user){
+        userService.registerUser(user);
+        return ResponseEntity.ok("registro Realizado com Sucesso");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login (@RequestBody LoginRequestDTO request) {
+        userService.authenticateUser(request);
+        return ResponseEntity.ok("login Realizado com Sucesso");
     }
 }
