@@ -214,7 +214,7 @@ public class UserValidator {
         return errors;
     }
 
-    private List<ErrorDetail> validateCreate(UserRegisterDTO dto) {
+    public List<ErrorDetail> validateRegister(UserRegisterDTO dto) {
         List<ErrorDetail> errors = new ArrayList<>();
 
         errors.addAll(validateBaseUserData(
@@ -230,7 +230,7 @@ public class UserValidator {
         return errors;
     }
 
-    private List<ErrorDetail> validateUpdate(UserUpdateDTO dto) {
+    public List<ErrorDetail> validateUpdate(UserUpdateDTO dto) {
         List<ErrorDetail> errors = new ArrayList<>();
 
         errors.addAll(validateBaseUserData(
