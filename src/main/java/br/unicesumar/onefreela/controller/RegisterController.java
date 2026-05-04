@@ -1,5 +1,6 @@
 package br.unicesumar.onefreela.controller;
 
+import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.service.UserService;
 import jakarta.validation.Valid;
@@ -18,22 +19,8 @@ public class RegisterController {
     @Autowired
     private UserService userService;
     @PostMapping
-    public ResponseEntity<?> createUser (@Valid @RequestBody User user){
-        user.setAdmin(false);
-        if (userService.isValidUserData(user)){
-            User savedUser = userService.save(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("error: couldn't validate user");
-        }
-    }
-    @PostMapping("/noDB")
-    public ResponseEntity<?> createUserNoSaveDb (@Valid @RequestBody User user){
-        user.setAdmin(false);
-        if (userService.isValidUserData(user)){
-            return ResponseEntity.status(HttpStatus.CREATED).body(user);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("error: couldn't validate user");
-        }
+    public ResponseEntity<?> registerUser (@Valid @RequestBody UserRegisterDTO user){
+        userService.createUser(user);
+        return ResponseEntity.ok("registro Realizado com Sucesso");
     }
 }

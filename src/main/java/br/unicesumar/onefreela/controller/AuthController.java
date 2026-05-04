@@ -13,15 +13,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/login")
 public class AuthController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public AuthController (UserService userService){
+        this.userService = userService;
+    }
+
     @PostMapping
-    public ResponseEntity<?> login (@RequestBody LoginRequest request){
-        if (userService.existsByEmail(request.getEmail())){
-            if (userService.findByEmail(request.getEmail()).getPassword().equals(request.getPassword())){
-                return ResponseEntity.status(HttpStatus.ACCEPTED).body(request.getEmail() + request.getPassword());
-            }
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(request.getEmail() + request.getPassword());
+    public ResponseEntity<?> login (@RequestBody LoginRequest request) {
+        userService.checkLoginCredentials(request);
+        return ResponseEntity.ok("login Realizado com Sucesso");
     }
 }
