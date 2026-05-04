@@ -3,11 +3,13 @@ package br.unicesumar.onefreela.service;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import br.unicesumar.onefreela.dto.UserUpdateRequest;
 
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -20,6 +22,10 @@ public class UserService {
 
     public List<User> findAll() {
         return repository.findAll();
+    }
+    
+    public Optional<User> findById (Long id){
+        return repository.findById(id);
     }
 
     public User save(User user) {
@@ -190,5 +196,46 @@ public class UserService {
         }
 
         return true;
+    }
+    
+    public Boolean isValidUpdateData (UserUpdateRequest data, Long userId){
+    
+        String name = data.getName();
+        String password = data.getPassword();
+        String email = data.getEmail();
+        LocalDate birthday = data.getBirthday();
+        String phoneNumber = data.getPhoneNumber();
+    
+        if (!isValidName(name)){
+            return false;
+        }
+    
+        if (!isValidPassword(password)){
+            return false;
+        }
+    
+        if (repository.existsByEmailAndIdNot(email, userId) || !isValidEmailFormat(email)){
+            return false;
+        }
+    
+        if (!isValidBirthday(birthday)){
+            return false;
+        }
+    
+        if (!isValidPhoneNumber(phoneNumber)){
+            return false;
+        }
+    
+        return true;
+    }
+    
+    public User applyUpdate (User existing, UserUpdateRequest data){
+        existing.setName(data.getName());
+        existing.setPassword(data.getPassword());
+        existing.setEmail(data.getEmail());
+        existing.setBirthday(data.getBirthday());
+        existing.setPhoneNumber(data.getPhoneNumber());
+        existing.setProfilePicturePath(data.getProfilePicturePath());
+        return repository.save(existing);
     }
 }
