@@ -16,25 +16,11 @@ public class User {
     private Long id;
 
     private Boolean isAdmin;
-
-    @NotBlank(message = "nome não pode ser vazio")
     private String name;
-
-    @NotBlank(message = "senha não pode ser vazio")
     private String password;
-
-    @Column(unique = true)
-    @Email(message = "formato de email invalido")
-    @NotBlank(message = "email não pode ser vazio")
     private String email;
-
-    @NotBlank(message = "cpf não pode ser vazio")
     private String cpf;
-
-    @NotNull(message = "data não pode ser vazio")
     private LocalDate birthday;
-
-    @NotBlank(message = "numero de telefone não pode ser vazio")
     private String phoneNumber;
     private String profilePicturePath;
     private String registerDate;
