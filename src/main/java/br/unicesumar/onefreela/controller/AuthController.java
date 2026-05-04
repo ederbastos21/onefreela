@@ -21,6 +21,7 @@ public class AuthController {
 
     @PostMapping
     public ResponseEntity<?> login (@RequestBody LoginRequest request) {
-        return userService.checkLoginCredentials(request);
+        userService.checkLoginCredentials(request);
+        return ResponseEntity.ok("login Realizado com Sucesso");
     }
 }

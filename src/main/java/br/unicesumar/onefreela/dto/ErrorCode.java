@@ -8,7 +8,7 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR,
 
     WRONG_LOGIN_CREDENTIALS,
-    
+
     EMAIL_INVALID,
     EMAIL_REQUIRED,
     EMAIL_TOO_LONG,

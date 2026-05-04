@@ -1,5 +1,6 @@
 package br.unicesumar.onefreela.controller;
 
+import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.service.UserService;
 import jakarta.validation.Valid;
@@ -18,7 +19,8 @@ public class RegisterController {
     @Autowired
     private UserService userService;
     @PostMapping
-    public ResponseEntity<?> registerUser (@Valid @RequestBody User user){
-        return userService.createUser(user);
+    public ResponseEntity<?> registerUser (@Valid @RequestBody UserRegisterDTO user){
+        userService.createUser(user);
+        return ResponseEntity.ok("registro Realizado com Sucesso");
     }
 }
