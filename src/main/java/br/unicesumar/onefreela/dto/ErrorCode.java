@@ -1,6 +1,12 @@
 package br.unicesumar.onefreela.dto;
 
 public enum ErrorCode {
+
+    VALIDATION_ERROR,
+    UNAUTHORIZED,
+    FORBIDDEN,
+    INTERNAL_SERVER_ERROR,
+
     EMAIL_INVALID,
     EMAIL_REQUIRED,
     EMAIL_TOO_LONG,
