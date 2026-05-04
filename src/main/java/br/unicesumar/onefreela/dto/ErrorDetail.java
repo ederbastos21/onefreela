@@ -1,6 +1,6 @@
 package br.unicesumar.onefreela.dto;
 
-public class FieldErrorResponse {
+public class ErrorDetail {
     private String code;
     private String field;
     private String message;

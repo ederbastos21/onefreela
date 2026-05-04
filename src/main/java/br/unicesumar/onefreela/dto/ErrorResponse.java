@@ -4,7 +4,7 @@ import java.util.List;
 
 public class ErrorResponse {
     private String code;
-    private List<FieldErrorResponse> errors;
+    private List<ErrorDetail> errors;
 
     public String getCode() {
         return code;
@@ -14,11 +14,11 @@ public class ErrorResponse {
         this.code = code;
     }
 
-    public List<FieldErrorResponse> getErrors() {
+    public List<ErrorDetail> getErrors() {
         return errors;
     }
 
-    public void setErrors(List<FieldErrorResponse> errors) {
+    public void setErrors(List<ErrorDetail> errors) {
         this.errors = errors;
     }
 }
