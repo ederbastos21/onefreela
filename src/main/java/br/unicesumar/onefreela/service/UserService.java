@@ -3,10 +3,12 @@ package br.unicesumar.onefreela.service;
 import br.unicesumar.onefreela.dto.LoginRequest;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.repository.UserRepository;
+import br.unicesumar.onefreela.utils.StringFunctions;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import static br.unicesumar.onefreela.utils.StringFunctions.*;
 
 import java.time.LocalDate;
 import java.time.Period;
