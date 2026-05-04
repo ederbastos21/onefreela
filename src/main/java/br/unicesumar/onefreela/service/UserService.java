@@ -42,44 +42,6 @@ public class UserService {
         return repository.existsByEmail(email);
     }
 
-    private Boolean hasUppercase(String value){
-        if (value == null){
-            return false;
-        }
-
-        for (char c : value.toCharArray()){
-            if (Character.isUpperCase(c)){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private Boolean hasNumber (String value){
-        if (value == null){
-            return false;
-        }
-
-        for (char c : value.toCharArray()){
-            if (Character.isDigit(c)){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private Boolean hasSpecialCharacter (String value){
-        if (value == null){
-            return false;
-        }
-
-        if (value.matches(".*[^a-zA-Z0-9].*")) {
-            return true;
-        }
-
-        return false;
-    }
-
     private boolean isValidName(String value){
 
         if (hasNumber(value) || hasSpecialCharacter(value) || value.length()<2 || value.length()>100){
