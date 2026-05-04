@@ -5,6 +5,12 @@ public class ErrorDetail {
     private String field;
     private String message;
 
+    public ErrorDetail(ErrorCode code, String field, String message) {
+        this.code = code;
+        this.field = field;
+        this.message = message;
+    }
+
     public String getField() {
         return field;
     }
