@@ -113,7 +113,7 @@ public class UserService {
             return errors;
         }
 
-        cpf = cpf.replaceAll("\\D", "");
+        cpf = cpf.replace(".", "").replace("-", "");
 
         if (cpf.length() > 11) {
             errors.add(new ErrorDetail(ErrorCode.CPF_TOO_LONG, "cpf", "O CPF deve conter 11 dígitos"));
@@ -123,6 +123,13 @@ public class UserService {
         if (cpf.length() < 11) {
             errors.add(new ErrorDetail(ErrorCode.CPF_TOO_SHORT, "cpf", "O CPF deve conter 11 dígitos"));
             return errors;
+        }
+
+        for (Character c : cpf.toCharArray()){
+            if (!Character.isDigit(c)){
+                errors.add(new ErrorDetail(ErrorCode.CPF_HAS_LETTER, "cpf", "O cpf nao pode conter letras"));
+                return errors;
+            }
         }
 
         if (cpf.matches("(\\d)\\1{10}")) {
