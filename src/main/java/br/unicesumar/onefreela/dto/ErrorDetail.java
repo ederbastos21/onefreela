@@ -1,7 +1,7 @@
 package br.unicesumar.onefreela.dto;
 
 public class ErrorDetail {
-    private String code;
+    private ErrorCode code;
     private String field;
     private String message;
 
@@ -21,11 +21,11 @@ public class ErrorDetail {
         this.message = message;
     }
 
-    public String getCode() {
+    public ErrorCode getCode() {
         return code;
     }
 
-    public void setCode(String code) {
+    public void setCode(ErrorCode code) {
         this.code = code;
     }
 }

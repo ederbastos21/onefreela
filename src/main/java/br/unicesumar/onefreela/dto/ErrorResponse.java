@@ -3,14 +3,14 @@ package br.unicesumar.onefreela.dto;
 import java.util.List;
 
 public class ErrorResponse {
-    private String code;
+    private ErrorCode code;
     private List<ErrorDetail> errors;
 
-    public String getCode() {
+    public ErrorCode getCode() {
         return code;
     }
 
-    public void setCode(String code) {
+    public void setCode(ErrorCode code) {
         this.code = code;
     }
 
