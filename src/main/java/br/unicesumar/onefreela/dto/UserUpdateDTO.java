@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
-public class UserUpdateRequest {
+public class UserUpdateDTO {
 
     @NotBlank(message = "nome não pode ser vazio")
     private String name;
@@ -74,5 +74,5 @@ public class UserUpdateRequest {
         this.profilePicturePath = profilePicturePath;
     }
 
-    public UserUpdateRequest() {}
+    public UserUpdateDTO() {}
 }
