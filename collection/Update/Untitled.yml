@@ -12,9 +12,9 @@ http:
       {
         "name": "Joaosilva",
         "oldPassword": "Abc123!232",
-        "newPassword": "CarlosGay123!",
+        "newPassword": "teste",
         "oldEmail": "exemploab@gmail.com",
-        "newEmail": "carlosgay@gmail.com",
+        "newEmail": "teste",
         "birthday": "2000-05-20",
         "phoneNumber": "5542999999999",
         "profilePicturePath": "/images/profiles/joao.png"

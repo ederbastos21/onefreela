@@ -23,14 +23,12 @@ public class UserService {
 
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
-    private final SessionService sessionService;
     private final UserValidator userValidator;
     private final UserMapper userMapper;
 
-    public UserService(UserRepository repository, PasswordEncoder passwordEncoder,SessionService sessionService, UserValidator userValidator, UserMapper userMapper) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder, UserValidator userValidator, UserMapper userMapper) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
-        this.sessionService = sessionService;
         this.userValidator = userValidator;
         this.userMapper = userMapper;
     }
@@ -73,51 +71,31 @@ public class UserService {
         }
     }
 
-    public void updateUser (UserUpdateDTO userUpdateDTO, Long userId){
+    public void updateUser(UserUpdateDTO userUpdateDTO, Long userId) {
 
-        List <ErrorDetail> errors = new ArrayList<>();
+        List<ErrorDetail> errors = new ArrayList<>();
         errors.addAll(userValidator.validateUpdate(userUpdateDTO));
 
-        if (repository.findByEmail(userUpdateDTO.getNewEmail()) != null){
-            errors.add(new ErrorDetail(ErrorCode.EMAIL_ALREADY_EXISTS, "email", "email já registrado no sistema"));
+        if (repository.existsByEmailAndIdNot(userUpdateDTO.getNewEmail(), userId)) {
+            errors.add(new ErrorDetail(ErrorCode.EMAIL_ALREADY_EXISTS, "email", "Email já registrado no sistema"));
         }
 
-        if (errors.isEmpty()){
-            User newUser = userMapper.toUser(userUpdateDTO);
-
-            if (findById(userId).isPresent()){
-                newUser.setId(findById(userId).get().getId());
-                newUser.setAdmin(findById(userId).get().getAdmin());
-                newUser.setVerified(findById(userId).get().getVerified());
-                newUser.setCpf(findById(userId).get().getCpf());
-                newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
-                save(newUser);
-            }
-        } else {
+        if (!errors.isEmpty()) {
             throw new ValidationException(errors);
         }
+
+        User existing = repository.findById(userId)
+                .orElseThrow(() -> new ValidationException(List.of(
+                        new ErrorDetail(ErrorCode.VALIDATION_ERROR, "id", "Usuário não encontrado")
+                )));
+
+        User updated = userMapper.toUser(userUpdateDTO);
+        updated.setId(existing.getId());
+        updated.setAdmin(existing.getAdmin());
+        updated.setVerified(existing.getVerified());
+        updated.setCpf(existing.getCpf());
+        updated.setPassword(passwordEncoder.encode(userUpdateDTO.getNewPassword()));
+
+        repository.save(updated);
     }
-
-    public void authenticateUser (LoginRequestDTO request){
-        List<ErrorDetail> errors = new ArrayList<>();
-
-        if (sessionService.getSession(request.getToken())!= null){
-            System.out.println("deu certo login pelo token");
-            return;
-        }
-
-        if (existsByEmail(request.getEmail())){
-            User user = findByEmail(request.getEmail());
-
-            if (passwordEncoder.matches(request.getPassword(), user.getPassword())){
-                sessionService.storeSession(user.getId());
-                return;
-            }
-            errors.add(new ErrorDetail(ErrorCode.VALIDATION_ERROR, "login", "Usuario ou senha incorretos"));
-            throw new ValidationException(errors);
-        }
-        errors.add(new ErrorDetail(ErrorCode.EMAIL_DOES_NOT_EXIST, "login", "Email nao existe no sistema"));
-    }
-
-
 }

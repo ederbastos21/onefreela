@@ -21,14 +21,25 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map <String, String> handle (MethodArgumentNotValidException e){
-        Map<String, String> errors = new HashMap<>();
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
 
-        e.getBindingResult().getFieldErrors().forEach(error -> {
-            errors.put(error.getField(), error.getDefaultMessage());
-        });
+        List<ErrorDetail> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> new ErrorDetail(
+                        ErrorCode.VALIDATION_ERROR,
+                        fieldError.getField(),
+                        fieldError.getDefaultMessage()
+                ))
+                .toList();
 
-        return errors;
+        ErrorResponse response = new ErrorResponse();
+        response.setCode(ErrorCode.VALIDATION_ERROR);
+        response.setErrors(errors);
+        response.setMethod(request.getMethod());
+        response.setPath(request.getRequestURI());
+        response.setTimestamp(ZonedDateTime.now(ZoneId.of("America/Sao_Paulo")).toLocalDateTime().toString());
+
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler

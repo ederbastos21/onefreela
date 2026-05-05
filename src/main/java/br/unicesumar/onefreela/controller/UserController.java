@@ -5,6 +5,7 @@ import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.dto.UserResponse;
 import br.unicesumar.onefreela.dto.UserUpdateDTO;
 import br.unicesumar.onefreela.entity.User;
+import br.unicesumar.onefreela.service.AuthService;
 import br.unicesumar.onefreela.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,18 +22,16 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private AuthService authService;
+
     @PutMapping("/updateUser/{id}")
     public ResponseEntity<?> updateUser (@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDTO) {
-        LoginRequestDTO loginRequestDTO = new LoginRequestDTO();
-        loginRequestDTO.setEmail(userUpdateDTO.getOldEmail());
-        loginRequestDTO.setPassword(userUpdateDTO.getOldPassword());
-        loginRequestDTO.setToken("123");
 
-        userService.authenticateUser(loginRequestDTO);
+        authService.verifyPassword(userUpdateDTO.getOldEmail(), userUpdateDTO.getOldPassword());
         userService.updateUser(userUpdateDTO, id);
 
         return ResponseEntity.ok().body("Alteração de dados realizada com sucesso");
-
     }
 
     @PostMapping("/register")
@@ -43,7 +42,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login (@RequestBody LoginRequestDTO request) {
-        userService.authenticateUser(request);
-        return ResponseEntity.ok("login Realizado com Sucesso");
+        String token = authService.authenticate(request);
+        return ResponseEntity.ok(token);
     }
 }
