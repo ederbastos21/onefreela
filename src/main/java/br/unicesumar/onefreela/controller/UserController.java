@@ -43,7 +43,12 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login (@RequestBody LoginRequestDTO loginRequestDTO, HttpServletRequest httpRequest) {
-        String token = authService.authenticate(loginRequestDTO, httpRequest);
+        //first auth checks if existing token is valid
+        String token = authService.authenticate(httpRequest);
+        if (token == null){
+            //this auth uses email and password
+            token = authService.authenticate(loginRequestDTO);
+        }
         return ResponseEntity.ok(token);
     }
 }

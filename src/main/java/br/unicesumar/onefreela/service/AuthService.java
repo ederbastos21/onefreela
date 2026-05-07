@@ -42,9 +42,10 @@ public class AuthService {
         }
     }
 
-    public String authenticate(LoginRequestDTO loginRequestDTO, HttpServletRequest httpRequest) {
+    public String authenticate(LoginRequestDTO loginRequestDTO) {
         List<ErrorDetail> errors = new ArrayList<>();
 
+        //checks for errors
         if (loginRequestDTO.getPassword() == null) {
             errors.add(new ErrorDetail(ErrorCode.PASSWORD_REQUIRED, "login", "Senha é obrigatória"));
         }
@@ -55,38 +56,40 @@ public class AuthService {
             throw new ValidationException(errors);
         }
 
-        String token = httpRequest.getHeader("Authorization");
-        String session = null;
-
-        if (token != null){
-            session = sessionService.getSession(token);
-        }
-
+        //extract object of existing user using email from loginRequestDTO
         User user = userService.findByEmail(loginRequestDTO.getEmail());
 
-
-        //caso token seja valido e corresponda ao usuario, retorna token
-        if (user != null && session != null && session.equals(user.getId().toString())){
-            return token;
-        }
-
+        //compares if the generated user object returns null. If it did, it means that the user doesn't exist
         if (user == null) {
             errors.add(new ErrorDetail(ErrorCode.EMAIL_DOES_NOT_EXIST, "login", "Email não existe no sistema"));
             throw new ValidationException(errors);
         }
 
+        //here the email is of an existing account, and tries to check if the password provided is the same as the one from the user object extracted from the email
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
             errors.add(new ErrorDetail(ErrorCode.INVALID_CREDENTIALS, "login", "Senha incorreta"));
             throw new ValidationException(errors);
         }
 
-        //caso token nao seja valido ou nulo, vai remover dados anteriores do usuario e sobreescrever a sessão
-        if (sessionService.getSession(user.getId()) == null){
-            return sessionService.storeSession(user.getId());
-        } else {
-            sessionService.removeSession(user.getId());
-            return sessionService.storeSession(user.getId());
+        //tries to extract an existing session instead of creating a new one
+        String existingSession = sessionService.getSession(user.getId());
+        if (existingSession != null){
+            return existingSession;
         }
+
+        //if credentials are correct and there's no active session, stores session
+        return sessionService.storeSession(user.getId());
+    }
+
+    public String authenticate(HttpServletRequest httpRequest){
+        String token = httpRequest.getHeader("Authorization");
+        if (token == null){
+            return null;
+        }
+        if (sessionService.getSession(token) != null){
+            return token;
+        }
+        return null;
     }
 }
 

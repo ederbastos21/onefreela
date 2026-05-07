@@ -37,12 +37,4 @@ public class SessionService {
          String idString = id.toString();
          return redisTemplate.opsForValue().get(idString);
     }
-
-    public void removeSession (Long id){
-         String idString = id.toString();
-         String token = redisTemplate.opsForValue().getAndDelete(idString);
-         if (token != null){
-             redisTemplate.opsForValue().getAndDelete(token);
-         }
-    }
 }
