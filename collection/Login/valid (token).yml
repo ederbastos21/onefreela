@@ -1,17 +1,20 @@
 info:
-  name: Untitled
+  name: valid (token)
   type: http
   seq: 1
 
 http:
   method: POST
-  url: http://localhost:8080/login
+  url: http://localhost:8080/users/login
+  headers:
+    - name: Authorization
+      value: df916f13-5f9f-4ecf-9d66-ed0690c9153d
   body:
     type: json
     data: |-
       {
         "email" : "exemploab@gmail.com", "password" : "Abc123!232"
-      }
+      }88
   auth: inherit
 
 settings:
