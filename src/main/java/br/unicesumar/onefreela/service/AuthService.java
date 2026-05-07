@@ -5,6 +5,7 @@ import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.LoginRequestDTO;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.exception.ValidationException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +42,7 @@ public class AuthService {
         }
     }
 
-    public String authenticate(LoginRequestDTO loginRequestDTO) {
+    public String authenticate(LoginRequestDTO loginRequestDTO, HttpServletRequest httpRequest) {
         List<ErrorDetail> errors = new ArrayList<>();
 
         if (loginRequestDTO.getPassword() == null) {
@@ -54,11 +55,20 @@ public class AuthService {
             throw new ValidationException(errors);
         }
 
-        if (loginRequestDTO.getToken() != null && sessionService.getSession(loginRequestDTO.getToken()) != null) {
-            return loginRequestDTO.getToken();
+        String token = httpRequest.getHeader("Authorization");
+        String session = null;
+
+        if (token != null){
+            session = sessionService.getSession(token);
         }
 
         User user = userService.findByEmail(loginRequestDTO.getEmail());
+
+
+        //caso token seja valido e corresponda ao usuario, retorna token
+        if (user != null && session != null && session.equals(user.getId().toString())){
+            return token;
+        }
 
         if (user == null) {
             errors.add(new ErrorDetail(ErrorCode.EMAIL_DOES_NOT_EXIST, "login", "Email não existe no sistema"));
@@ -70,8 +80,13 @@ public class AuthService {
             throw new ValidationException(errors);
         }
 
-        return sessionService.storeSession(user.getId());
+        //caso token nao seja valido ou nulo, vai remover dados anteriores do usuario e sobreescrever a sessão
+        if (sessionService.getSession(user.getId()) == null){
+            return sessionService.storeSession(user.getId());
+        } else {
+            sessionService.removeSession(user.getId());
+            return sessionService.storeSession(user.getId());
+        }
     }
-
 }
 
