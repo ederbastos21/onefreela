@@ -101,9 +101,11 @@ public class AuthService {
     public String authenticate(HttpServletRequest httpRequest){
         List<ErrorDetail> errors = new ArrayList<>();
         String token = httpRequest.getHeader("Authorization");
+
         if (token == null){
             return null;
         }
+
         if (sessionService.getSession(token) != null){
             System.out.println("[INFO] Token" + token + " inserted");
             System.out.println("[RESULT ] - user logged by token");
@@ -112,6 +114,24 @@ public class AuthService {
 
         errors.add(new ErrorDetail(ErrorCode.TOKEN_NOT_FOUND, "token", "token inserido nao corresponde a nenhum registrado"));
         System.out.println("[INFO] inserted token doesn't exist");
+        throw new ValidationException(errors);
+    }
+
+    public boolean checkAdmin(HttpServletRequest httpServletRequest){
+        String token = authenticate(httpServletRequest);
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        if (token == null){
+            errors.add(new ErrorDetail(ErrorCode.TOKEN_NOT_FOUND, "admin", "o token inserido nao existe no sistema"));
+            throw new ValidationException(errors);
+        }
+
+        User user = userService.findById(Long.parseLong(sessionService.getSession(token))).orElseThrow();
+        if (user.getAdmin() == true){
+            return true;
+        }
+
+        errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "admin", "voce nao tem permissao para acessar este recurso"));
         throw new ValidationException(errors);
     }
 }
