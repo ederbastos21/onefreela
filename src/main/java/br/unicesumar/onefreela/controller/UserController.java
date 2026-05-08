@@ -26,11 +26,14 @@ public class UserController {
     @Autowired
     private AuthService authService;
 
-    @PutMapping("/updateUser/{id}")
-    public ResponseEntity<?> updateUser (@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDTO) {
+    @PutMapping("/updateUser")
+    public ResponseEntity<?> updateUser (@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
 
-        authService.verifyPassword(userUpdateDTO.getOldEmail(), userUpdateDTO.getOldPassword());
-        userService.updateUser(userUpdateDTO, id);
+        //tries to authenticate user with passed credentials
+        User authenticatedUser = authService.verifyPassword(userUpdateDTO.getOldEmail(), userUpdateDTO.getOldPassword());
+
+        //if the codes reaches here, the user was authenticated and the modifications will be updated
+        userService.updateUser(authenticatedUser, userUpdateDTO);
 
         return ResponseEntity.ok().body("Alteração de dados realizada com sucesso");
     }

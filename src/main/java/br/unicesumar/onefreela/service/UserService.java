@@ -71,31 +71,27 @@ public class UserService {
         }
     }
 
-    public void updateUser(UserUpdateDTO userUpdateDTO, Long userId) {
+    public void updateUser(User authenticatedUser, UserUpdateDTO userUpdateDTO) {
 
         List<ErrorDetail> errors = new ArrayList<>();
         errors.addAll(userValidator.validateUpdate(userUpdateDTO));
-
-        if (repository.existsByEmailAndIdNot(userUpdateDTO.getNewEmail(), userId)) {
-            errors.add(new ErrorDetail(ErrorCode.EMAIL_ALREADY_EXISTS, "email", "Email já registrado no sistema"));
-        }
 
         if (!errors.isEmpty()) {
             throw new ValidationException(errors);
         }
 
-        User existing = repository.findById(userId)
-                .orElseThrow(() -> new ValidationException(List.of(
-                        new ErrorDetail(ErrorCode.VALIDATION_ERROR, "id", "Usuário não encontrado")
-                )));
+        //ele tem que checar se o novo email informado ja existe no sistema
+        if (!userUpdateDTO.getOldEmail().equals(userUpdateDTO.getNewEmail()) && findByEmail(userUpdateDTO.getNewEmail()) != null){
+            errors.add(new ErrorDetail(ErrorCode.EMAIL_ALREADY_EXISTS, "update", "O email inserido ja existe no sistema"));
+        }
 
-        User updated = userMapper.toUser(userUpdateDTO);
-        updated.setId(existing.getId());
-        updated.setAdmin(existing.getAdmin());
-        updated.setVerified(existing.getVerified());
-        updated.setCpf(existing.getCpf());
-        updated.setPassword(passwordEncoder.encode(userUpdateDTO.getNewPassword()));
+        authenticatedUser.setName(userUpdateDTO.getName());
+        authenticatedUser.setEmail(userUpdateDTO.getNewEmail());
+        authenticatedUser.setPassword(passwordEncoder.encode(userUpdateDTO.getNewPassword()));
+        authenticatedUser.setBirthday(userUpdateDTO.getBirthday());
+        authenticatedUser.setProfilePicturePath(userUpdateDTO.getProfilePicturePath());
+        authenticatedUser.setPhoneNumber(userUpdateDTO.getPhoneNumber());
 
-        repository.save(updated);
+        save(authenticatedUser);
     }
 }

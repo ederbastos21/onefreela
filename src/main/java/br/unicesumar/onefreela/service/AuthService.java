@@ -27,7 +27,7 @@ public class AuthService {
     }
 
     // validates email and password during a standalone login check, creates user object
-    public void verifyPassword(String email, String password) {
+    public User verifyPassword(String email, String password) {
         List<ErrorDetail> errors = new ArrayList<>();
 
         User user = userService.findByEmail(email);
@@ -41,6 +41,8 @@ public class AuthService {
             errors.add(new ErrorDetail(ErrorCode.INVALID_CREDENTIALS, "login", "Senha incorreta"));
             throw new ValidationException(errors);
         }
+
+        return user;
     }
 
     // validates email and password when the User object is already available.
