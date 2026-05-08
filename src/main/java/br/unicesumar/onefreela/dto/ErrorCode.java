@@ -10,7 +10,6 @@ public enum ErrorCode {
     WRONG_LOGIN_CREDENTIALS,
 
     TOKEN_NOT_FOUND,
-
     EMAIL_INVALID,
     EMAIL_REQUIRED,
     EMAIL_TOO_LONG,
@@ -55,4 +54,7 @@ public enum ErrorCode {
     INVALID_CREDENTIALS,
     TOKEN_EXPIRED,
     ACCESS_DENIED,
+    
+    WORK_PRICE_INVALID,
+    WORK_PRICE_RANGE_INVALID,
 }
