@@ -9,6 +9,8 @@ public enum ErrorCode {
 
     WRONG_LOGIN_CREDENTIALS,
 
+    TOKEN_NOT_FOUND,
+
     EMAIL_INVALID,
     EMAIL_REQUIRED,
     EMAIL_TOO_LONG,

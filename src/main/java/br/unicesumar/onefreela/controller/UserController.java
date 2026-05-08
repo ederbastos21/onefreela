@@ -42,13 +42,15 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login (@RequestBody LoginRequestDTO loginRequestDTO, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> login (@RequestBody LoginRequestDTO loginRequestDTO) {
         //first auth checks if existing token is valid
+        String token = authService.authenticate(loginRequestDTO);
+        return ResponseEntity.ok(token);
+    }
+
+    @PostMapping("/loginToken")
+    public ResponseEntity<?> login (HttpServletRequest httpRequest) {
         String token = authService.authenticate(httpRequest);
-        if (token == null){
-            //this auth uses email and password
-            token = authService.authenticate(loginRequestDTO);
-        }
         return ResponseEntity.ok(token);
     }
 }

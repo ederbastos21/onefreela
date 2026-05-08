@@ -26,22 +26,39 @@ public class AuthService {
         this.sessionService = sessionService;
     }
 
+    // validates email and password during a standalone login check, creates user object
     public void verifyPassword(String email, String password) {
+        List<ErrorDetail> errors = new ArrayList<>();
+
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            throw new ValidationException(List.of(
-                    new ErrorDetail(ErrorCode.EMAIL_DOES_NOT_EXIST, "login", "Email não existe no sistema")
-            ));
+            errors.add(new ErrorDetail(ErrorCode.EMAIL_DOES_NOT_EXIST, "login", "Email não existe no sistema"));
+            throw new ValidationException(errors);
         }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new ValidationException(List.of(
-                    new ErrorDetail(ErrorCode.INVALID_CREDENTIALS, "login", "Senha incorreta")
-            ));
+            errors.add(new ErrorDetail(ErrorCode.INVALID_CREDENTIALS, "login", "Senha incorreta"));
+            throw new ValidationException(errors);
         }
     }
 
+    // validates email and password when the User object is already available.
+    public void verifyPassword(String email, String password, User user) {
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        if (user == null) {
+            errors.add(new ErrorDetail(ErrorCode.EMAIL_DOES_NOT_EXIST, "login", "Email não existe no sistema"));
+            throw new ValidationException(errors);
+        }
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            errors.add(new ErrorDetail(ErrorCode.INVALID_CREDENTIALS, "login", "Senha incorreta"));
+            throw new ValidationException(errors);
+        }
+    }
+
+    //validates login when LoginRequestDTO is passed, which the email and password is passed
     public String authenticate(LoginRequestDTO loginRequestDTO) {
         List<ErrorDetail> errors = new ArrayList<>();
 
@@ -59,37 +76,41 @@ public class AuthService {
         //extract object of existing user using email from loginRequestDTO
         User user = userService.findByEmail(loginRequestDTO.getEmail());
 
-        //compares if the generated user object returns null. If it did, it means that the user doesn't exist
-        if (user == null) {
-            errors.add(new ErrorDetail(ErrorCode.EMAIL_DOES_NOT_EXIST, "login", "Email não existe no sistema"));
-            throw new ValidationException(errors);
-        }
-
-        //here the email is of an existing account, and tries to check if the password provided is the same as the one from the user object extracted from the email
-        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
-            errors.add(new ErrorDetail(ErrorCode.INVALID_CREDENTIALS, "login", "Senha incorreta"));
-            throw new ValidationException(errors);
-        }
+        verifyPassword(loginRequestDTO.getEmail(), loginRequestDTO.getPassword(), user);
 
         //tries to extract an existing session instead of creating a new one
         String existingSession = sessionService.getSession(user.getId());
         if (existingSession != null){
+            System.out.println("[INFO] user " + user.getId() + " already has active session token: " + existingSession);
+            System.out.println("[RESULT] - user logged by credentials");
             return existingSession;
         }
 
         //if credentials are correct and there's no active session, stores session
-        return sessionService.storeSession(user.getId());
+        String newSession = sessionService.storeSession(user.getId());
+        System.out.println("[INFO] user " + user.getId() + " doesn't have active token");
+        System.out.println("[RESULT] - new token created: "+newSession);
+        System.out.println("[RESULT] - user logged by credentials");
+
+        return newSession;
     }
 
+    //this method is used for session checks, when the only value passed in the requisition is the token
     public String authenticate(HttpServletRequest httpRequest){
+        List<ErrorDetail> errors = new ArrayList<>();
         String token = httpRequest.getHeader("Authorization");
         if (token == null){
             return null;
         }
         if (sessionService.getSession(token) != null){
+            System.out.println("[INFO] Token" + token + " inserted");
+            System.out.println("[RESULT ] - user logged by token");
             return token;
         }
-        return null;
+
+        errors.add(new ErrorDetail(ErrorCode.TOKEN_NOT_FOUND, "token", "token inserido nao corresponde a nenhum registrado"));
+        System.out.println("[INFO] inserted token doesn't exist");
+        throw new ValidationException(errors);
     }
 }
 
