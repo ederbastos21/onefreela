@@ -1,8 +1,14 @@
 package br.unicesumar.onefreela.repository;
 
 import br.unicesumar.onefreela.entity.Work;
+import br.unicesumar.onefreela.entity.WorkStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import java.util.List;
 
-public interface WorkRepository extends JpaRepository<Work, Long>, JpaSpecificationExecutor<Work> {
+public interface WorkRepository extends JpaRepository<Work, Long> {
+    List<Work> findByStatus(WorkStatus status);
+
+    List<Work> findByStatusAndCategoryIgnoreCase(WorkStatus status, String category);
+
+    List<Work> findByStatusAndTitleContainingIgnoreCaseOrStatusAndDescriptionContainingIgnoreCase(WorkStatus statusForTitle, String title, WorkStatus statusForDescription, String description);
 }
