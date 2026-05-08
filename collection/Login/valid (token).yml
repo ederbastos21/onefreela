@@ -5,16 +5,13 @@ info:
 
 http:
   method: POST
-  url: http://localhost:8080/users/login
+  url: http://localhost:8080/users/loginToken
   headers:
     - name: Authorization
-      value: df916f13-5f9f-4ecf-9d66-ed0690c9153d
+      value: b5b23b95-14b1-4098-88c8-93f107f8f6b1
   body:
     type: json
-    data: |-
-      {
-        "email" : "exemploab@gmail.com", "password" : "Abc123!232"
-      }88
+    data: ""
   auth: inherit
 
 settings:
