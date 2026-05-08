@@ -80,9 +80,9 @@ public class UserService {
             throw new ValidationException(errors);
         }
 
-        //ele tem que checar se o novo email informado ja existe no sistema
         if (!userUpdateDTO.getOldEmail().equals(userUpdateDTO.getNewEmail()) && findByEmail(userUpdateDTO.getNewEmail()) != null){
             errors.add(new ErrorDetail(ErrorCode.EMAIL_ALREADY_EXISTS, "update", "O email inserido ja existe no sistema"));
+            throw new ValidationException(errors);
         }
 
         authenticatedUser.setName(userUpdateDTO.getName());
