@@ -44,7 +44,7 @@ public class AuthService {
     }
 
     // validates email and password when the User object is already available.
-    public void verifyPassword(String email, String password, User user) {
+    public void verifyPassword(String password, User user) {
         List<ErrorDetail> errors = new ArrayList<>();
 
         if (user == null) {
@@ -76,7 +76,7 @@ public class AuthService {
         //extract object of existing user using email from loginRequestDTO
         User user = userService.findByEmail(loginRequestDTO.getEmail());
 
-        verifyPassword(loginRequestDTO.getEmail(), loginRequestDTO.getPassword(), user);
+        verifyPassword(loginRequestDTO.getPassword(), user);
 
         //tries to extract an existing session instead of creating a new one
         String existingSession = sessionService.getSession(user.getId());
