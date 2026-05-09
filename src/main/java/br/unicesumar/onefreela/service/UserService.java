@@ -69,7 +69,9 @@ public class UserService {
             newUser.setProfilePicturePath("");
             newUser.setVerified(false);
             newUser.setRegisterDate(LocalDate.now().toString());
+            newUser.setFreelancer(false);
             save(newUser);
+            
         } else {
             throw new ValidationException(errors);
         }

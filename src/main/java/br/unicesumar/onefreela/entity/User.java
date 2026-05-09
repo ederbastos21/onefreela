@@ -15,15 +15,19 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Boolean isAdmin;
+    //input data
     private String name;
-    private String password;
     private String email;
+    private String password;
     private String cpf;
     private LocalDate birthday;
     private String phoneNumber;
-    private String profilePicturePath;
+
+    //automatic data
     private String registerDate;
+    private String profilePicturePath;
+    private Boolean isAdmin;
+    private Boolean isFreelancer;
     private Boolean verified;
 
     public Long getId() {
@@ -112,6 +116,14 @@ public class User {
 
     public void setVerified(Boolean verified) {
         this.verified = verified;
+    }
+
+    public Boolean getFreelancer() {
+        return isFreelancer;
+    }
+
+    public void setFreelancer(Boolean freelancer) {
+        isFreelancer = freelancer;
     }
 
     public User() {}
