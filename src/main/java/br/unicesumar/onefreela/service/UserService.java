@@ -65,6 +65,10 @@ public class UserService {
         if (errors.isEmpty()){
             User newUser = userMapper.toUser(userRegisterDTO);
             newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
+            newUser.setAdmin(false);
+            newUser.setProfilePicturePath("");
+            newUser.setVerified(false);
+            newUser.setRegisterDate(LocalDate.now().toString());
             save(newUser);
         } else {
             throw new ValidationException(errors);
