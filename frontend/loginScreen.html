@@ -34,6 +34,7 @@
       user-select: none;
     }
 
+    /* ─── NOISE GRAIN OVERLAY ─── */
     body::before {
       content: '';
       position: fixed;
@@ -44,6 +45,7 @@
       opacity: .35;
     }
 
+    /* ─── BACKGROUND MESH ─── */
     .bg {
       position: fixed;
       inset: 0;
@@ -55,6 +57,7 @@
       z-index: 0;
     }
 
+    /* ─── GLOW BLOBS ─── */
     .blob {
       position: fixed;
       border-radius: 50%;
@@ -67,6 +70,7 @@
     .blob-2 { width:300px; height:300px; bottom:-60px; right:-60px; background: rgba(127,255,0,.04); animation-delay: -5s; }
     @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,20px) scale(1.05); } }
 
+    /* ─── CURSOR GLOW ─── */
     .cursor-glow {
       position: fixed;
       width: 320px;
@@ -79,6 +83,7 @@
       z-index: 2;
     }
 
+    /* ─── SCENE ─── */
     .scene {
       position: relative;
       z-index: 10;
@@ -88,6 +93,7 @@
       height: 100%;
     }
 
+    /* ─── CARD ─── */
     .card {
       background: linear-gradient(145deg, rgba(30,30,30,.95), rgba(18,18,18,.95));
       border: 1px solid var(--border);
@@ -107,6 +113,7 @@
       to   { opacity:1; transform: translateY(0)   scale(1);    }
     }
 
+    /* ─── DRAGGABLE ELEMENTS ─── */
     .draggable {
       cursor: grab;
       transition: opacity .2s, box-shadow .2s;
@@ -117,6 +124,7 @@
       z-index: 1000;
     }
 
+    /* ─── LOGO ─── */
     .logo-wrap {
       display: inline-flex;
       align-items: center;
@@ -142,6 +150,7 @@
     }
     .logo-text span { color: var(--green); }
 
+    /* ─── HEADING ─── */
     .heading {
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(38px, 6vw, 52px);
@@ -178,6 +187,7 @@
     }
     .subtitle a:hover { opacity: .75; }
 
+    /* ─── FIELDS ─── */
     .field { margin-bottom: 20px; animation: slideDown .55s calc(.3s + var(--d,0s)) cubic-bezier(.22,.68,0,1.2) both; }
     .field:nth-child(1) { --d: 0s; }
     .field:nth-child(2) { --d: .07s; }
@@ -238,6 +248,7 @@
     }
     .eye-btn:hover { color: var(--green); }
 
+    /* ─── TOGGLE ─── */
     .toggle-row {
       display: flex;
       align-items: center;
@@ -268,6 +279,7 @@
     }
     .toggle.on::after { transform: translateX(16px); }
 
+    /* ─── BUTTON ─── */
     .btn {
       width: 100%;
       padding: 18px;
@@ -296,11 +308,13 @@
     .btn:hover::before { transform: translateX(100%); }
     .btn:active { transform: translateY(0); box-shadow: none; }
 
+    /* ─── SHARED SLIDE-DOWN ─── */
     @keyframes slideDown {
       from { opacity:0; transform: translateY(-18px); }
       to   { opacity:1; transform: translateY(0); }
     }
 
+    /* ─── DRAG HINT ─── */
     .drag-hint {
       text-align: center;
       font-size: 11px;
@@ -311,6 +325,7 @@
     }
     @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 
+    /* ─── FLOATING TAGS ─── */
     .float-tag {
       position: fixed;
       font-family: 'Bebas Neue', sans-serif;
@@ -326,6 +341,7 @@
     .float-tag:nth-child(3) { top: 55%; left:  5%; animation-delay: -11s; }
     @keyframes floatTag { 0%,100%{opacity:.15;transform:translateY(0)} 50%{opacity:.35;transform:translateY(-8px)} }
 
+    /* ─── RIPPLE ─── */
     .ripple {
       position: absolute;
       border-radius: 50%;
@@ -336,6 +352,7 @@
     }
     @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
 
+    /* ─── SNAP BACK ─── */
     .snap-back {
       transition: transform .5s cubic-bezier(.34,1.56,.64,1), opacity .3s;
     }
@@ -348,6 +365,7 @@
   <div class="blob blob-2"></div>
   <div class="cursor-glow" id="cursorGlow"></div>
 
+  <!-- Floating decorative text -->
   <div class="float-tag">ONEFREELA</div>
   <div class="float-tag">FREELANCER</div>
   <div class="float-tag">CONECTE-SE</div>
@@ -355,25 +373,29 @@
   <div class="scene">
     <div class="card" id="card">
 
-        <div class="logo-wrap draggable" id="logo">
+      <!-- Logo -->
+      <div class="logo-wrap draggable" id="logo">
         <div class="logo-icon">OF</div>
         <div class="logo-text">One<span>Freela</span></div>
       </div>
 
-          <div class="heading draggable" id="heading">BEM-VINDO<br>DE VOLTA!</div>
+      <!-- Heading -->
+      <div class="heading draggable" id="heading">BEM-VINDO<br>DE VOLTA!</div>
 
-          <p class="subtitle draggable" id="subtitle">
+      <!-- Subtitle -->
+      <p class="subtitle draggable" id="subtitle">
         Não tem uma conta? <a href="signupScreen.html">Crie uma agora!</a>
       </p>
 
-          <div class="field">
+      <!-- Email -->
+      <div class="field">
         <div class="label-row"><label for="email">E-mail</label></div>
         <div class="input-wrap">
           <input type="email" id="email" placeholder="seu@email.com" autocomplete="off" />
         </div>
       </div>
 
-    
+      <!-- Password -->
       <div class="field">
         <div class="label-row">
           <label for="senha">Senha</label>
@@ -390,30 +412,30 @@
         </div>
       </div>
 
-    
+      <!-- Toggle -->
       <div class="toggle-row">
         <div class="toggle" id="toggle"></div>
         <span>Manter-me conectado</span>
       </div>
 
-    
-      <button class="btn draggable" id="loginBtn">ENTRAR</button>
+      <!-- Button -->
+      <button class="btn draggable" id="loginBtn" onclick="window.location.href='exploreFreelancers.html'">ENTRAR</button>
 
-    
+      <!-- Drag hint -->
       <p class="drag-hint">✦ ARRASTE OS ELEMENTOS ACIMA ✦</p>
 
     </div>
   </div>
 
   <script>
-    
+    /* ── Cursor glow ── */
     const glow = document.getElementById('cursorGlow');
     document.addEventListener('mousemove', e => {
       glow.style.left = e.clientX + 'px';
       glow.style.top  = e.clientY + 'px';
     });
 
-    
+    /* ── Eye toggle ── */
     const senhaInput = document.getElementById('senha');
     const eyeBtn    = document.getElementById('eyeBtn');
     const eyeIcon   = document.getElementById('eyeIcon');
@@ -425,9 +447,11 @@
         : `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
     });
 
+    /* ── Toggle switch ── */
     const toggle = document.getElementById('toggle');
     toggle.addEventListener('click', () => toggle.classList.toggle('on'));
 
+    /* ── Ripple on button ── */
     const loginBtn = document.getElementById('loginBtn');
     loginBtn.addEventListener('pointerdown', e => {
       const rect = loginBtn.getBoundingClientRect();
@@ -439,6 +463,7 @@
       r.addEventListener('animationend', () => r.remove());
     });
 
+    /* ── Drag ── */
     const draggables = document.querySelectorAll('.draggable');
 
     draggables.forEach(el => {
@@ -447,6 +472,7 @@
       let dragging = false;
       let clone = null;
 
+      // Store original position
       const getOrigin = () => {
         const rect = el.getBoundingClientRect();
         return { x: rect.left, y: rect.top };
@@ -464,6 +490,7 @@
         offX   = e.clientX - rect.left;
         offY   = e.clientY - rect.top;
 
+        // Create a floating ghost clone
         clone = el.cloneNode(true);
         clone.style.cssText = `
           position: fixed;
@@ -483,6 +510,7 @@
         `;
         document.body.appendChild(clone);
 
+        // Dim original
         el.style.opacity = '.25';
 
         window.addEventListener('pointermove', onPointerMove);
@@ -499,6 +527,7 @@
         if (!dragging) return;
         dragging = false;
 
+        // Snap clone back with a satisfying spring
         if (clone) {
           const rect = el.getBoundingClientRect();
           clone.style.transition = 'left .5s cubic-bezier(.34,1.56,.64,1), top .5s cubic-bezier(.34,1.56,.64,1), opacity .35s, transform .35s';

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Explorar Freelancers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --black:  #080808;
+      --card:   #141414;
+      --card2:  #1a1a1a;
+      --input:  #1c1c1c;
+      --border: #242424;
+      --border2:#2e2e2e;
+      --green:  #7fff00;
+      --gdim:   rgba(127,255,0,.12);
+      --text:   #f0f0f0;
+      --muted:  #666;
+      --muted2: #999;
+      --radius: 999px;
+      --rc:     14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Syne', sans-serif; background: var(--black); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9998; opacity: .25;
+    }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      height: 64px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+      background: rgba(8,8,8,.95); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-left { display: flex; align-items: center; gap: 28px; }
+    .nav-logo  { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); }
+    .nav-logo-icon { width: 28px; height: 28px; background: var(--green); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #000; }
+    .nav-logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; }
+    .nav-logo-text span { color: var(--green); }
+    .nav-search {
+      display: flex; align-items: center;
+      background: var(--input); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0 16px; gap: 10px;
+      width: 340px; height: 38px; transition: border-color .25s, box-shadow .25s;
+    }
+    .nav-search:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(127,255,0,.08); }
+    .nav-search input { flex: 1; background: none; border: none; outline: none; font-family: 'Syne', sans-serif; font-size: 13px; color: var(--text); }
+    .nav-search input::placeholder { color: var(--muted); }
+    .nav-search svg { color: var(--muted); }
+    .nav-right { display: flex; align-items: center; gap: 14px; }
+    .nav-icon-btn { position: relative; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); transition: border-color .2s, color .2s; }
+    .nav-icon-btn:hover { border-color: var(--green); color: var(--green); }
+    .notif-badge { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--green); color: #000; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--black); }
+    .nav-avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--green); cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #000; border: 2px solid transparent; transition: border-color .2s; }
+    .nav-avatar:hover { border-color: var(--green); }
+    .nav-user { display: flex; flex-direction: column; }
+    .nav-user-name { font-size: 12px; font-weight: 700; line-height: 1; }
+    .nav-user-role { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    .page { padding-top: 64px; }
+
+    .filter-bar {
+      position: sticky; top: 64px; z-index: 400;
+      background: #0a0a0a;
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+    }
+    .filter-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0 0; gap: 16px; flex-wrap: wrap;
+    }
+    .results-info { font-size: 13px; color: var(--muted2); }
+    .results-info strong { color: var(--text); }
+    .filter-top-right { display: flex; align-items: center; gap: 10px; }
+    .sort-select {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 8px 30px 8px 12px; font-family: 'Syne', sans-serif; font-size: 12px; color: var(--text);
+      outline: none; cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; transition: border-color .2s;
+    }
+    .sort-select:focus { border-color: var(--green); }
+    .view-toggle { display: flex; background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .view-btn { padding: 8px 11px; border: none; background: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; transition: background .2s, color .2s; }
+    .view-btn.active { background: var(--gdim); color: var(--green); }
+
+    .filter-pills-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 0 14px; overflow-x: auto; flex-wrap: nowrap;
+    }
+    .filter-pills-row::-webkit-scrollbar { height: 0; }
+    .filter-pill-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+    .pill-divider { width: 1px; height: 20px; background: var(--border2); flex-shrink: 0; margin: 0 4px; }
+
+    .fpill {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 6px 14px; font-size: 12px; font-weight: 600; color: var(--muted2);
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: border-color .2s, color .2s; user-select: none;
+    }
+    .fpill:hover { border-color: rgba(127,255,0,.3); color: var(--text); }
+    .fpill.active { background: var(--gdim); border-color: rgba(127,255,0,.35); color: var(--green); }
+    .fpill-arrow { font-size: 10px; transition: transform .2s; pointer-events: none; }
+    .fpill.open .fpill-arrow { transform: rotate(180deg); }
+
+    /* DROPDOWNS — fixed, fora de qualquer stacking context */
+    .filter-dropdown {
+      position: fixed;
+      background: var(--card2); border: 1px solid var(--border2); border-radius: 14px;
+      padding: 16px; z-index: 9999; min-width: 210px;
+      box-shadow: 0 16px 48px rgba(0,0,0,.75);
+      display: none;
+      animation: dropIn .2s ease both;
+    }
+    .filter-dropdown.open { display: block; }
+    @keyframes dropIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+    .dd-title { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+
+    .dd-options { display: flex; flex-direction: column; gap: 2px; }
+    .dd-opt { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 9px; cursor: pointer; font-size: 13px; color: var(--muted2); transition: background .2s, color .2s; }
+    .dd-opt:hover { background: rgba(255,255,255,.04); color: var(--text); }
+    .dd-opt.active { background: var(--gdim); color: var(--green); font-weight: 700; }
+    .dd-count { font-size: 10px; color: var(--muted); background: rgba(255,255,255,.05); border-radius: var(--radius); padding: 2px 7px; }
+    .dd-opt.active .dd-count { background: rgba(127,255,0,.12); color: var(--green); }
+
+    .dd-price { min-width: 240px; flex-direction: column; gap: 10px; }
+    .filter-dropdown.dd-price.open { display: flex; }
+    .dd-price-row { display: flex; gap: 8px; }
+    .dd-pinput-wrap { flex: 1; position: relative; }
+    .dd-plabel { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); pointer-events: none; }
+    .dd-pinput { width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 9px; padding: 9px 10px 9px 26px; font-family: 'Syne', sans-serif; font-size: 13px; color: var(--text); outline: none; transition: border-color .2s; }
+    .dd-pinput:focus { border-color: var(--green); }
+    .range-slider { width: 100%; appearance: none; height: 3px; background: var(--border2); border-radius: 3px; outline: none; cursor: pointer; }
+    .range-slider::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; border-radius: 50%; background: var(--green); cursor: pointer; border: 2px solid var(--black); box-shadow: 0 0 6px rgba(127,255,0,.35); }
+    .range-val { font-size: 11px; color: var(--muted2); text-align: right; }
+    .dd-apply-btn { margin-top: 4px; width: 100%; padding: 9px; background: var(--green); color: #000; border: none; border-radius: var(--radius); font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 2px; cursor: pointer; transition: transform .15s; }
+    .dd-apply-btn:hover { transform: translateY(-1px); }
+
+    .dd-stars { display: flex; flex-direction: column; gap: 3px; }
+    .dd-star { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 9px; cursor: pointer; transition: background .2s; }
+    .dd-star:hover { background: rgba(255,255,255,.04); }
+    .dd-star.active { background: var(--gdim); }
+    .star-txt { color: var(--green); font-size: 13px; flex-shrink: 0; }
+    .star-lbl { font-size: 12px; color: var(--muted2); flex: 1; }
+    .dd-star.active .star-lbl { color: var(--green); font-weight: 700; }
+    .radio-dot { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: border-color .2s; }
+    .dd-star.active .radio-dot { border-color: var(--green); }
+    .radio-dot::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--green); display: none; }
+    .dd-star.active .radio-dot::after { display: block; }
+
+    .dd-avail { display: flex; flex-direction: column; gap: 3px; }
+    .dd-av { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 9px; cursor: pointer; font-size: 13px; color: var(--muted2); transition: background .2s, color .2s; }
+    .dd-av:hover { background: rgba(255,255,255,.04); color: var(--text); }
+    .dd-av.active { background: var(--gdim); color: var(--green); font-weight: 700; }
+    .av-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* NOTIF — fixed, fora de qualquer stacking context */
+    .notif-panel {
+      position: fixed; top: 72px; right: 20px; width: 300px;
+      background: var(--card2); border: 1px solid var(--border2); border-radius: 16px;
+      padding: 16px; z-index: 9999; box-shadow: 0 20px 60px rgba(0,0,0,.75);
+      display: none; animation: dropIn .2s cubic-bezier(.22,.68,0,1.2) both;
+    }
+    .notif-panel.open { display: block; }
+    .notif-title { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+    .notif-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-top: 4px; flex-shrink: 0; }
+    .notif-text { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+    .notif-text strong { color: var(--text); }
+    .notif-time { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+    .active-chip { display: flex; align-items: center; gap: 5px; background: var(--gdim); border: 1px solid rgba(127,255,0,.25); border-radius: var(--radius); padding: 5px 12px; font-size: 11px; font-weight: 700; color: var(--green); cursor: pointer; flex-shrink: 0; transition: background .2s; }
+    .active-chip:hover { background: rgba(127,255,0,.2); }
+    .chip-x { opacity: .7; font-size: 13px; }
+
+    .content { padding: 28px 32px 60px; }
+
+    .fl-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 1400px) { .fl-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 1000px) { .fl-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .fl-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--rc); padding: 20px;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: border-color .25s, transform .25s, box-shadow .25s;
+      animation: cardIn .4s ease both;
+    }
+    .fl-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--green), transparent); transform: scaleX(0); transform-origin: left; transition: transform .35s; }
+    .fl-card:hover { border-color: rgba(127,255,0,.28); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.45); }
+    .fl-card:hover::after { transform: scaleX(1); }
+    @keyframes cardIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+    .fl-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+    .fl-avatar { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 19px; color: #000; flex-shrink: 0; }
+    .badge-pill { font-size: 10px; font-weight: 800; letter-spacing: 1px; border-radius: var(--radius); padding: 3px 9px; }
+    .badge-top { background: rgba(127,255,0,.15); border: 1px solid rgba(127,255,0,.3); color: var(--green); }
+    .badge-new { background: rgba(59,130,246,.15); border: 1px solid rgba(59,130,246,.3); color: #60a5fa; }
+    .fl-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+    .fl-role { font-size: 11px; color: var(--muted2); margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+    .avail-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .fl-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+    .fl-tag { font-size: 10px; background: rgba(255,255,255,.04); border: 1px solid var(--border2); border-radius: var(--radius); padding: 3px 8px; color: var(--muted2); }
+    .fl-footer { display: flex; align-items: center; justify-content: space-between; }
+    .fl-rating { font-size: 11px; color: var(--green); font-weight: 700; display: flex; align-items: center; gap: 3px; }
+    .fl-rating span { color: var(--muted); font-weight: 400; font-size: 10px; }
+    .fl-price { font-family: 'Bebas Neue', sans-serif; font-size: 18px; }
+    .fl-price small { font-family: 'Syne', sans-serif; font-size: 10px; color: var(--muted); font-weight: 400; }
+    .fl-heart { position: absolute; top: 12px; right: 12px; background: none; border: none; cursor: pointer; color: var(--border2); font-size: 15px; transition: color .2s, transform .2s; }
+    .fl-heart:hover { color: #f87171; transform: scale(1.2); }
+    .fl-heart.liked { color: #f87171; }
+
+    .fl-list { display: none; flex-direction: column; gap: 12px; }
+    .fl-list-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--rc);
+      padding: 22px 28px;
+      display: grid; grid-template-columns: 60px 1fr max-content max-content;
+      align-items: center; gap: 24px;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: border-color .25s, transform .2s, box-shadow .2s;
+      animation: cardIn .35s ease both;
+    }
+    .fl-list-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--green); transform: scaleY(0); transform-origin: top; transition: transform .3s; }
+    .fl-list-card:hover { border-color: rgba(127,255,0,.25); transform: translateX(4px); box-shadow: 0 8px 28px rgba(0,0,0,.4); }
+    .fl-list-card:hover::before { transform: scaleY(1); }
+    .fl-list-avatar { width: 60px; height: 60px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: #000; }
+    .fl-list-info { min-width: 0; }
+    .fl-list-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .fl-list-role { font-size: 12px; color: var(--muted2); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .fl-list-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .fl-list-stats { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .fl-list-rating { font-size: 13px; color: var(--green); font-weight: 700; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .fl-list-rating span { color: var(--muted); font-weight: 400; font-size: 11px; }
+    .fl-list-avail { font-size: 11px; color: var(--muted2); display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .fl-list-price-col { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .fl-list-price { font-family: 'Bebas Neue', sans-serif; font-size: 26px; line-height: 1; white-space: nowrap; }
+    .fl-list-price small { font-family: 'Syne', sans-serif; font-size: 11px; color: var(--muted); font-weight: 400; }
+    .fl-list-heart { background: none; border: none; cursor: pointer; color: var(--border2); font-size: 19px; transition: color .2s, transform .2s; }
+    .fl-list-heart:hover { color: #f87171; transform: scale(1.15); }
+    .fl-list-heart.liked { color: #f87171; }
+
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 40px; }
+    .page-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--muted2); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color .2s, color .2s, background .2s; }
+    .page-btn:hover { border-color: var(--green); color: var(--green); }
+    .page-btn.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 800; }
+
+    .empty { display: none; flex-direction: column; align-items: center; padding: 80px 20px; text-align: center; gap: 12px; }
+    .empty.show { display: flex; }
+    .empty-icon { font-size: 48px; }
+    .empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; }
+    .empty-desc { font-size: 13px; color: var(--muted2); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo">
+        <div class="nav-logo-icon">OF</div>
+        <div class="nav-logo-text">One<span>Freela</span></div>
+      </a>
+      <div class="nav-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="navSearch" placeholder="Buscar freelancers, habilidades..." oninput="applyFilters()" />
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="nav-icon-btn" id="notifBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-badge">3</span>
+      </div>
+      <div class="nav-icon-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="nav-user">
+        <div class="nav-user-name">Carlos A.</div>
+        <div class="nav-user-role">Cliente</div>
+      </div>
+      <div class="nav-avatar">CA</div>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="filter-bar">
+      <div class="filter-top">
+        <div class="results-info"><strong id="resultCount">12</strong> freelancers encontrados</div>
+        <div class="filter-top-right">
+          <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+            <option value="relevancia">Ordenar: Relevância</option>
+            <option value="preco-asc">Menor preço</option>
+            <option value="preco-desc">Maior preço</option>
+            <option value="nota">Melhor nota</option>
+          </select>
+          <div class="view-toggle">
+            <button class="view-btn active" id="btnGrid" onclick="setView('grid')" title="Grade">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </button>
+            <button class="view-btn" id="btnList" onclick="setView('list')" title="Lista">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="filter-pills-row">
+        <span class="filter-pill-label">Filtrar:</span>
+        <div class="fpill" id="pillCat" data-dd="ddCat"><span id="pillCatLabel">Categoria</span> <span class="fpill-arrow">▾</span></div>
+        <div class="fpill" id="pillPreco" data-dd="ddPreco"><span id="pillPrecoLabel">Preço</span> <span class="fpill-arrow">▾</span></div>
+        <div class="fpill" id="pillStar" data-dd="ddStar"><span id="pillStarLabel">Avaliação</span> <span class="fpill-arrow">▾</span></div>
+        <div class="fpill" id="pillAvail" data-dd="ddAvail"><span id="pillAvailLabel">Disponibilidade</span> <span class="fpill-arrow">▾</span></div>
+        <div class="pill-divider"></div>
+        <div id="activeChips" style="display:flex;gap:8px;align-items:center"></div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="fl-grid" id="flGrid"></div>
+      <div class="fl-list" id="flList"></div>
+      <div class="empty" id="emptyState">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">Nenhum resultado</div>
+        <div class="empty-desc">Tente ajustar os filtros ou a busca.</div>
+      </div>
+      <div class="pagination" id="pagination">
+        <button class="page-btn">‹</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <button class="page-btn">›</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dropdowns e notif FORA do filter-bar — position:fixed via JS -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-title">Notificações</div>
+    <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text"><strong>Marina Rocha</strong> aceitou seu convite.</div><div class="notif-time">Há 5 min</div></div></div>
+    <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text"><strong>Lucas Ferreira</strong> enviou uma proposta.</div><div class="notif-time">Há 1 hora</div></div></div>
+    <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text">Seu projeto recebeu <strong>4 propostas</strong>.</div><div class="notif-time">Há 3 horas</div></div></div>
+  </div>
+
+  <div class="filter-dropdown" id="ddCat">
+    <div class="dd-title">Categoria</div>
+    <div class="dd-options">
+      <div class="dd-opt active" data-cat="todos"  onclick="pickCat(this)"><span>🔥 Todos</span><span class="dd-count">12</span></div>
+      <div class="dd-opt" data-cat="design" onclick="pickCat(this)"><span>🎨 Design & Arte</span><span class="dd-count">3</span></div>
+      <div class="dd-opt" data-cat="dev"    onclick="pickCat(this)"><span>💻 Desenvolvimento</span><span class="dd-count">3</span></div>
+      <div class="dd-opt" data-cat="mkt"    onclick="pickCat(this)"><span>📱 Marketing</span><span class="dd-count">2</span></div>
+      <div class="dd-opt" data-cat="copy"   onclick="pickCat(this)"><span>✍️ Redação</span><span class="dd-count">1</span></div>
+      <div class="dd-opt" data-cat="video"  onclick="pickCat(this)"><span>🎬 Vídeo & Animação</span><span class="dd-count">2</span></div>
+      <div class="dd-opt" data-cat="dados"  onclick="pickCat(this)"><span>📊 Dados & BI</span><span class="dd-count">1</span></div>
+      <div class="dd-opt" data-cat="ia"     onclick="pickCat(this)"><span>🤖 I.A.</span><span class="dd-count">1</span></div>
+    </div>
+  </div>
+
+  <div class="filter-dropdown dd-price" id="ddPreco">
+    <div class="dd-title">Faixa de preço / hora</div>
+    <div class="dd-price-row">
+      <div class="dd-pinput-wrap"><span class="dd-plabel">R$</span><input type="number" class="dd-pinput" id="priceMin" value="0" min="0" max="500" /></div>
+      <div style="display:flex;align-items:center;color:var(--muted);font-size:12px;flex-shrink:0">até</div>
+      <div class="dd-pinput-wrap"><span class="dd-plabel">R$</span><input type="number" class="dd-pinput" id="priceMax" value="500" min="0" max="500" oninput="syncSlider()" /></div>
+    </div>
+    <input type="range" class="range-slider" id="priceSlider" min="0" max="500" value="500" oninput="syncMax()" />
+    <div class="range-val" id="rangeVal">Até R$ 500/hr</div>
+    <button class="dd-apply-btn" onclick="applyPrice()">APLICAR</button>
+  </div>
+
+  <div class="filter-dropdown" id="ddStar">
+    <div class="dd-title">Avaliação mínima</div>
+    <div class="dd-stars">
+      <div class="dd-star active" data-val="0"   onclick="pickStar(this)"><span class="star-txt">⭐</span><span class="star-lbl">Qualquer nota</span><span class="radio-dot"></span></div>
+      <div class="dd-star"        data-val="4.5" onclick="pickStar(this)"><span class="star-txt">★★★★★</span><span class="star-lbl">4.5 ou mais</span><span class="radio-dot"></span></div>
+      <div class="dd-star"        data-val="4.0" onclick="pickStar(this)"><span class="star-txt">★★★★☆</span><span class="star-lbl">4.0 ou mais</span><span class="radio-dot"></span></div>
+      <div class="dd-star"        data-val="3.5" onclick="pickStar(this)"><span class="star-txt">★★★½☆</span><span class="star-lbl">3.5 ou mais</span><span class="radio-dot"></span></div>
+    </div>
+  </div>
+
+  <div class="filter-dropdown" id="ddAvail">
+    <div class="dd-title">Disponibilidade</div>
+    <div class="dd-avail">
+      <div class="dd-av active" data-val="todos"  onclick="pickAvail(this)"><span class="av-dot" style="background:#22c55e"></span>Qualquer</div>
+      <div class="dd-av"        data-val="green"  onclick="pickAvail(this)"><span class="av-dot" style="background:#22c55e"></span>Disponível agora</div>
+      <div class="dd-av"        data-val="yellow" onclick="pickAvail(this)"><span class="av-dot" style="background:#eab308"></span>Esta semana</div>
+      <div class="dd-av"        data-val="red"    onclick="pickAvail(this)"><span class="av-dot" style="background:#ef4444"></span>Este mês</div>
+    </div>
+  </div>
+
+  <script>
+    const DATA = [
+      { id:1,  name:'Marina Rocha',   role:'UI/UX Designer Sênior',  tags:['Figma','Prototyping','Design System'], rating:4.98, reviews:214, price:120, color:'#7fff00', avail:'green',  badge:'TOP', cat:'design' },
+      { id:2,  name:'Lucas Ferreira', role:'Dev Front-end',           tags:['React','TypeScript','Next.js'],        rating:4.95, reviews:183, price:95,  color:'#b0ff4e', avail:'green',  badge:'',    cat:'dev'    },
+      { id:3,  name:'Julia Santos',   role:'Copywriter & SEO',        tags:['SEO','Blog','Branding'],               rating:4.99, reviews:301, price:65,  color:'#a3e635', avail:'green',  badge:'TOP', cat:'copy'   },
+      { id:4,  name:'Pedro Castro',   role:'Motion Designer',         tags:['After Effects','Cinema 4D'],          rating:4.87, reviews:97,  price:80,  color:'#5bbd00', avail:'yellow', badge:'',    cat:'video'  },
+      { id:5,  name:'Ana Beatriz',    role:'Social Media Manager',    tags:['Instagram','TikTok','Copy'],          rating:4.91, reviews:145, price:55,  color:'#84cc16', avail:'green',  badge:'NEW', cat:'mkt'    },
+      { id:6,  name:'Rafael Mendes',  role:'Full Stack Developer',    tags:['Node.js','React','AWS'],              rating:4.93, reviews:88,  price:140, color:'#65a30d', avail:'red',    badge:'',    cat:'dev'    },
+      { id:7,  name:'Camila Torres',  role:'Analista de Dados',       tags:['Python','Power BI','SQL'],            rating:4.80, reviews:62,  price:110, color:'#4d7c0f', avail:'green',  badge:'',    cat:'dados'  },
+      { id:8,  name:'Diego Lima',     role:'Designer Gráfico',        tags:['Illustrator','Branding','Print'],     rating:4.76, reviews:134, price:70,  color:'#7fff00', avail:'yellow', badge:'',    cat:'design' },
+      { id:9,  name:'Fernanda Costa', role:'Dev Mobile',              tags:['Flutter','Dart','Firebase'],          rating:4.88, reviews:56,  price:130, color:'#b0ff4e', avail:'green',  badge:'NEW', cat:'dev'    },
+      { id:10, name:'Bruno Alves',    role:'Especialista em SEO',     tags:['SEO','Analytics','Google Ads'],       rating:4.84, reviews:203, price:75,  color:'#a3e635', avail:'green',  badge:'',    cat:'mkt'    },
+      { id:11, name:'Larissa Nunes',  role:'Engenheira de I.A.',      tags:['Python','LLMs','TensorFlow'],         rating:4.97, reviews:44,  price:180, color:'#5bbd00', avail:'red',    badge:'TOP', cat:'ia'     },
+      { id:12, name:'Thiago Ramos',   role:'Produtor de Vídeo',       tags:['Premiere','DaVinci','YouTube'],       rating:4.72, reviews:89,  price:90,  color:'#84cc16', avail:'green',  badge:'',    cat:'video'  },
+    ];
+
+    let liked  = new Set();
+    let state  = { cat:'todos', star:0, avail:'todos', maxPrice:500 };
+    let openDd = null;
+
+    /* ── RENDER ── */
+    function render(data) {
+      const grid  = document.getElementById('flGrid');
+      const list  = document.getElementById('flList');
+      const empty = document.getElementById('emptyState');
+      const pag   = document.getElementById('pagination');
+      grid.innerHTML = ''; list.innerHTML = '';
+      document.getElementById('resultCount').textContent = data.length;
+      if (!data.length) { empty.classList.add('show'); pag.style.display='none'; return; }
+      empty.classList.remove('show'); pag.style.display='flex';
+
+      data.forEach((f, i) => {
+        const ac  = f.avail==='green'?'#22c55e':f.avail==='yellow'?'#eab308':'#ef4444';
+        const al  = f.avail==='green'?'Disponível':f.avail==='yellow'?'Esta semana':'Este mês';
+        const bp  = f.badge ? `<span class="badge-pill ${f.badge==='TOP'?'badge-top':'badge-new'}">${f.badge}</span>` : '';
+        const lk  = liked.has(f.id);
+        const ini = f.name.split(' ').map(n=>n[0]).join('');
+        const tags = f.tags.map(t=>`<span class="fl-tag">${t}</span>`).join('');
+
+        const gc = document.createElement('div');
+        gc.className = 'fl-card';
+        gc.style.animationDelay = (i*40)+'ms';
+        gc.innerHTML = `
+          <button class="fl-heart${lk?' liked':''}" onclick="toggleLike(event,${f.id},this)">♥</button>
+          <div class="fl-card-top"><div class="fl-avatar" style="background:${f.color}">${ini}</div>${bp}</div>
+          <div class="fl-name">${f.name}</div>
+          <div class="fl-role"><span class="avail-dot" style="background:${ac}"></span>${f.role}</div>
+          <div class="fl-tags">${tags}</div>
+          <div class="fl-footer">
+            <div class="fl-rating">★ ${f.rating} <span>(${f.reviews})</span></div>
+            <div class="fl-price">R$${f.price}<small>/hr</small></div>
+          </div>`;
+        grid.appendChild(gc);
+
+        const lc = document.createElement('div');
+        lc.className = 'fl-list-card';
+        lc.style.animationDelay = (i*30)+'ms';
+        lc.innerHTML = `
+          <div class="fl-list-avatar" style="background:${f.color}">${ini}</div>
+          <div class="fl-list-info">
+            <div class="fl-list-name">${f.name}${bp?'&nbsp;'+bp:''}</div>
+            <div class="fl-list-role"><span class="avail-dot" style="background:${ac}"></span>${f.role}</div>
+            <div class="fl-list-tags">${tags}</div>
+          </div>
+          <div class="fl-list-stats">
+            <div class="fl-list-rating">★ ${f.rating} <span>(${f.reviews} avaliações)</span></div>
+            <div class="fl-list-avail"><span class="avail-dot" style="background:${ac}"></span>${al}</div>
+          </div>
+          <div class="fl-list-price-col">
+            <div class="fl-list-price">R$${f.price}<small>/hr</small></div>
+            <button class="fl-list-heart${lk?' liked':''}" onclick="toggleLike(event,${f.id},this)">♥</button>
+          </div>`;
+        list.appendChild(lc);
+      });
+    }
+
+    /* ── FILTER ── */
+    function applyFilters() {
+      const q = document.getElementById('navSearch').value.toLowerCase();
+      let result = DATA.filter(f => {
+        if (state.cat !== 'todos' && f.cat !== state.cat) return false;
+        if (f.rating < state.star) return false;
+        if (f.price > state.maxPrice) return false;
+        if (state.avail !== 'todos' && f.avail !== state.avail) return false;
+        if (q && !f.name.toLowerCase().includes(q) && !f.role.toLowerCase().includes(q) && !f.tags.some(t=>t.toLowerCase().includes(q))) return false;
+        return true;
+      });
+      const sort = document.getElementById('sortSelect').value;
+      if (sort==='preco-asc')  result.sort((a,b)=>a.price-b.price);
+      if (sort==='preco-desc') result.sort((a,b)=>b.price-a.price);
+      if (sort==='nota')       result.sort((a,b)=>b.rating-a.rating);
+      render(result);
+    }
+
+    /* ── VIEW ── */
+    function setView(v) {
+      const grid = document.getElementById('flGrid');
+      const list = document.getElementById('flList');
+      if (v==='grid') { grid.style.display='grid'; list.style.display='none'; document.getElementById('btnGrid').classList.add('active'); document.getElementById('btnList').classList.remove('active'); }
+      else            { grid.style.display='none'; list.style.display='flex'; document.getElementById('btnGrid').classList.remove('active'); document.getElementById('btnList').classList.add('active'); }
+    }
+
+    /* ── HEART ── */
+    function toggleLike(e,id,btn) { e.stopPropagation(); liked.has(id)?(liked.delete(id),btn.classList.remove('liked')):(liked.add(id),btn.classList.add('liked')); }
+
+    /* ── DROPDOWNS com position:fixed posicionado via JS ── */
+    function openDropdown(pillId, ddId) {
+      const pill = document.getElementById(pillId);
+      const dd   = document.getElementById(ddId);
+      const rect = pill.getBoundingClientRect();
+      dd.style.top  = (rect.bottom + 8) + 'px';
+      dd.style.left = rect.left + 'px';
+      dd.classList.add('open');
+      pill.classList.add('open');
+      openDd = { pillId, ddId };
+    }
+
+    function closeAllDd() {
+      document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('open'));
+      document.querySelectorAll('.fpill').forEach(p => p.classList.remove('open'));
+      openDd = null;
+    }
+
+    document.querySelectorAll('.fpill').forEach(pill => {
+      pill.addEventListener('click', e => {
+        e.stopPropagation();
+        const ddId = pill.dataset.dd;
+        const isOpen = document.getElementById(ddId).classList.contains('open');
+        closeAllDd();
+        if (!isOpen) openDropdown(pill.id, ddId);
+      });
+    });
+
+    document.querySelectorAll('.filter-dropdown').forEach(dd => {
+      dd.addEventListener('click', e => e.stopPropagation());
+    });
+
+    document.addEventListener('click', closeAllDd);
+
+    /* ── NOTIF ── */
+    document.getElementById('notifBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      document.getElementById('notifPanel').classList.toggle('open');
+    });
+    document.getElementById('notifPanel').addEventListener('click', e => e.stopPropagation());
+
+    /* ── PICKERS ── */
+    function pickCat(el) {
+      document.querySelectorAll('#ddCat .dd-opt').forEach(o=>o.classList.remove('active'));
+      el.classList.add('active');
+      state.cat = el.dataset.cat;
+      document.getElementById('pillCatLabel').textContent = el.querySelector('span').textContent.trim();
+      document.getElementById('pillCat').classList.toggle('active', state.cat !== 'todos');
+      closeAllDd(); applyFilters();
+    }
+
+    function pickStar(el) {
+      document.querySelectorAll('.dd-star').forEach(s=>s.classList.remove('active'));
+      el.classList.add('active');
+      state.star = parseFloat(el.dataset.val);
+      document.getElementById('pillStarLabel').textContent = state.star > 0 ? `★ ${el.querySelector('.star-lbl').textContent}` : 'Avaliação';
+      document.getElementById('pillStar').classList.toggle('active', state.star > 0);
+      closeAllDd(); applyFilters();
+    }
+
+    function pickAvail(el) {
+      document.querySelectorAll('.dd-av').forEach(a=>a.classList.remove('active'));
+      el.classList.add('active');
+      state.avail = el.dataset.val;
+      document.getElementById('pillAvailLabel').textContent = state.avail !== 'todos' ? el.textContent.trim() : 'Disponibilidade';
+      document.getElementById('pillAvail').classList.toggle('active', state.avail !== 'todos');
+      closeAllDd(); applyFilters();
+    }
+
+    function syncMax() { const v=document.getElementById('priceSlider').value; document.getElementById('priceMax').value=v; document.getElementById('rangeVal').textContent=`Até R$ ${v}/hr`; }
+    function syncSlider() { const v=document.getElementById('priceMax').value; document.getElementById('priceSlider').value=v; document.getElementById('rangeVal').textContent=`Até R$ ${v}/hr`; }
+    function applyPrice() {
+      state.maxPrice = parseInt(document.getElementById('priceMax').value)||500;
+      const active = state.maxPrice < 500;
+      document.getElementById('pillPrecoLabel').textContent = active ? `Até R$${state.maxPrice}` : 'Preço';
+      document.getElementById('pillPreco').classList.toggle('active', active);
+      closeAllDd(); applyFilters();
+    }
+
+    /* ── PAGINATION ── */
+    document.querySelectorAll('.page-btn').forEach(btn => {
+      btn.addEventListener('click', function() { document.querySelectorAll('.page-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); });
+    });
+
+    render(DATA);
+  </script>
+</body>
+</html>

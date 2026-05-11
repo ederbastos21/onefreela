@@ -34,6 +34,7 @@
       overflow-x: hidden;
     }
 
+    /* ── GRAIN ── */
     body::before {
       content: '';
       position: fixed;
@@ -44,6 +45,7 @@
       opacity: .3;
     }
 
+    /* ── CURSOR GLOW ── */
     .cursor-glow {
       position: fixed;
       width: 380px; height: 380px;
@@ -55,6 +57,7 @@
       z-index: 998;
     }
 
+    /* ── SCROLL REVEAL ── */
     .reveal {
       opacity: 0;
       transform: translateY(36px);
@@ -62,6 +65,9 @@
     }
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
+    /* ════════════════════════════
+       NAV
+    ════════════════════════════ */
     nav {
       position: fixed;
       top: 0; left: 0; right: 0;
@@ -141,6 +147,9 @@
     }
     .btn-green:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(127,255,0,.3); }
 
+    /* ════════════════════════════
+       HERO
+    ════════════════════════════ */
     .hero {
       min-height: 100vh;
       display: flex; align-items: center;
@@ -149,6 +158,7 @@
       overflow: hidden;
     }
 
+    /* Background mesh */
     .hero::before {
       content: '';
       position: absolute; inset: 0;
@@ -159,6 +169,7 @@
       z-index: 0;
     }
 
+    /* Grid lines */
     .hero::after {
       content: '';
       position: absolute; inset: 0;
@@ -256,6 +267,7 @@
     }
     .btn-hero-ghost:hover { border-color: var(--green); color: var(--green); }
 
+    /* Floating hero decoration */
     .hero-deco {
       position: absolute;
       right: 6%; top: 50%;
@@ -294,6 +306,9 @@
 
     @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
 
+    /* ════════════════════════════
+       CATEGORIES
+    ════════════════════════════ */
     .section {
       padding: 100px 6%;
     }
@@ -356,6 +371,9 @@
     }
     .cat-card:hover .cat-arrow { color: var(--green); transform: translate(3px,-3px); }
 
+    /* ════════════════════════════
+       FREELANCERS
+    ════════════════════════════ */
     .freelancers-section { background: linear-gradient(180deg, var(--black) 0%, #0d0d0d 100%); }
 
     .freelancers-grid {
@@ -420,6 +438,9 @@
       color: var(--green);
     }
 
+    /* ════════════════════════════
+       FAQ
+    ════════════════════════════ */
     .faq-section { border-top: 1px solid var(--border); }
 
     .faq-wrap { max-width: 720px; }
@@ -455,6 +476,9 @@
     }
     .faq-item.open .faq-answer { max-height: 200px; padding-top: 14px; }
 
+    /* ════════════════════════════
+       FOOTER
+    ════════════════════════════ */
     footer {
       border-top: 1px solid var(--border);
       padding: 60px 6% 36px;
@@ -517,6 +541,7 @@
 
   <div class="cursor-glow" id="cursorGlow"></div>
 
+  <!-- ══ NAV ══ -->
   <nav>
     <a href="#" class="nav-logo">
       <div class="nav-logo-icon">OF</div>
@@ -529,10 +554,11 @@
     </ul>
     <div class="nav-cta">
       <a href="loginScreen.html" class="btn-outline">Entrar</a>
-      <a href="signupScreen.html" class="btn-green">Começar</a>
+      <a href="exploreFreelancers.html" class="btn-green">Começar</a>
     </div>
   </nav>
 
+  <!-- ══ HERO ══ -->
   <section class="hero">
     <div class="hero-inner">
       <div class="hero-badge">
@@ -548,11 +574,12 @@
         Conecte-se com os melhores freelancers do Brasil. Design, desenvolvimento, marketing e muito mais — tudo em um só lugar.
       </p>
       <div class="hero-actions">
-        <button class="btn-hero">Explorar Serviços</button>
+        <a href="exploreFreelancers.html" style="text-decoration:none"><button class="btn-hero">Explorar Serviços</button></a>
         <button class="btn-hero-ghost">Sou Freelancer →</button>
       </div>
     </div>
 
+    <!-- Floating cards deco -->
     <div class="hero-deco">
       <div class="deco-card">
         <div class="deco-avatar" style="background:#7fff00">MR</div>
@@ -585,6 +612,7 @@
     </div>
   </section>
 
+  <!-- ══ CATEGORIES ══ -->
   <section class="section" id="categorias">
     <div class="reveal">
       <p class="section-label">O que você precisa?</p>
@@ -642,6 +670,7 @@
     </div>
   </section>
 
+  <!-- ══ FREELANCERS ══ -->
   <section class="section freelancers-section" id="freelancers">
     <div class="reveal">
       <p class="section-label">Talentos verificados</p>
@@ -729,6 +758,7 @@
     </div>
   </section>
 
+  <!-- ══ FAQ ══ -->
   <section class="section faq-section" id="faq">
     <div class="reveal">
       <p class="section-label">Dúvidas frequentes</p>
@@ -789,6 +819,7 @@
     </div>
   </section>
 
+  <!-- ══ FOOTER ══ -->
   <footer>
     <div class="footer-top">
       <div class="footer-brand">
@@ -844,15 +875,18 @@
   </footer>
 
   <script>
+    /* ── Cursor glow ── */
     const glow = document.getElementById('cursorGlow');
     document.addEventListener('mousemove', e => {
       glow.style.left = e.clientX + 'px';
       glow.style.top  = e.clientY + 'px';
     });
 
+    /* ── Scroll reveal ── */
     const observer = new IntersectionObserver(entries => {
       entries.forEach((entry, i) => {
         if (entry.isIntersecting) {
+          // Stagger children of grids
           const el = entry.target;
           const delay = el.dataset.delay || 0;
           setTimeout(() => el.classList.add('visible'), delay);
@@ -865,10 +899,12 @@
       observer.observe(el);
     });
 
+    // Stagger grid children
     document.querySelectorAll('.categories-grid .cat-card, .freelancers-grid .fl-card').forEach((el, i) => {
       el.style.transitionDelay = (i * 80) + 'ms';
     });
 
+    /* ── FAQ accordion ── */
     document.querySelectorAll('.faq-item').forEach(item => {
       item.querySelector('.faq-question').addEventListener('click', () => {
         const isOpen = item.classList.contains('open');
@@ -877,6 +913,7 @@
       });
     });
 
+    /* ── Navbar active link on scroll ── */
     const sections = document.querySelectorAll('section[id]');
     const navLinks = document.querySelectorAll('.nav-links a');
     window.addEventListener('scroll', () => {
