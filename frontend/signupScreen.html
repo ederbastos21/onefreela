@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Criar Conta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --black:  #080808;
+      --card:   #161616;
+      --input:  #1e1e1e;
+      --border: #272727;
+      --green:  #7fff00;
+      --purple: #a855f7;
+      --text:   #f0f0f0;
+      --muted:  #777;
+      --radius: 999px;
+      --r-card: 20px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Syne', sans-serif; background: var(--black); color: var(--text); overflow-x: hidden; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 999; opacity: .3;
+    }
+
+    .cursor-glow {
+      position: fixed; width: 360px; height: 360px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(127,255,0,.05) 0%, transparent 70%);
+      pointer-events: none; transform: translate(-50%,-50%);
+      transition: left .1s, top .1s, background .6s; z-index: 998;
+    }
+    .cursor-glow.freelancer {
+      background: radial-gradient(circle, rgba(168,85,247,.07) 0%, transparent 70%);
+    }
+
+    .bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse 70% 80% at 10% 20%, #1e1e1e 0%, transparent 55%),
+                  radial-gradient(ellipse 60% 60% at 90% 80%, #141414 0%, transparent 55%),
+                  linear-gradient(170deg, #1a1a1a 0%, #080808 60%);
+      transition: background 0.6s ease;
+    }
+
+    .page {
+      position: relative; z-index: 10;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .left-panel {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 60px 6%;
+      position: relative; overflow: hidden;
+    }
+    .left-panel::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 0% 50%, rgba(127,255,0,.05) 0%, transparent 60%);
+      transition: background .6s; pointer-events: none;
+    }
+    .left-panel.freelancer::before {
+      background: radial-gradient(ellipse 80% 60% at 0% 50%, rgba(168,85,247,.06) 0%, transparent 60%);
+    }
+
+    .left-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+      background-size: 50px 50px;
+      mask-image: radial-gradient(ellipse 80% 80% at 20% 50%, black 10%, transparent 75%);
+    }
+
+    .left-content { position: relative; z-index: 1; max-width: 420px; }
+
+    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; color: var(--text); margin-bottom: 64px; }
+    .nav-logo-icon {
+      width: 32px; height: 32px; background: var(--green);
+      border-radius: 9px; display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif; font-size: 17px; color: #000;
+      transition: background .6s;
+    }
+    .nav-logo-icon.freelancer { background: var(--purple); }
+    .nav-logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 21px; letter-spacing: 2px; }
+    .nav-logo-text span { color: var(--green); transition: color .6s; }
+    .nav-logo-text span.freelancer { color: var(--purple); }
+
+    .left-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--green); margin-bottom: 16px;
+      transition: color .6s;
+    }
+    .left-label.freelancer { color: var(--purple); }
+
+    .left-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(44px, 5vw, 68px);
+      line-height: .92; letter-spacing: 1px;
+      color: var(--text); margin-bottom: 20px;
+    }
+    .left-title .accent { color: var(--green); transition: color .6s; }
+    .left-title .accent.freelancer { color: var(--purple); }
+
+    .left-desc {
+      font-size: 14px; line-height: 1.75; color: var(--muted);
+      margin-bottom: 40px;
+    }
+
+    .perks { display: flex; flex-direction: column; gap: 14px; }
+    .perk {
+      display: flex; align-items: flex-start; gap: 12px;
+      opacity: 0; transform: translateX(-16px);
+      transition: opacity .4s ease, transform .4s ease, color .3s;
+    }
+    .perk.visible { opacity: 1; transform: translateX(0); }
+    .perk-icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: rgba(127,255,0,.12); border: 1px solid rgba(127,255,0,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0;
+      transition: background .6s, border-color .6s;
+    }
+    .perk-icon.freelancer { background: rgba(168,85,247,.12); border-color: rgba(168,85,247,.2); }
+    .perk-text { font-size: 13px; color: var(--muted); line-height: 1.5; padding-top: 4px; }
+    .perk-text strong { color: var(--text); }
+
+    .testimonial {
+      margin-top: 48px;
+      background: rgba(22,22,22,.9);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px;
+      backdrop-filter: blur(8px);
+      opacity: 0; transform: translateY(16px);
+      transition: opacity .5s .4s ease, transform .5s .4s ease;
+    }
+    .testimonial.visible { opacity: 1; transform: translateY(0); }
+    .test-stars { color: var(--green); font-size: 12px; margin-bottom: 8px; transition: color .6s; }
+    .test-stars.freelancer { color: var(--purple); }
+    .test-quote { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; font-style: italic; }
+    .test-author { display: flex; align-items: center; gap: 10px; }
+    .test-avatar {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--green); display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #000;
+      transition: background .6s;
+    }
+    .test-avatar.freelancer { background: var(--purple); }
+    .test-name { font-size: 12px; font-weight: 700; }
+    .test-role { font-size: 11px; color: var(--muted); }
+
+    .right-panel {
+      display: flex; align-items: center; justify-content: center;
+      padding: 60px 6%;
+      border-left: 1px solid var(--border);
+      background: rgba(12,12,12,.6);
+    }
+
+    .form-card {
+      width: 100%; max-width: 440px;
+      animation: cardIn .6s cubic-bezier(.22,.68,0,1.2) both;
+    }
+    @keyframes cardIn { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+
+    .type-toggle {
+      display: grid; grid-template-columns: 1fr 1fr;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px; margin-bottom: 32px;
+      position: relative;
+    }
+    .toggle-pill {
+      position: absolute;
+      top: 4px; left: 4px;
+      width: calc(50% - 4px); height: calc(100% - 8px);
+      background: var(--green);
+      border-radius: var(--radius);
+      transition: transform .35s cubic-bezier(.34,1.2,.64,1), background .6s;
+      z-index: 0;
+    }
+    .toggle-pill.freelancer { transform: translateX(100%); background: var(--purple); }
+
+    .toggle-btn {
+      position: relative; z-index: 1;
+      padding: 11px;
+      border: none; background: none;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 15px; letter-spacing: 2px;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: var(--radius);
+      transition: color .3s;
+    }
+    .toggle-btn.active { color: #000; }
+
+    .form-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 38px; letter-spacing: 1px;
+      line-height: 1; margin-bottom: 6px;
+    }
+    .form-sub {
+      font-size: 13px; color: var(--muted); margin-bottom: 28px;
+    }
+    .form-sub a { color: var(--green); text-decoration: none; font-weight: 600; transition: color .6s; }
+    .form-sub a.freelancer { color: var(--purple); }
+
+    .fields-wrap { display: flex; flex-direction: column; gap: 16px; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    label {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--muted);
+    }
+
+    .input-wrap { position: relative; }
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    select {
+      width: 100%;
+      background: var(--input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-family: 'Syne', sans-serif; font-size: 14px; color: var(--text);
+      outline: none;
+      transition: border-color .25s, box-shadow .25s;
+      appearance: none;
+    }
+    input::placeholder, select option:first-child { color: #3a3a3a; }
+    input:focus, select:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(127,255,0,.1);
+    }
+    .freelancer-mode input:focus,
+    .freelancer-mode select:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(168,85,247,.12);
+    }
+
+    .select-arrow {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none; color: var(--muted); font-size: 12px;
+    }
+
+    .eye-btn {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); display: flex; transition: color .2s;
+    }
+    .eye-btn:hover { color: var(--green); }
+    .freelancer-mode .eye-btn:hover { color: var(--purple); }
+
+    .strength-bar {
+      height: 3px; border-radius: 3px;
+      background: var(--border); margin-top: 6px; overflow: hidden;
+    }
+    .strength-fill {
+      height: 100%; width: 0%; border-radius: 3px;
+      transition: width .4s ease, background .4s ease;
+    }
+    .strength-label { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+    .freelancer-only {
+      max-height: 0; overflow: hidden;
+      transition: max-height .45s cubic-bezier(.22,.68,0,1.1), opacity .35s;
+      opacity: 0;
+    }
+    .freelancer-only.show { max-height: 200px; opacity: 1; }
+
+    .terms-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      margin-top: 4px;
+    }
+    .checkbox {
+      width: 18px; height: 18px; flex-shrink: 0;
+      background: var(--input); border: 1px solid var(--border);
+      border-radius: 5px; cursor: pointer; margin-top: 1px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s, border-color .2s;
+    }
+    .checkbox.checked { background: var(--green); border-color: var(--green); }
+    .checkbox.checked.freelancer { background: var(--purple); border-color: var(--purple); }
+    .checkbox svg { display: none; }
+    .checkbox.checked svg { display: block; }
+    .terms-text { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .terms-text a { color: var(--green); text-decoration: none; transition: color .6s; }
+    .terms-text a.freelancer { color: var(--purple); }
+
+    .btn-submit {
+      width: 100%; padding: 17px;
+      background: var(--green); color: #000;
+      border: none; border-radius: var(--radius);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px; letter-spacing: 3px;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: transform .18s, box-shadow .18s, background .6s;
+      margin-top: 8px;
+    }
+    .btn-submit.freelancer { background: var(--purple); color: #fff; }
+    .btn-submit::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
+      transform: translateX(-100%); transition: transform .5s;
+    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(127,255,0,.32); }
+    .btn-submit.freelancer:hover { box-shadow: 0 10px 32px rgba(168,85,247,.32); }
+    .btn-submit:hover::before { transform: translateX(100%); }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 18px 0;
+    }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-text { font-size: 11px; color: #3a3a3a; letter-spacing: 1px; }
+
+    .social-login { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn-social {
+      padding: 12px; border: 1px solid var(--border);
+      border-radius: 12px; background: var(--card);
+      color: var(--muted); font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-social:hover { border-color: rgba(255,255,255,.2); color: var(--text); }
+
+    .ripple {
+      position: absolute; border-radius: 50%;
+      background: rgba(0,0,0,.2);
+      transform: scale(0);
+      animation: rippleAnim .55s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+    @media (max-width: 860px) {
+      .page { grid-template-columns: 1fr; }
+      .left-panel { display: none; }
+      .right-panel { border-left: none; padding: 100px 5% 60px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg" id="bg"></div>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <div class="page" id="page">
+
+    <div class="left-panel" id="leftPanel">
+      <div class="left-grid"></div>
+      <div class="left-content">
+
+        <a href="index.html" class="nav-logo">
+          <div class="nav-logo-icon" id="logoIcon">OF</div>
+          <div class="nav-logo-text">One<span id="logoSpan">Freela</span></div>
+        </a>
+
+        <p class="left-label" id="leftLabel">Para clientes</p>
+        <h2 class="left-title" id="leftTitle">
+          CONTRATE<br>OS MELHORES<br><span class="accent" id="leftAccent">TALENTOS</span>
+        </h2>
+        <p class="left-desc" id="leftDesc">
+          Publique projetos, encontre profissionais verificados e pague com segurança — tudo em um só lugar.
+        </p>
+
+        <div class="perks" id="perksWrap">
+        </div>
+
+        <div class="testimonial" id="testimonial">
+          <div class="test-stars" id="testStars">★★★★★</div>
+          <p class="test-quote" id="testQuote">"Contratei um designer em menos de 2 horas. A qualidade superou todas as expectativas."</p>
+          <div class="test-author">
+            <div class="test-avatar" id="testAvatar">CA</div>
+            <div>
+              <div class="test-name" id="testName">Carlos Andrade</div>
+              <div class="test-role" id="testRole">CEO, Startup de Tecnologia</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="form-card" id="formCard">
+
+        <div class="type-toggle">
+          <div class="toggle-pill" id="togglePill"></div>
+          <button class="toggle-btn active" id="btnCliente" onclick="setType('cliente')">CLIENTE</button>
+          <button class="toggle-btn" id="btnFreelancer" onclick="setType('freelancer')">FREELANCER</button>
+        </div>
+
+        <h2 class="form-heading" id="formHeading">CRIAR CONTA</h2>
+        <p class="form-sub">
+          Já tem uma conta?
+          <a href="loginScreen.html" id="loginLink">Faça login</a>
+        </p>
+
+        <div class="fields-wrap" id="fieldsWrap">
+
+          <div class="field-row">
+            <div class="field">
+              <label for="nome">Nome</label>
+              <input type="text" id="nome" placeholder="João" />
+            </div>
+            <div class="field">
+              <label for="sobrenome">Sobrenome</label>
+              <input type="text" id="sobrenome" placeholder="Silva" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" placeholder="seu@email.com" />
+          </div>
+
+          <div class="freelancer-only" id="areaField">
+            <div class="field">
+              <label for="area">Área de atuação</label>
+              <div class="input-wrap">
+                <select id="area">
+                  <option value="" disabled selected>Selecione sua área</option>
+                  <option>Design & Arte</option>
+                  <option>Desenvolvimento</option>
+                  <option>Marketing Digital</option>
+                  <option>Redação & Conteúdo</option>
+                  <option>Vídeo & Animação</option>
+                  <option>Dados & BI</option>
+                  <option>Cibersegurança</option>
+                  <option>Inteligência Artificial</option>
+                  <option>Outro</option>
+                </select>
+                <span class="select-arrow">▾</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="senha">Senha</label>
+            <div class="input-wrap">
+              <input type="password" id="senha" placeholder="Mínimo 8 caracteres" oninput="checkStrength(this.value)" />
+              <button class="eye-btn" onclick="toggleEye()" type="button">
+                <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+            <span class="strength-label" id="strengthLabel"></span>
+          </div>
+
+          <div class="field">
+            <label for="confirma">Confirmar senha</label>
+            <input type="password" id="confirma" placeholder="Repita a senha" />
+          </div>
+
+          <div class="terms-row">
+            <div class="checkbox" id="checkbox" onclick="toggleCheck()"></div>
+            <p class="terms-text">
+              Concordo com os <a href="#" id="termsLink">Termos de Uso</a> e a
+              <a href="#" id="privacyLink">Política de Privacidade</a> da OneFreela.
+            </p>
+          </div>
+
+          <button class="btn-submit" id="btnSubmit" onclick="handleSubmit(event)">
+            CRIAR MINHA CONTA
+          </button>
+
+          <div class="divider">
+            <div class="divider-line"></div>
+            <span class="divider-text">OU ENTRE COM</span>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="social-login">
+            <button class="btn-social">
+              <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M5.27 9.76A7.08 7.08 0 0 1 12 4.9c1.76 0 3.35.64 4.59 1.69l3.4-3.4A11.94 11.94 0 0 0 12 .9C8.16.9 4.83 3 3.06 6.1l2.21 3.66z"/><path fill="#34A853" d="M16.04 18.01A7.08 7.08 0 0 1 12 19.1c-2.94 0-5.46-1.79-6.65-4.38l-2.2 3.64A11.94 11.94 0 0 0 12 23.1c3.38 0 6.49-1.37 8.76-3.61l-4.72-1.48z"/><path fill="#FBBC05" d="M5.35 14.72A7.15 7.15 0 0 1 4.9 12c0-.95.17-1.86.45-2.72L3.06 5.62A11.94 11.94 0 0 0 .9 12c0 2.28.64 4.41 1.74 6.24l2.71-3.52z"/><path fill="#4285F4" d="M23.1 12c0-.87-.09-1.71-.24-2.52H12v4.77h6.22a5.3 5.3 0 0 1-2.28 3.5l4.72 1.48A11.95 11.95 0 0 0 23.1 12z"/></svg>
+              Google
+            </button>
+            <button class="btn-social">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zm1.78 13.02H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45C23.21 24 24 23.23 24 22.28V1.72C24 .77 23.21 0 22.22 0z"/></svg>
+              LinkedIn
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentType = 'cliente';
+    let checked = false;
+
+    const content = {
+      cliente: {
+        label:     'Para clientes',
+        title:     'CONTRATE\nOS MELHORES\nTALENTOS',
+        accentWord:'TALENTOS',
+        desc:      'Publique projetos, encontre profissionais verificados e pague com segurança — tudo em um só lugar.',
+        perks: [
+          { icon: '🎯', title: 'Freelancers verificados', desc: 'Todos os perfis passam por curadoria da nossa equipe.' },
+          { icon: '🔒', title: 'Pagamento seguro',        desc: 'O valor só é liberado quando você aprova a entrega.' },
+          { icon: '⚡', title: 'Rápido de verdade',       desc: 'Encontre o profissional ideal em minutos, não dias.' },
+        ],
+        quote:   '"Contratei um designer em menos de 2 horas. A qualidade superou todas as expectativas."',
+        author:  'CA', authorName: 'Carlos Andrade', authorRole: 'CEO, Startup de Tecnologia',
+        heading: 'CRIAR CONTA',
+      },
+      freelancer: {
+        label:     'Para freelancers',
+        title:     'MOSTRE SEU\nTALENTO PARA\nO BRASIL',
+        accentWord:'BRASIL',
+        desc:      'Crie seu perfil, publique seus serviços e comece a receber projetos de clientes em todo o país.',
+        perks: [
+          { icon: '💰', title: 'Receba com segurança',    desc: 'Garantia de pagamento para cada projeto concluído.' },
+          { icon: '📈', title: 'Construa sua reputação',  desc: 'Avaliações verificadas que valorizam seu portfólio.' },
+          { icon: '🌍', title: 'Clientes em todo Brasil', desc: 'Trabalhe de onde quiser para quem precisar.' },
+        ],
+        quote:   '"Em 3 meses na OneFreela já superei meu salário CLT. A plataforma mudou minha vida."',
+        author:  'JS', authorName: 'Julia Santos', authorRole: 'Designer Freelancer, SP',
+        heading: 'CRIAR PERFIL',
+      },
+    };
+
+    function setType(type) {
+      currentType = type;
+      const isFreela = type === 'freelancer';
+
+      document.getElementById('togglePill').classList.toggle('freelancer', isFreela);
+      document.getElementById('btnCliente').classList.toggle('active', !isFreela);
+      document.getElementById('btnFreelancer').classList.toggle('active', isFreela);
+
+      document.getElementById('cursorGlow').classList.toggle('freelancer', isFreela);
+      document.getElementById('leftPanel').classList.toggle('freelancer', isFreela);
+      document.getElementById('logoIcon').classList.toggle('freelancer', isFreela);
+      document.getElementById('logoSpan').classList.toggle('freelancer', isFreela);
+      document.getElementById('leftLabel').classList.toggle('freelancer', isFreela);
+      document.getElementById('leftAccent').classList.toggle('freelancer', isFreela);
+      document.getElementById('testStars').classList.toggle('freelancer', isFreela);
+      document.getElementById('testAvatar').classList.toggle('freelancer', isFreela);
+
+      document.getElementById('fieldsWrap').classList.toggle('freelancer-mode', isFreela);
+      document.getElementById('btnSubmit').classList.toggle('freelancer', isFreela);
+      document.getElementById('loginLink').classList.toggle('freelancer', isFreela);
+      document.getElementById('termsLink').classList.toggle('freelancer', isFreela);
+      document.getElementById('privacyLink').classList.toggle('freelancer', isFreela);
+
+      document.getElementById('areaField').classList.toggle('show', isFreela);
+
+      const c = content[type];
+      document.getElementById('leftLabel').textContent = c.label;
+      document.getElementById('formHeading').textContent = c.heading;
+
+      const titleLines = c.title.split('\n');
+      document.getElementById('leftTitle').innerHTML =
+        titleLines.map((l, i) =>
+          i === titleLines.length - 1
+            ? `<span class="accent${isFreela ? ' freelancer' : ''}" id="leftAccent">${l}</span>`
+            : l + '<br>'
+        ).join('');
+
+      document.getElementById('leftDesc').textContent = c.desc;
+
+      document.getElementById('testQuote').textContent = c.quote;
+      document.getElementById('testAvatar').textContent = c.author;
+      document.getElementById('testName').textContent = c.authorName;
+      document.getElementById('testRole').textContent = c.authorRole;
+
+      const perksWrap = document.getElementById('perksWrap');
+      perksWrap.innerHTML = '';
+      c.perks.forEach((p, i) => {
+        const el = document.createElement('div');
+        el.className = 'perk';
+        el.innerHTML = `
+          <div class="perk-icon${isFreela ? ' freelancer' : ''}">${p.icon}</div>
+          <div class="perk-text"><strong>${p.title}</strong> — ${p.desc}</div>`;
+        perksWrap.appendChild(el);
+        setTimeout(() => el.classList.add('visible'), 80 + i * 100);
+      });
+
+      if (checked) {
+        document.getElementById('checkbox').classList.toggle('freelancer', isFreela);
+      }
+    }
+
+    function toggleEye() {
+      const input = document.getElementById('senha');
+      const icon  = document.getElementById('eyeIcon');
+      const show  = input.type === 'text';
+      input.type  = show ? 'password' : 'text';
+      icon.innerHTML = show
+        ? `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`
+        : `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+    }
+
+    function checkStrength(val) {
+      const fill  = document.getElementById('strengthFill');
+      const label = document.getElementById('strengthLabel');
+      let score = 0;
+      if (val.length >= 8)                     score++;
+      if (/[A-Z]/.test(val))                   score++;
+      if (/[0-9]/.test(val))                   score++;
+      if (/[^A-Za-z0-9]/.test(val))            score++;
+
+      const levels = [
+        { w: '0%',   c: 'transparent', t: '' },
+        { w: '25%',  c: '#ef4444',     t: 'Fraca' },
+        { w: '50%',  c: '#f97316',     t: 'Razoável' },
+        { w: '75%',  c: '#eab308',     t: 'Boa' },
+        { w: '100%', c: '#7fff00',     t: 'Forte ✓' },
+      ];
+      fill.style.width      = levels[score].w;
+      fill.style.background = levels[score].c;
+      label.textContent     = levels[score].t;
+    }
+
+    function toggleCheck() {
+      checked = !checked;
+      const cb = document.getElementById('checkbox');
+      cb.classList.toggle('checked', checked);
+      cb.classList.toggle('freelancer', checked && currentType === 'freelancer');
+      cb.innerHTML = checked
+        ? `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>`
+        : '';
+    }
+
+    function handleSubmit(e) {
+      const btn  = document.getElementById('btnSubmit');
+      const rect = btn.getBoundingClientRect();
+      const r    = document.createElement('span');
+      r.className = 'ripple';
+      const size  = Math.max(rect.width, rect.height);
+      r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+      btn.appendChild(r);
+      r.addEventListener('animationend', () => r.remove());
+    }
+
+    document.addEventListener('mousemove', e => {
+      const g = document.getElementById('cursorGlow');
+      g.style.left = e.clientX + 'px';
+      g.style.top  = e.clientY + 'px';
+    });
+
+    setType('cliente');
+    setTimeout(() => {
+      document.getElementById('testimonial').classList.add('visible');
+    }, 500);
+  </script>
+</body>
+</html>
