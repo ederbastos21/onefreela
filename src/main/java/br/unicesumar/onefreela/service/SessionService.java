@@ -1,6 +1,5 @@
 package br.unicesumar.onefreela.service;
 
-import br.unicesumar.onefreela.exception.ValidationException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
