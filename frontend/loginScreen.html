@@ -418,8 +418,18 @@
         <span>Manter-me conectado</span>
       </div>
 
+      <!-- Tipo de usuário -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Entrar como</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;background:var(--input);border:1px solid var(--border);border-radius:var(--radius);padding:4px;position:relative">
+          <div id="typePill" style="position:absolute;top:4px;left:4px;width:calc(50% - 4px);height:calc(100% - 8px);background:var(--green);border-radius:var(--radius);transition:transform .35s cubic-bezier(.34,1.2,.64,1);z-index:0"></div>
+          <button id="btnCliente" onclick="setUserType('cliente')" style="position:relative;z-index:1;padding:10px;border:none;background:none;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#000;cursor:pointer;border-radius:var(--radius);transition:color .3s">CLIENTE</button>
+          <button id="btnFreelancer" onclick="setUserType('freelancer')" style="position:relative;z-index:1;padding:10px;border:none;background:none;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--muted);cursor:pointer;border-radius:var(--radius);transition:color .3s">FREELANCER</button>
+        </div>
+      </div>
+
       <!-- Button -->
-      <button class="btn draggable" id="loginBtn" onclick="window.location.href='exploreFreelancers.html'">ENTRAR</button>
+      <button class="btn draggable" id="loginBtn" onclick="handleLogin()">ENTRAR</button>
 
       <!-- Drag hint -->
       <p class="drag-hint">✦ ARRASTE OS ELEMENTOS ACIMA ✦</p>
@@ -434,6 +444,30 @@
       glow.style.left = e.clientX + 'px';
       glow.style.top  = e.clientY + 'px';
     });
+
+    /* ── User type toggle ── */
+    let selectedType = 'cliente';
+
+    function setUserType(type) {
+      selectedType = type;
+      const pill = document.getElementById('typePill');
+      const btnC = document.getElementById('btnCliente');
+      const btnF = document.getElementById('btnFreelancer');
+      if (type === 'freelancer') {
+        pill.style.transform = 'translateX(100%)';
+        btnC.style.color = 'var(--muted)';
+        btnF.style.color = '#000';
+      } else {
+        pill.style.transform = 'translateX(0)';
+        btnC.style.color = '#000';
+        btnF.style.color = 'var(--muted)';
+      }
+    }
+
+    function handleLogin() {
+      localStorage.setItem('of_user_type', selectedType);
+      window.location.href = 'exploreFreelancers.html';
+    }
 
     /* ── Eye toggle ── */
     const senhaInput = document.getElementById('senha');
