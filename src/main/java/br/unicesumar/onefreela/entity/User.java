@@ -21,9 +21,9 @@ public class User {
     //automatic data
     private String registerDate;
     private String profilePicturePath;
-    private Boolean isAdmin;
-    private Boolean isFreelancer;
-    private Boolean verified;
+    private boolean isAdmin;
+    private boolean isFreelancer;
+    private boolean verified;
 
     public Long getId() {
         return id;
@@ -33,11 +33,11 @@ public class User {
         this.id = id;
     }
 
-    public Boolean getAdmin() {
+    public boolean getAdmin() {
         return isAdmin;
     }
 
-    public void setAdmin(Boolean admin) {
+    public void setAdmin(boolean admin) {
         isAdmin = admin;
     }
 
@@ -105,19 +105,19 @@ public class User {
         this.registerDate = registerDate;
     }
 
-    public Boolean getVerified() {
+    public boolean getVerified() {
         return verified;
     }
 
-    public void setVerified(Boolean verified) {
+    public void setVerified(boolean verified) {
         this.verified = verified;
     }
 
-    public Boolean getFreelancer() {
+    public boolean getFreelancer() {
         return isFreelancer;
     }
 
-    public void setFreelancer(Boolean freelancer) {
+    public void setFreelancer(boolean freelancer) {
         isFreelancer = freelancer;
     }
 

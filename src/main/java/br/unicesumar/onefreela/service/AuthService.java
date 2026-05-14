@@ -116,16 +116,31 @@ public class AuthService {
         throw new ValidationException(errors);
     }
 
-    public boolean checkAdmin(HttpServletRequest httpServletRequest){
+    public User getAuthenticatedUser(HttpServletRequest httpServletRequest){
         String token = authenticate(httpServletRequest);
         List<ErrorDetail> errors = new ArrayList<>();
 
         if (token == null){
-            errors.add(new ErrorDetail(ErrorCode.TOKEN_NOT_FOUND, "admin", "o token inserido nao existe no sistema"));
+            errors.add(new ErrorDetail(ErrorCode.TOKEN_NOT_FOUND, "token", "o token inserido nao existe no sistema"));
             throw new ValidationException(errors);
         }
 
-        User user = userService.findById(Long.parseLong(sessionService.getSession(token))).orElseThrow();
+        String userId = sessionService.getSession(token);
+
+        User user = userService.findById(Long.parseLong(userId)).orElse(null);
+
+        if (user == null) {
+            errors.add(new ErrorDetail(ErrorCode.TOKEN_NOT_FOUND, "token", "token nao corresponde a nenhum usuario registrado"));
+            throw new ValidationException(errors);
+        }
+
+        return user;
+    }
+
+    public boolean checkAdmin(HttpServletRequest httpServletRequest){
+        User user = getAuthenticatedUser(httpServletRequest);
+        List<ErrorDetail> errors = new ArrayList<>();
+
         if (user.getAdmin() == true){
             return true;
         }
@@ -133,5 +148,16 @@ public class AuthService {
         errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "admin", "voce nao tem permissao para acessar este recurso"));
         throw new ValidationException(errors);
     }
-}
 
+    public User checkFreelancer(HttpServletRequest httpServletRequest){
+        User user = getAuthenticatedUser(httpServletRequest);
+        List<ErrorDetail> errors = new ArrayList<>();
+    
+        if (user.getFreelancer()) {
+            return user;
+        }
+    
+        errors.add(new ErrorDetail(ErrorCode.FREELANCER_REQUIRED, "freelancer", "voce precisa ser freelancer para acessar este recurso"));
+        throw new ValidationException(errors);
+    }
+}
