@@ -27,6 +27,9 @@ public class UserRegisterDTO {
     @NotBlank(message = "número de telefone não pode ser vazio")
     private String phoneNumber;
 
+    @NotNull(message = "informe se o usuário será freelancer")
+    private Boolean freelancer;
+
     // getters e setters
 
     public String getName() {
@@ -35,6 +38,14 @@ public class UserRegisterDTO {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+     public Boolean getFreelancer() {
+        return freelancer;
+    }
+
+    public void setFreelancer(Boolean freelancer) {
+        this.freelancer = freelancer;
     }
 
     public String getPassword() {

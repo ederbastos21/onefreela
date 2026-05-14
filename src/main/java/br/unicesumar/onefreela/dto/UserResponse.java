@@ -8,6 +8,7 @@ public class UserResponse {
 
     private Long id;
     private Boolean isAdmin;
+    private boolean isFreelancer;
     private String name;
     private String email;
     private String cpf;
@@ -21,6 +22,7 @@ public class UserResponse {
         UserResponse r = new UserResponse();
         r.id = user.getId();
         r.isAdmin = user.getAdmin();
+        r.isFreelancer = user.getFreelancer();
         r.name = user.getName();
         r.email = user.getEmail();
         r.cpf = user.getCpf();
@@ -44,8 +46,16 @@ public class UserResponse {
         return isAdmin;
     }
 
+    public boolean getFreelancer() {
+        return isFreelancer;
+    }
+
     public void setAdmin(Boolean admin) {
         isAdmin = admin;
+    }
+
+    public void setFreelancer(boolean freelancer) {
+        isFreelancer = freelancer;
     }
 
     public String getName() {

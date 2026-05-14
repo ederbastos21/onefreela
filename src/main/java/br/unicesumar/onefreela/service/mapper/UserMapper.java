@@ -15,6 +15,7 @@ public class UserMapper {
         user.setCpf(dto.getCpf());
         user.setBirthday(dto.getBirthday());
         user.setPhoneNumber(dto.getPhoneNumber());
+        user.setFreelancer(dto.getFreelancer());
 
         return user;
     }
