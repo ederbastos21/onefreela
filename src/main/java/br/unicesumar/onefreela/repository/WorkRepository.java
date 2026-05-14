@@ -8,6 +8,8 @@ import java.util.List;
 public interface WorkRepository extends JpaRepository<Work, Long> {
     List<Work> findByStatus(WorkStatus status);
 
+    List<Work> findByOwnerId(Long ownerId);
+
     List<Work> findByStatusAndCategoryIgnoreCase(WorkStatus status, String category);
 
     List<Work> findByStatusAndTitleContainingIgnoreCaseOrStatusAndDescriptionContainingIgnoreCase(WorkStatus statusForTitle, String title, WorkStatus statusForDescription, String description);
