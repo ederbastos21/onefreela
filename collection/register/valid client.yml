@@ -1,7 +1,7 @@
 info:
-  name: over 11 char
+  name: valid client
   type: http
-  seq: 3
+  seq: 5
 
 http:
   method: POST
@@ -11,12 +11,12 @@ http:
     data: |-
       {
         "birthday": "2005-10-10",
-        "cpf": "123456789001231",
-        "email": "exemploa@gmail.com",
-        "name": "ederbastos",
+        "cpf": "87393046080",
+        "email": "cliente@gmail.com",
+        "name": "mariasilva",
         "password": "Abc123!232",
         "phoneNumber": "5542123456789",
-        "freelancer": true
+        "freelancer": false
       }
   auth: inherit
 

@@ -15,7 +15,8 @@ http:
         "email": "exemploa@gmail.com",
         "name": "ederbastos",
         "password": "Abc123!232",
-        "phoneNumber": "5542123456789"
+        "phoneNumber": "5542123456789",
+        "freelancer": true
       }
   auth: inherit
 

@@ -1,17 +1,14 @@
 info:
-  name: valid (token)
+  name: valid
   type: http
   seq: 1
 
 http:
-  method: POST
-  url: http://localhost:8080/users/loginToken
+  method: GET
+  url: http://localhost:8080/works/myWorks
   headers:
     - name: Authorization
       value: 4e4ec019-2e53-4c06-bf57-169f09e3f680
-  body:
-    type: json
-    data: ""
   auth: inherit
 
 settings:

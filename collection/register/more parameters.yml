@@ -16,6 +16,7 @@ http:
         "name": "ederbastos",
         "password": "Abc123!232",
         "phoneNumber": "5542123456789",
+        "freelancer": true,
         "teste": "12345"
       }
   auth: inherit

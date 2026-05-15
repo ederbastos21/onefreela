@@ -1,0 +1,27 @@
+info:
+  name: valid
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:8080/works/register
+  headers:
+    - name: Authorization
+      value: 387d979a-76bf-4847-bf69-6ebaff886475
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Desenvolvimento de API Spring Boot",
+        "description": "Desenvolvo APIs REST com Java, Spring Boot, MySQL e organização em camadas.",
+        "category": "programacao",
+        "price": 800.0
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

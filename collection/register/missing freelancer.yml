@@ -1,7 +1,7 @@
 info:
-  name: over 11 char
+  name: missing freelancer
   type: http
-  seq: 3
+  seq: 4
 
 http:
   method: POST
@@ -11,12 +11,11 @@ http:
     data: |-
       {
         "birthday": "2005-10-10",
-        "cpf": "123456789001231",
-        "email": "exemploa@gmail.com",
+        "cpf": "11144477735",
+        "email": "semfreelancer@gmail.com",
         "name": "ederbastos",
         "password": "Abc123!232",
-        "phoneNumber": "5542123456789",
-        "freelancer": true
+        "phoneNumber": "5542123456789"
       }
   auth: inherit
 

@@ -1,17 +1,14 @@
 info:
-  name: valid (token)
+  name: not found
   type: http
-  seq: 1
+  seq: 2
 
 http:
-  method: POST
-  url: http://localhost:8080/users/loginToken
+  method: DELETE
+  url: http://localhost:8080/works/deleteWork/999999
   headers:
     - name: Authorization
       value: 4e4ec019-2e53-4c06-bf57-169f09e3f680
-  body:
-    type: json
-    data: ""
   auth: inherit
 
 settings:

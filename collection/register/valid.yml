@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://localhost:8080/register
+  url: http://localhost:8080/users/register
   body:
     type: json
     data: |-
@@ -15,7 +15,8 @@ http:
         "email": "exemploab@gmail.com",
         "name": "ederbastos",
         "password": "Abc123!232",
-        "phoneNumber": "5542123456789"
+        "phoneNumber": "5542123456789",
+        "freelancer": true
       }
   auth: inherit
 
