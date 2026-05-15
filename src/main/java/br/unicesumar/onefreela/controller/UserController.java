@@ -5,6 +5,7 @@ import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.dto.UserUpdateDTO;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.service.AuthService;
+import br.unicesumar.onefreela.service.SessionService;
 import br.unicesumar.onefreela.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -21,6 +22,9 @@ public class UserController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    SessionService sessionService;
 
     @PutMapping("/updateUser")
     public ResponseEntity<?> updateUser (@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
@@ -50,6 +54,8 @@ public class UserController {
     @PostMapping("/loginToken")
     public ResponseEntity<?> login (HttpServletRequest httpRequest) {
         String token = authService.authenticate(httpRequest);
-        return ResponseEntity.ok(token);
+        Long id = Long.parseLong(sessionService.getSession(token).toString());
+        User user = userService.findById(id).orElseThrow(() -> new RuntimeException("Usuario nao encontrado com token"));
+        return ResponseEntity.ok().body(user);
     }
 }
