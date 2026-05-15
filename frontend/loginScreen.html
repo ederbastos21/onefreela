@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --black:   #0a0a0a;
+      --surface: #141414;
+      --card:    #1c1c1c;
+      --input:   #232323;
+      --border:  #2e2e2e;
+      --green:   #7fff00;
+      --green-dim: #5bbd00;
+      --text:    #f0f0f0;
+      --muted:   #888;
+      --radius:  999px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Syne', sans-serif;
+      background: var(--black);
+      color: var(--text);
+      cursor: default;
+      user-select: none;
+    }
+
+    /* ─── NOISE GRAIN OVERLAY ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: .35;
+    }
+
+    /* ─── BACKGROUND MESH ─── */
+    .bg {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 15% 10%,  #2a2a2a 0%, transparent 55%),
+        radial-gradient(ellipse 60% 80% at 85% 90%,  #1a1a1a 0%, transparent 55%),
+        radial-gradient(ellipse 50% 50% at 50% 50%,  #111    0%, transparent 80%),
+        linear-gradient(175deg, #333 0%, #0a0a0a 50%, #000 100%);
+      z-index: 0;
+    }
+
+    /* ─── GLOW BLOBS ─── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 1;
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+    .blob-1 { width:420px; height:420px; top:-80px;  left:-80px;  background: rgba(127,255,0,.06); animation-delay: 0s; }
+    .blob-2 { width:300px; height:300px; bottom:-60px; right:-60px; background: rgba(127,255,0,.04); animation-delay: -5s; }
+    @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,20px) scale(1.05); } }
+
+    /* ─── CURSOR GLOW ─── */
+    .cursor-glow {
+      position: fixed;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(127,255,0,.07) 0%, transparent 70%);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: left .12s ease, top .12s ease;
+      z-index: 2;
+    }
+
+    /* ─── SCENE ─── */
+    .scene {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    /* ─── CARD ─── */
+    .card {
+      background: linear-gradient(145deg, rgba(30,30,30,.95), rgba(18,18,18,.95));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 52px 56px 56px;
+      width: 520px;
+      max-width: 96vw;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.03),
+        0 32px 80px rgba(0,0,0,.7),
+        0 0 40px rgba(127,255,0,.03);
+      backdrop-filter: blur(12px);
+      animation: cardIn .7s cubic-bezier(.22,.68,0,1.2) both;
+    }
+    @keyframes cardIn {
+      from { opacity:0; transform: translateY(40px) scale(.96); }
+      to   { opacity:1; transform: translateY(0)   scale(1);    }
+    }
+
+    /* ─── DRAGGABLE ELEMENTS ─── */
+    .draggable {
+      cursor: grab;
+      transition: opacity .2s, box-shadow .2s;
+    }
+    .draggable:active { cursor: grabbing; }
+    .draggable.dragging {
+      opacity: .88;
+      z-index: 1000;
+    }
+
+    /* ─── LOGO ─── */
+    .logo-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 32px;
+      animation: slideDown .5s .1s cubic-bezier(.22,.68,0,1.2) both;
+    }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--green);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      color: #000;
+      letter-spacing: .5px;
+    }
+    .logo-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--text);
+    }
+    .logo-text span { color: var(--green); }
+
+    /* ─── HEADING ─── */
+    .heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(38px, 6vw, 52px);
+      letter-spacing: 2px;
+      line-height: 1;
+      color: var(--text);
+      margin-bottom: 10px;
+      position: relative;
+      animation: slideDown .55s .18s cubic-bezier(.22,.68,0,1.2) both;
+    }
+    .heading::after {
+      content: '';
+      position: absolute;
+      left: 0; bottom: -6px;
+      width: 0; height: 2px;
+      background: var(--green);
+      animation: lineGrow .6s .8s ease forwards;
+    }
+    @keyframes lineGrow { to { width: 60px; } }
+
+    .subtitle {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--muted);
+      margin-bottom: 40px;
+      margin-top: 16px;
+      animation: slideDown .55s .26s cubic-bezier(.22,.68,0,1.2) both;
+    }
+    .subtitle a {
+      color: var(--green);
+      text-decoration: none;
+      font-weight: 600;
+      transition: opacity .2s;
+    }
+    .subtitle a:hover { opacity: .75; }
+
+    /* ─── FIELDS ─── */
+    .field { margin-bottom: 20px; animation: slideDown .55s calc(.3s + var(--d,0s)) cubic-bezier(.22,.68,0,1.2) both; }
+    .field:nth-child(1) { --d: 0s; }
+    .field:nth-child(2) { --d: .07s; }
+
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .forgot {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green);
+      text-decoration: none;
+      transition: opacity .2s;
+    }
+    .forgot:hover { opacity: .7; }
+
+    .input-wrap {
+      position: relative;
+    }
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      background: var(--input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .25s, box-shadow .25s;
+    }
+    input::placeholder { color: #444; }
+    input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(127,255,0,.12);
+    }
+    .eye-btn {
+      position: absolute;
+      right: 16px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      cursor: pointer;
+      color: var(--muted);
+      display: flex; align-items: center;
+      transition: color .2s;
+    }
+    .eye-btn:hover { color: var(--green); }
+
+    /* ─── TOGGLE ─── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0 32px;
+      font-size: 13px;
+      color: var(--muted);
+      animation: slideDown .55s .44s cubic-bezier(.22,.68,0,1.2) both;
+    }
+    .toggle {
+      width: 38px; height: 22px;
+      background: var(--border);
+      border-radius: var(--radius);
+      position: relative;
+      cursor: pointer;
+      transition: background .25s;
+      flex-shrink: 0;
+    }
+    .toggle.on { background: var(--green); }
+    .toggle::after {
+      content: '';
+      width: 16px; height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px; left: 3px;
+      transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+    }
+    .toggle.on::after { transform: translateX(16px); }
+
+    /* ─── BUTTON ─── */
+    .btn {
+      width: 100%;
+      padding: 18px;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 3px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform .18s, box-shadow .18s;
+      animation: slideDown .55s .52s cubic-bezier(.22,.68,0,1.2) both;
+    }
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.25) 50%, transparent 100%);
+      transform: translateX(-100%);
+      transition: transform .5s ease;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(127,255,0,.35); }
+    .btn:hover::before { transform: translateX(100%); }
+    .btn:active { transform: translateY(0); box-shadow: none; }
+
+    /* ─── SHARED SLIDE-DOWN ─── */
+    @keyframes slideDown {
+      from { opacity:0; transform: translateY(-18px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    /* ─── DRAG HINT ─── */
+    .drag-hint {
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: #333;
+      margin-top: 28px;
+      animation: fadeIn 1s 1.2s both;
+    }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    /* ─── FLOATING TAGS ─── */
+    .float-tag {
+      position: fixed;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: rgba(127,255,0,.15);
+      pointer-events: none;
+      z-index: 3;
+      animation: floatTag 18s linear infinite;
+    }
+    .float-tag:nth-child(1) { top: 12%; left:  8%; animation-delay: 0s; }
+    .float-tag:nth-child(2) { top: 75%; left: 78%; animation-delay: -6s; }
+    .float-tag:nth-child(3) { top: 55%; left:  5%; animation-delay: -11s; }
+    @keyframes floatTag { 0%,100%{opacity:.15;transform:translateY(0)} 50%{opacity:.35;transform:translateY(-8px)} }
+
+    /* ─── FORM MESSAGE ─── */
+    .form-msg {
+      display: none; font-size: 13px; font-weight: 600;
+      padding: 12px 16px; border-radius: 12px; text-align: center; margin-bottom: 16px;
+    }
+    .form-msg.error   { display: block; color: #f87171; background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.25); }
+    .form-msg.success { display: block; color: var(--green); background: rgba(127,255,0,.08); border: 1px solid rgba(127,255,0,.2); }
+
+    /* ─── RIPPLE ─── */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(0,0,0,.3);
+      transform: scale(0);
+      animation: rippleAnim .55s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+    /* ─── SNAP BACK ─── */
+    .snap-back {
+      transition: transform .5s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg"></div>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <!-- Floating decorative text -->
+  <div class="float-tag">ONEFREELA</div>
+  <div class="float-tag">FREELANCER</div>
+  <div class="float-tag">CONECTE-SE</div>
+
+  <div class="scene">
+    <div class="card" id="card">
+
+      <!-- Logo -->
+      <div class="logo-wrap draggable" id="logo">
+        <div class="logo-icon">OF</div>
+        <div class="logo-text">One<span>Freela</span></div>
+      </div>
+
+      <!-- Heading -->
+      <div class="heading draggable" id="heading">BEM-VINDO<br>DE VOLTA!</div>
+
+      <!-- Subtitle -->
+      <p class="subtitle draggable" id="subtitle">
+        Não tem uma conta? <a href="signupScreen.html">Crie uma agora!</a>
+      </p>
+
+      <!-- Email -->
+      <div class="field">
+        <div class="label-row"><label for="email">E-mail</label></div>
+        <div class="input-wrap">
+          <input type="email" id="email" placeholder="seu@email.com" autocomplete="off" />
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="field">
+        <div class="label-row">
+          <label for="senha">Senha</label>
+          <a href="forgotPassword.html" class="forgot">Esqueceu a senha?</a>
+        </div>
+        <div class="input-wrap">
+          <input type="password" id="senha" placeholder="••••••••" />
+          <button class="eye-btn" id="eyeBtn" type="button" aria-label="Mostrar senha">
+            <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Toggle -->
+      <div class="toggle-row">
+        <div class="toggle" id="toggle"></div>
+        <span>Manter-me conectado</span>
+      </div>
+
+      <!-- Tipo de usuário -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Entrar como</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;background:var(--input);border:1px solid var(--border);border-radius:var(--radius);padding:4px;position:relative">
+          <div id="typePill" style="position:absolute;top:4px;left:4px;width:calc(50% - 4px);height:calc(100% - 8px);background:var(--green);border-radius:var(--radius);transition:transform .35s cubic-bezier(.34,1.2,.64,1);z-index:0"></div>
+          <button id="btnCliente" onclick="setUserType('cliente')" style="position:relative;z-index:1;padding:10px;border:none;background:none;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#000;cursor:pointer;border-radius:var(--radius);transition:color .3s">CLIENTE</button>
+          <button id="btnFreelancer" onclick="setUserType('freelancer')" style="position:relative;z-index:1;padding:10px;border:none;background:none;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--muted);cursor:pointer;border-radius:var(--radius);transition:color .3s">FREELANCER</button>
+        </div>
+      </div>
+
+      <!-- Button -->
+      <div id="formMsg" class="form-msg"></div>
+      <button class="btn draggable" id="loginBtn" onclick="handleLogin()">ENTRAR</button>
+
+      <!-- Drag hint -->
+      <p class="drag-hint">✦ ARRASTE OS ELEMENTOS ACIMA ✦</p>
+
+    </div>
+  </div>
+
+  <script>
+    /* ── Cursor glow ── */
+    const glow = document.getElementById('cursorGlow');
+    document.addEventListener('mousemove', e => {
+      glow.style.left = e.clientX + 'px';
+      glow.style.top  = e.clientY + 'px';
+    });
+
+    /* ── User type toggle ── */
+    let selectedType = 'cliente';
+
+    function setUserType(type) {
+      selectedType = type;
+      const pill = document.getElementById('typePill');
+      const btnC = document.getElementById('btnCliente');
+      const btnF = document.getElementById('btnFreelancer');
+      if (type === 'freelancer') {
+        pill.style.transform = 'translateX(100%)';
+        btnC.style.color = 'var(--muted)';
+        btnF.style.color = '#000';
+      } else {
+        pill.style.transform = 'translateX(0)';
+        btnC.style.color = '#000';
+        btnF.style.color = 'var(--muted)';
+      }
+    }
+
+    const API = 'http://localhost:8080';
+
+    function showMsg(text, type) {
+      const el = document.getElementById('formMsg');
+      el.textContent = text;
+      el.className = 'form-msg ' + type;
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value;
+
+      if (!email || !senha) { showMsg('Preencha e-mail e senha.', 'error'); return; }
+
+      const btn = document.getElementById('loginBtn');
+      const originalText = btn.textContent;
+      btn.textContent = 'ENTRANDO...';
+      btn.disabled = true;
+
+      try {
+        const res  = await fetch(API + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: senha })
+        });
+        const data = await res.json();
+
+        if (!res.ok) { showMsg(data.message || 'E-mail ou senha incorretos.', 'error'); return; }
+
+        localStorage.setItem('of_token',     data.token);
+        localStorage.setItem('of_user_type', data.userType || selectedType);
+
+        const type = data.userType || selectedType;
+        window.location.href = type === 'freelancer' ? 'chatScreenFreelancer.html' : 'exploreFreelancers.html';
+
+      } catch {
+        showMsg('Erro de conexão. Verifique sua internet.', 'error');
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    /* ── Eye toggle ── */
+    const senhaInput = document.getElementById('senha');
+    const eyeBtn    = document.getElementById('eyeBtn');
+    const eyeIcon   = document.getElementById('eyeIcon');
+    eyeBtn.addEventListener('click', () => {
+      const showing = senhaInput.type === 'text';
+      senhaInput.type = showing ? 'password' : 'text';
+      eyeIcon.innerHTML = showing
+        ? `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`
+        : `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+    });
+
+    /* ── Toggle switch ── */
+    const toggle = document.getElementById('toggle');
+    toggle.addEventListener('click', () => toggle.classList.toggle('on'));
+
+    /* ── Ripple on button ── */
+    const loginBtn = document.getElementById('loginBtn');
+    loginBtn.addEventListener('pointerdown', e => {
+      const rect = loginBtn.getBoundingClientRect();
+      const r = document.createElement('span');
+      r.className = 'ripple';
+      const size = Math.max(rect.width, rect.height);
+      r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+      loginBtn.appendChild(r);
+      r.addEventListener('animationend', () => r.remove());
+    });
+
+    /* ── Drag ── */
+    const draggables = document.querySelectorAll('.draggable');
+
+    draggables.forEach(el => {
+      let startX, startY, origX, origY;
+      let offX, offY;
+      let dragging = false;
+      let clone = null;
+
+      // Store original position
+      const getOrigin = () => {
+        const rect = el.getBoundingClientRect();
+        return { x: rect.left, y: rect.top };
+      };
+
+      const onPointerDown = e => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+
+        dragging = true;
+        const rect = el.getBoundingClientRect();
+
+        startX = e.clientX;
+        startY = e.clientY;
+        offX   = e.clientX - rect.left;
+        offY   = e.clientY - rect.top;
+
+        // Create a floating ghost clone
+        clone = el.cloneNode(true);
+        clone.style.cssText = `
+          position: fixed;
+          left: ${rect.left}px;
+          top: ${rect.top}px;
+          width: ${rect.width}px;
+          height: ${rect.height}px;
+          margin: 0;
+          pointer-events: none;
+          z-index: 9999;
+          opacity: .92;
+          transform: scale(1.04) rotate(-1.5deg);
+          transition: transform .15s, box-shadow .15s;
+          box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 30px rgba(127,255,0,.18);
+          animation: none;
+          filter: drop-shadow(0 0 12px rgba(127,255,0,.3));
+        `;
+        document.body.appendChild(clone);
+
+        // Dim original
+        el.style.opacity = '.25';
+
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup',   onPointerUp);
+      };
+
+      const onPointerMove = e => {
+        if (!dragging || !clone) return;
+        clone.style.left = (e.clientX - offX) + 'px';
+        clone.style.top  = (e.clientY - offY) + 'px';
+      };
+
+      const onPointerUp = e => {
+        if (!dragging) return;
+        dragging = false;
+
+        // Snap clone back with a satisfying spring
+        if (clone) {
+          const rect = el.getBoundingClientRect();
+          clone.style.transition = 'left .5s cubic-bezier(.34,1.56,.64,1), top .5s cubic-bezier(.34,1.56,.64,1), opacity .35s, transform .35s';
+          clone.style.left      = rect.left + 'px';
+          clone.style.top       = rect.top  + 'px';
+          clone.style.transform = 'scale(1) rotate(0deg)';
+          clone.style.opacity   = '0';
+          clone.addEventListener('transitionend', () => {
+            clone && clone.remove();
+            clone = null;
+          }, { once: true });
+        }
+
+        el.style.opacity = '1';
+
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup',   onPointerUp);
+      };
+
+      el.addEventListener('pointerdown', onPointerDown);
+    });
+  </script>
+</body>
+</html>

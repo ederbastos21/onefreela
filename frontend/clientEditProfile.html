@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Editar Perfil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --black:  #080808;
+      --surface:#0f0f0f;
+      --card:   #141414;
+      --card2:  #1a1a1a;
+      --input:  #1e1e1e;
+      --border: #242424;
+      --border2:#2e2e2e;
+      --green:  #7fff00;
+      --gdim:   rgba(127,255,0,.1);
+      --text:   #f0f0f0;
+      --muted:  #666;
+      --muted2: #999;
+      --radius: 999px;
+      --rc:     14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Syne', sans-serif; background: var(--black); color: var(--text); min-height: 100vh; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9998; opacity: .25;
+    }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      height: 64px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; background: rgba(8,8,8,.95); border-bottom: 1px solid var(--border);
+    }
+    .nav-left { display: flex; align-items: center; gap: 20px; }
+    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); }
+    .nav-logo-icon { width: 28px; height: 28px; background: var(--green); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #000; }
+    .nav-logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; }
+    .nav-logo-text span { color: var(--green); }
+    .nav-sep { width: 1px; height: 20px; background: var(--border2); }
+    .nav-back { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--muted2); text-decoration: none; transition: color .2s; }
+    .nav-back:hover { color: var(--green); }
+    .nav-back svg { transition: transform .2s; }
+    .nav-back:hover svg { transform: translateX(-3px); }
+    .nav-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px; color: var(--muted); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--green); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #000; }
+
+    .page { padding-top: 64px; display: block; min-height: 100vh; }
+
+    .sidebar {
+      position: fixed; top: 64px; left: 0; bottom: 0; width: 260px;
+      background: var(--surface); border-right: 1px solid var(--border);
+      padding: 28px 16px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .sidebar-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 0 12px; margin: 14px 0 6px; }
+    .sidebar-label:first-child { margin-top: 0; }
+    .side-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--muted2); cursor: pointer; transition: background .2s, color .2s; text-decoration: none; }
+    .side-item:hover { background: var(--card2); color: var(--text); }
+    .side-item.active { background: var(--gdim); color: var(--green); }
+    .side-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); flex-shrink: 0; margin-left: auto; transition: background .2s; }
+    .side-item.done .side-dot { background: var(--green); }
+
+    .main { margin-left: 260px; padding: 40px 48px 80px; max-width: 860px; }
+
+    .page-header { margin-bottom: 36px; }
+    .page-header-label { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--green); margin-bottom: 8px; }
+    .page-header-title { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 1px; line-height: 1; }
+    .page-header-sub { font-size: 13px; color: var(--muted2); margin-top: 8px; }
+
+    .form-section { margin-bottom: 32px; animation: fadeUp .5s ease both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    .section-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--rc); padding: 28px; }
+    .section-card-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--text); }
+    .section-card-title span { font-size: 18px; }
+
+    .fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .field-full { grid-column: 1 / -1; }
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+    .field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    .field-input {
+      background: var(--input); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; font-family: 'Syne', sans-serif; font-size: 13px; color: var(--text);
+      outline: none; transition: border-color .25s, box-shadow .25s; width: 100%;
+    }
+    .field-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(127,255,0,.08); }
+    .field-input::placeholder { color: #333; }
+    textarea.field-input { resize: vertical; min-height: 100px; }
+
+    .field-select {
+      background: var(--input); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; font-family: 'Syne', sans-serif; font-size: 13px; color: var(--text);
+      outline: none; appearance: none; cursor: pointer; width: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      transition: border-color .2s;
+    }
+    .field-select:focus { border-color: var(--green); }
+
+    /* AVATAR UPLOAD */
+    .avatar-upload { display: flex; align-items: center; gap: 24px; }
+    .avatar-preview { width: 88px; height: 88px; border-radius: 20px; background: var(--green); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: #000; flex-shrink: 0; border: 3px solid rgba(127,255,0,.25); position: relative; overflow: hidden; cursor: pointer; }
+    .avatar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.6); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; opacity: 0; transition: opacity .2s; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #fff; }
+    .avatar-preview:hover .avatar-overlay { opacity: 1; }
+    .avatar-actions { display: flex; flex-direction: column; gap: 8px; }
+    .btn-upload { padding: 9px 18px; background: var(--gdim); border: 1px solid rgba(127,255,0,.25); border-radius: 10px; color: var(--green); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .2s; }
+    .btn-upload:hover { background: rgba(127,255,0,.18); }
+    .btn-remove-avatar { padding: 9px 18px; background: none; border: 1px solid var(--border2); border-radius: 10px; color: var(--muted2); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: border-color .2s, color .2s; }
+    .btn-remove-avatar:hover { border-color: #ef4444; color: #ef4444; }
+    .avatar-hint { font-size: 11px; color: var(--muted); }
+
+    /* CHAR COUNTER */
+    .field-counter { display: flex; justify-content: space-between; }
+    .char-count { font-size: 11px; color: var(--muted); }
+    .char-count.warn { color: #f97316; }
+
+    /* SOCIAL LINKS */
+    .social-field { display: flex; align-items: center; background: var(--input); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
+    .social-field:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(127,255,0,.08); }
+    .social-prefix { padding: 12px 14px; font-size: 12px; color: var(--muted); border-right: 1px solid var(--border); white-space: nowrap; background: var(--card2); }
+    .social-input { flex: 1; background: none; border: none; outline: none; padding: 12px 14px; font-family: 'Syne', sans-serif; font-size: 13px; color: var(--text); }
+    .social-input::placeholder { color: #333; }
+
+    /* ACTIONS BAR */
+    .actions-bar {
+      position: fixed; bottom: 0; left: 260px; right: 0;
+      background: rgba(8,8,8,.95); border-top: 1px solid var(--border);
+      padding: 16px 48px; display: flex; align-items: center; justify-content: space-between;
+      z-index: 100;
+    }
+    .actions-left { font-size: 12px; color: var(--muted2); }
+    .actions-left span { color: var(--green); font-weight: 700; }
+    .actions-right { display: flex; gap: 12px; }
+    .btn-cancel { padding: 11px 24px; background: none; border: 1px solid var(--border2); border-radius: var(--radius); color: var(--muted2); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: border-color .2s, color .2s; }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+    .btn-save { padding: 11px 32px; background: var(--green); border: none; border-radius: var(--radius); color: #000; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px; cursor: pointer; transition: transform .18s, box-shadow .18s; position: relative; overflow: hidden; }
+    .btn-save::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); transform: translateX(-100%); transition: transform .5s; }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(127,255,0,.3); }
+    .btn-save:hover::before { transform: translateX(100%); }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 80px; right: 32px;
+      background: var(--card2); border: 1px solid rgba(127,255,0,.3);
+      border-radius: 12px; padding: 14px 20px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; font-weight: 600; color: var(--green);
+      z-index: 9999; box-shadow: 0 12px 40px rgba(0,0,0,.5);
+      transform: translateY(20px); opacity: 0;
+      transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo">
+        <div class="nav-logo-icon">OF</div>
+        <div class="nav-logo-text">One<span>Freela</span></div>
+      </a>
+      <div class="nav-sep"></div>
+      <a href="clientProfile.html" class="nav-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Voltar ao perfil
+      </a>
+      <div class="nav-sep"></div>
+      <span class="nav-title">Editar Perfil</span>
+    </div>
+    <div class="nav-right">
+      <div class="nav-avatar">CA</div>
+    </div>
+  </nav>
+
+  <div class="page">
+    <aside class="sidebar">
+      <span class="sidebar-label">Seções</span>
+      <a href="#foto" class="side-item active done">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+        Foto & Identidade
+        <span class="side-dot"></span>
+      </a>
+      <a href="#info" class="side-item done">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Informações Pessoais
+        <span class="side-dot"></span>
+      </a>
+      <a href="#contato" class="side-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Contato & Localização
+        <span class="side-dot"></span>
+      </a>
+      <a href="#redes" class="side-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Redes Sociais
+        <span class="side-dot"></span>
+      </a>
+    </aside>
+
+    <main class="main">
+
+      <div class="page-header">
+        <div class="page-header-label">Cliente · Edição</div>
+        <h1 class="page-header-title">EDITAR PERFIL</h1>
+        <p class="page-header-sub">As alterações ficam visíveis para os freelancers ao receber propostas.</p>
+      </div>
+
+      <div id="foto" class="form-section" style="animation-delay:.05s">
+        <div class="section-card">
+          <div class="section-card-title"><span>🖼️</span> Foto & Identidade</div>
+          <div class="avatar-upload">
+            <div class="avatar-preview">
+              CA
+              <div class="avatar-overlay">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Alterar foto
+              </div>
+            </div>
+            <div class="avatar-actions">
+              <button class="btn-upload">📁 Enviar nova foto</button>
+              <button class="btn-remove-avatar">Remover foto</button>
+              <span class="avatar-hint">JPG, PNG ou WebP · máx. 2MB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="info" class="form-section" style="animation-delay:.1s">
+        <div class="section-card">
+          <div class="section-card-title"><span>👤</span> Informações Pessoais</div>
+          <div class="fields-grid">
+            <div class="field">
+              <label class="field-label">Nome</label>
+              <input class="field-input" type="text" value="Carlos" placeholder="Seu nome" />
+            </div>
+            <div class="field">
+              <label class="field-label">Sobrenome</label>
+              <input class="field-input" type="text" value="Andrade" placeholder="Seu sobrenome" />
+            </div>
+            <div class="field field-full">
+              <div class="field-counter">
+                <label class="field-label">Bio</label>
+                <span class="char-count" id="bioCount">156/300</span>
+              </div>
+              <textarea class="field-input" id="bioInput" maxlength="300" oninput="updateCount('bioInput','bioCount',300)">CEO de uma startup de tecnologia em São Paulo. Sempre em busca dos melhores talentos para tirar ideias do papel com qualidade e agilidade.</textarea>
+              <span class="field-hint">Aparece no seu perfil público ao receber propostas.</span>
+            </div>
+            <div class="field">
+              <label class="field-label">Empresa / Organização</label>
+              <input class="field-input" type="text" value="TechStartup SP" placeholder="Nome da empresa (opcional)" />
+            </div>
+            <div class="field">
+              <label class="field-label">Cargo</label>
+              <input class="field-input" type="text" value="CEO" placeholder="Ex: Gerente, Fundador..." />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="contato" class="form-section" style="animation-delay:.15s">
+        <div class="section-card">
+          <div class="section-card-title"><span>📍</span> Contato & Localização</div>
+          <div class="fields-grid">
+            <div class="field">
+              <label class="field-label">E-mail</label>
+              <input class="field-input" type="email" value="carlos@startup.com.br" />
+            </div>
+            <div class="field">
+              <label class="field-label">Telefone</label>
+              <input class="field-input" type="text" value="+55 11 99999-0000" placeholder="(11) 99999-0000" />
+            </div>
+            <div class="field">
+              <label class="field-label">Estado</label>
+              <select class="field-select">
+                <option>SP</option><option>RJ</option><option>MG</option>
+                <option>RS</option><option>PR</option><option>SC</option>
+                <option>BA</option><option>CE</option><option>PE</option><option>Outro</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Cidade</label>
+              <input class="field-input" type="text" value="São Paulo" placeholder="Sua cidade" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="redes" class="form-section" style="animation-delay:.2s">
+        <div class="section-card">
+          <div class="section-card-title"><span>🔗</span> Redes Sociais</div>
+          <div class="fields-grid">
+            <div class="field field-full">
+              <label class="field-label">LinkedIn</label>
+              <div class="social-field">
+                <span class="social-prefix">linkedin.com/in/</span>
+                <input class="social-input" type="text" value="carlos-andrade" placeholder="seu-perfil" />
+              </div>
+            </div>
+            <div class="field field-full">
+              <label class="field-label">Website / Portfólio</label>
+              <div class="social-field">
+                <span class="social-prefix">https://</span>
+                <input class="social-input" type="text" placeholder="seusite.com.br" />
+              </div>
+            </div>
+            <div class="field field-full">
+              <label class="field-label">Instagram</label>
+              <div class="social-field">
+                <span class="social-prefix">instagram.com/</span>
+                <input class="social-input" type="text" placeholder="seuperfil" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:72px"></div>
+    </main>
+  </div>
+
+  <div class="actions-bar">
+    <div class="actions-left">Alterações <span>não salvas</span></div>
+    <div class="actions-right">
+      <a href="clientProfile.html" class="btn-cancel">Cancelar</a>
+      <button class="btn-save" onclick="saveProfile()">SALVAR ALTERAÇÕES</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">✓ Perfil atualizado com sucesso!</div>
+
+  <script>
+    function updateCount(inputId, countId, max) {
+      const val = document.getElementById(inputId).value.length;
+      const el  = document.getElementById(countId);
+      el.textContent = val + '/' + max;
+      el.classList.toggle('warn', val > max * 0.85);
+    }
+
+    function saveProfile() {
+      const bar = document.querySelector('.actions-left span');
+      bar.textContent = 'salvo ✓';
+      bar.style.color = 'var(--green)';
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    document.querySelectorAll('.side-item').forEach(item => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.side-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    document.querySelectorAll('.field-input').forEach(input => {
+      input.addEventListener('focus', () => {
+        const label = document.querySelector('.actions-left span');
+        label.textContent = 'não salvas';
+        label.style.color = 'var(--green)';
+      });
+    });
+
+    updateCount('bioInput', 'bioCount', 300);
+  </script>
+</body>
+</html>
