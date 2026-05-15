@@ -8,7 +8,7 @@ http:
   url: http://localhost:8080/works/deleteWork/999999
   headers:
     - name: Authorization
-      value: 4e4ec019-2e53-4c06-bf57-169f09e3f680
+      value: 36b82c77-b530-46d4-bbf0-4148499a8d56
   auth: inherit
 
 settings:

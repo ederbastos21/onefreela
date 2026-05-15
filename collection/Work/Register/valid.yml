@@ -8,7 +8,7 @@ http:
   url: http://localhost:8080/works/register
   headers:
     - name: Authorization
-      value: 387d979a-76bf-4847-bf69-6ebaff886475
+      value: 36b82c77-b530-46d4-bbf0-4148499a8d56
   body:
     type: json
     data: |-
