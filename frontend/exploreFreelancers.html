@@ -240,7 +240,7 @@
     .avail-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
     /* Título do anúncio */
-    .fl-ad-title { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .fl-ad-title { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
     /* Tags */
     .fl-tags { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -298,7 +298,51 @@
     .page-btn:hover { border-color: var(--green); color: var(--green); }
     .page-btn.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 800; }
 
-    .empty { display: none; flex-direction: column; align-items: center; padding: 80px 20px; text-align: center; gap: 12px; }
+    /* ── AUTH MODAL ── */
+    .auth-overlay {
+      position: fixed; inset: 0; z-index: 9000;
+      background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s;
+    }
+    .auth-overlay.show { opacity: 1; pointer-events: all; }
+    .auth-modal {
+      background: var(--card); border: 1px solid var(--border2);
+      border-radius: 20px; padding: 36px 32px; width: 100%; max-width: 400px;
+      position: relative; text-align: center;
+      transform: translateY(20px) scale(.97);
+      transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 32px 80px rgba(0,0,0,.7);
+    }
+    .auth-modal::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--green), transparent); border-radius: 20px 20px 0 0; }
+    .auth-overlay.show .auth-modal { transform: translateY(0) scale(1); }
+    .auth-modal-icon { font-size: 40px; margin-bottom: 16px; }
+    .auth-modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; margin-bottom: 8px; }
+    .auth-modal-title span { color: var(--green); }
+    .auth-modal-desc { font-size: 13px; color: var(--muted2); line-height: 1.65; margin-bottom: 24px; }
+    .auth-modal-freelancer { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 20px; padding: 12px 16px; background: var(--card2); border: 1px solid var(--border2); border-radius: 12px; display: flex; align-items: center; gap: 10px; }
+    .auth-modal-avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #000; flex-shrink: 0; }
+    .auth-modal-fname { text-align: left; }
+    .auth-modal-fname small { display: block; font-size: 11px; color: var(--muted2); font-weight: 400; }
+    .auth-modal-actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn-auth-login { padding: 14px; background: var(--green); color: #000; border: none; border-radius: var(--radius); font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 2px; cursor: pointer; transition: transform .18s, box-shadow .18s; }
+    .btn-auth-login:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(127,255,0,.35); }
+    .btn-auth-register { padding: 13px; background: none; border: 1px solid var(--border2); border-radius: var(--radius); color: var(--text); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: border-color .2s, color .2s; text-decoration: none; display: block; }
+    .btn-auth-register:hover { border-color: var(--green); color: var(--green); }
+    .btn-auth-close { position: absolute; top: 14px; right: 14px; width: 28px; height: 28px; border: 1px solid var(--border2); border-radius: 8px; background: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: border-color .2s, color .2s; }
+    .btn-auth-close:hover { border-color: var(--text); color: var(--text); }
+
+    /* ── BOTÃO FALAR NOS CARDS ── */
+    .btn-chat-fl {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; padding: 9px; margin-top: 4px;
+      background: none; border: 1px solid var(--border2); border-radius: 10px;
+      color: var(--muted2); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: border-color .2s, color .2s, background .2s;
+    }
+    .btn-chat-fl:hover { border-color: var(--green); color: var(--green); background: var(--gdim); }
+    .empty { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 80px 32px; text-align: center; }
     .empty.show { display: flex; }
     .empty-icon { font-size: 48px; }
     .empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; }
@@ -319,7 +363,7 @@
       </div>
     </div>
     <div class="nav-right">
-      <a href="cartScreen.html" class="nav-icon-btn" title="Carrinho">
+      <a href="serviceScreen.html" class="nav-icon-btn" title="Carrinho">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
       </a>
       <div class="nav-icon-btn" id="notifBtn">
@@ -441,6 +485,27 @@
     </div>
   </div>
 
+  <!-- AUTH MODAL -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-modal">
+      <button class="btn-auth-close" onclick="closeAuthModal()">×</button>
+      <div class="auth-modal-icon">💬</div>
+      <h2 class="auth-modal-title">FALAR COM <span id="modalFreelancerName">FREELANCER</span></h2>
+      <p class="auth-modal-desc">Para iniciar uma conversa e contratar serviços, você precisa estar logado na plataforma.</p>
+      <div class="auth-modal-freelancer">
+        <div class="auth-modal-avatar" id="modalAvatar" style="background:#7fff00">MR</div>
+        <div class="auth-modal-fname">
+          <span id="modalName">Marina Rocha</span>
+          <small id="modalRole">UI/UX Designer Sênior</small>
+        </div>
+      </div>
+      <div class="auth-modal-actions">
+        <button class="btn-auth-login" onclick="goToLogin()">FAZER LOGIN</button>
+        <a href="signupScreen.html" class="btn-auth-register">Não tem conta? Cadastre-se grátis</a>
+      </div>
+    </div>
+  </div>
+
   <script>
     const DATA = [
       { id:1,  name:'Marina Rocha',   adTitle:'Vou criar seu Design System completo no Figma',          emoji:'🎨', bannerBg:'linear-gradient(135deg,#0d1f0d,#1a3a1a)', tags:['Figma','Prototyping','Design System'], rating:4.98, reviews:214, price:120, color:'#7fff00', avail:'green',  badge:'TOP', cat:'design' },
@@ -503,6 +568,10 @@
               <div class="fl-rating">★ ${f.rating} <span>(${f.reviews})</span></div>
               <div class="fl-price">R$${f.price}<small>/hr</small></div>
             </div>
+            <button class="btn-chat-fl" onclick="tryChat(event,'${f.name}','${ini}','${f.color}','${f.adTitle}')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Falar com ${f.name.split(' ')[0]}
+            </button>
           </div>`;
         grid.appendChild(gc);
 
@@ -528,6 +597,10 @@
           <div class="fl-list-price-col">
             <div class="fl-list-price">R$${f.price}<small>/hr</small></div>
             <button class="fl-list-heart${lk?' liked':''}" onclick="toggleLike(event,${f.id},this)">♥</button>
+            <button class="btn-chat-fl" style="margin-top:4px" onclick="tryChat(event,'${f.name}','${ini}','${f.color}','${f.adTitle}')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Falar
+            </button>
           </div>`;
         list.appendChild(lc);
       });
@@ -541,7 +614,7 @@
         if (f.rating < state.star) return false;
         if (f.price > state.maxPrice) return false;
         if (state.avail !== 'todos' && f.avail !== state.avail) return false;
-        if (q && !f.name.toLowerCase().includes(q) && !f.role.toLowerCase().includes(q) && !f.tags.some(t=>t.toLowerCase().includes(q))) return false;
+        if (q && !f.name.toLowerCase().includes(q) && !f.adTitle.toLowerCase().includes(q) && !f.tags.some(t=>t.toLowerCase().includes(q))) return false;
         return true;
       });
       const sort = document.getElementById('sortSelect').value;
@@ -596,6 +669,40 @@
 
     document.addEventListener('click', closeAllDd);
 
+    /* ── AUTH CHAT ── */
+    function tryChat(e, name, initials, color, role) {
+      e.stopPropagation();
+      const type = localStorage.getItem('of_user_type');
+      if (type === 'cliente') {
+        window.location.href = 'chatScreenClient.html';
+      } else if (type === 'freelancer') {
+        window.location.href = 'chatScreenFreelancer.html';
+      } else {
+        openAuthModal(name, initials, color, role);
+      }
+    }
+
+    function openAuthModal(name, initials, color, role) {
+      document.getElementById('modalFreelancerName').textContent = name.split(' ')[0].toUpperCase();
+      document.getElementById('modalAvatar').textContent = initials;
+      document.getElementById('modalAvatar').style.background = color;
+      document.getElementById('modalName').textContent = name;
+      document.getElementById('modalRole').textContent = role;
+      document.getElementById('authOverlay').classList.add('show');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authOverlay').classList.remove('show');
+    }
+
+    function goToLogin() {
+      window.location.href = 'loginScreen.html';
+    }
+
+    document.getElementById('authOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeAuthModal();
+    });
+
     /* ── NOTIF ── */
     document.getElementById('notifBtn').addEventListener('click', e => {
       e.stopPropagation();
@@ -647,6 +754,13 @@
     });
 
     render(DATA);
+  
+    function goToChat() {
+      const type = localStorage.getItem('of_user_type');
+      if (type === 'freelancer') window.location.href = 'chatScreenFreelancer.html';
+      else if (type === 'cliente') window.location.href = 'chatScreenClient.html';
+      else window.location.href = 'loginScreen.html';
+    }
   </script>
 </body>
 </html>

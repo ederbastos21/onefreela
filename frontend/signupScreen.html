@@ -319,6 +319,13 @@
     .btn-submit.freelancer:hover { box-shadow: 0 10px 32px rgba(168,85,247,.32); }
     .btn-submit:hover::before { transform: translateX(100%); }
 
+    .form-msg {
+      display: none; font-size: 13px; font-weight: 600;
+      padding: 12px 16px; border-radius: 12px; text-align: center;
+    }
+    .form-msg.error   { display: block; color: #f87171; background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.25); }
+    .form-msg.success { display: block; color: var(--green); background: rgba(127,255,0,.08); border: 1px solid rgba(127,255,0,.2); }
+
     .divider {
       display: flex; align-items: center; gap: 12px;
       margin: 18px 0;
@@ -473,6 +480,8 @@
               <a href="#" id="privacyLink">Política de Privacidade</a> da OneFreela.
             </p>
           </div>
+
+          <div id="formMsg" class="form-msg"></div>
 
           <button class="btn-submit" id="btnSubmit" onclick="handleSubmit(event)">
             CRIAR MINHA CONTA
@@ -637,7 +646,15 @@
         : '';
     }
 
-    function handleSubmit(e) {
+    const API = 'http://localhost:8080';
+
+    function showMsg(text, type) {
+      const el = document.getElementById('formMsg');
+      el.textContent = text;
+      el.className = 'form-msg ' + type;
+    }
+
+    async function handleSubmit(e) {
       const btn  = document.getElementById('btnSubmit');
       const rect = btn.getBoundingClientRect();
       const r    = document.createElement('span');
@@ -646,6 +663,57 @@
       r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
       btn.appendChild(r);
       r.addEventListener('animationend', () => r.remove());
+
+      const nome      = document.getElementById('nome').value.trim();
+      const sobrenome = document.getElementById('sobrenome').value.trim();
+      const email     = document.getElementById('email').value.trim();
+      const senha     = document.getElementById('senha').value;
+      const confirma  = document.getElementById('confirma').value;
+
+      if (!nome || !sobrenome || !email || !senha || !confirma) {
+        showMsg('Preencha todos os campos obrigatórios.', 'error'); return;
+      }
+      if (senha.length < 8) {
+        showMsg('A senha deve ter pelo menos 8 caracteres.', 'error'); return;
+      }
+      if (senha !== confirma) {
+        showMsg('As senhas não coincidem.', 'error'); return;
+      }
+      if (!checked) {
+        showMsg('Você precisa aceitar os Termos de Uso.', 'error'); return;
+      }
+      if (currentType === 'freelancer' && !document.getElementById('area').value) {
+        showMsg('Selecione sua área de atuação.', 'error'); return;
+      }
+
+      const originalText = btn.textContent;
+      btn.textContent = 'CRIANDO CONTA...';
+      btn.disabled = true;
+
+      try {
+        const body = { name: nome + ' ' + sobrenome, email, password: senha, userType: currentType };
+        if (currentType === 'freelancer') body.area = document.getElementById('area').value;
+
+        const res  = await fetch(API + '/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+
+        if (!res.ok) { showMsg(data.message || 'Erro ao criar conta. Tente novamente.', 'error'); return; }
+
+        localStorage.setItem('of_token',     data.token);
+        localStorage.setItem('of_user_type', data.userType || currentType);
+        showMsg('Conta criada com sucesso!', 'success');
+        setTimeout(() => { window.location.href = 'exploreFreelancers.html'; }, 800);
+
+      } catch {
+        showMsg('Erro de conexão. Verifique sua internet.', 'error');
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
     }
 
     document.addEventListener('mousemove', e => {

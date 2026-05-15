@@ -341,6 +341,14 @@
     .float-tag:nth-child(3) { top: 55%; left:  5%; animation-delay: -11s; }
     @keyframes floatTag { 0%,100%{opacity:.15;transform:translateY(0)} 50%{opacity:.35;transform:translateY(-8px)} }
 
+    /* ─── FORM MESSAGE ─── */
+    .form-msg {
+      display: none; font-size: 13px; font-weight: 600;
+      padding: 12px 16px; border-radius: 12px; text-align: center; margin-bottom: 16px;
+    }
+    .form-msg.error   { display: block; color: #f87171; background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.25); }
+    .form-msg.success { display: block; color: var(--green); background: rgba(127,255,0,.08); border: 1px solid rgba(127,255,0,.2); }
+
     /* ─── RIPPLE ─── */
     .ripple {
       position: absolute;
@@ -429,6 +437,7 @@
       </div>
 
       <!-- Button -->
+      <div id="formMsg" class="form-msg"></div>
       <button class="btn draggable" id="loginBtn" onclick="handleLogin()">ENTRAR</button>
 
       <!-- Drag hint -->
@@ -464,9 +473,47 @@
       }
     }
 
-    function handleLogin() {
-      localStorage.setItem('of_user_type', selectedType);
-      window.location.href = 'exploreFreelancers.html';
+    const API = 'http://localhost:8080';
+
+    function showMsg(text, type) {
+      const el = document.getElementById('formMsg');
+      el.textContent = text;
+      el.className = 'form-msg ' + type;
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value;
+
+      if (!email || !senha) { showMsg('Preencha e-mail e senha.', 'error'); return; }
+
+      const btn = document.getElementById('loginBtn');
+      const originalText = btn.textContent;
+      btn.textContent = 'ENTRANDO...';
+      btn.disabled = true;
+
+      try {
+        const res  = await fetch(API + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: senha })
+        });
+        const data = await res.json();
+
+        if (!res.ok) { showMsg(data.message || 'E-mail ou senha incorretos.', 'error'); return; }
+
+        localStorage.setItem('of_token',     data.token);
+        localStorage.setItem('of_user_type', data.userType || selectedType);
+
+        const type = data.userType || selectedType;
+        window.location.href = type === 'freelancer' ? 'chatScreenFreelancer.html' : 'exploreFreelancers.html';
+
+      } catch {
+        showMsg('Erro de conexão. Verifique sua internet.', 'error');
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
     }
 
     /* ── Eye toggle ── */
