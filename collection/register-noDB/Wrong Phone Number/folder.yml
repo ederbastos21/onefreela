@@ -1,7 +1,0 @@
-info:
-  name: Wrong Phone Number
-  type: folder
-  seq: 9
-
-request:
-  auth: inherit

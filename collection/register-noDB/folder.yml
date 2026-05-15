@@ -1,7 +1,0 @@
-info:
-  name: register-noDB
-  type: folder
-  seq: 2
-
-request:
-  auth: inherit

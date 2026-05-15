@@ -1,0 +1,27 @@
+info:
+  name: valid client
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: http://localhost:8080/users/register
+  body:
+    type: json
+    data: |-
+      {
+        "birthday": "2005-10-10",
+        "cpf": "87393046080",
+        "email": "cliente@gmail.com",
+        "name": "mariasilva",
+        "password": "Abc123!232",
+        "phoneNumber": "5542123456789",
+        "freelancer": false
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

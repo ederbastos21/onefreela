@@ -1,7 +1,0 @@
-info:
-  name: Wrong Age
-  type: folder
-  seq: 8
-
-request:
-  auth: inherit

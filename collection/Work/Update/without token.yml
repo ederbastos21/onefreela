@@ -1,0 +1,24 @@
+info:
+  name: without token
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: http://localhost:8080/works/updateWork/1
+  body:
+    type: json
+    data: |-
+      {
+        "title": "API REST com Spring Boot",
+        "description": "Desenvolvo APIs REST com Java, Spring Boot, validações, banco de dados e organização em camadas.",
+        "category": "programacao",
+        "price": 950.0
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

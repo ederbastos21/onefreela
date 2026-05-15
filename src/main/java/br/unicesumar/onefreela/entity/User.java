@@ -1,12 +1,7 @@
 package br.unicesumar.onefreela.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
 public class User {
@@ -15,30 +10,20 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Boolean isAdmin;
-
-    @NotBlank(message = "nome não pode ser vazio")
+    //input data
     private String name;
-
-    @NotBlank(message = "senha não pode ser vazio")
-    private String password;
-
-    @Column(unique = true)
-    @Email(message = "formato de email invalido")
-    @NotBlank(message = "email não pode ser vazio")
     private String email;
-
-    @NotBlank(message = "cpf não pode ser vazio")
+    private String password;
     private String cpf;
-
-    @NotNull(message = "data não pode ser vazio")
     private LocalDate birthday;
-
-    @NotBlank(message = "numero de telefone não pode ser vazio")
     private String phoneNumber;
-    private String profilePicturePath;
+
+    //automatic data
     private String registerDate;
-    private Boolean verified;
+    private String profilePicturePath;
+    private boolean isAdmin;
+    private boolean isFreelancer;
+    private boolean verified;
 
     public Long getId() {
         return id;
@@ -48,11 +33,11 @@ public class User {
         this.id = id;
     }
 
-    public Boolean getAdmin() {
+    public boolean getAdmin() {
         return isAdmin;
     }
 
-    public void setAdmin(Boolean admin) {
+    public void setAdmin(boolean admin) {
         isAdmin = admin;
     }
 
@@ -120,12 +105,20 @@ public class User {
         this.registerDate = registerDate;
     }
 
-    public Boolean getVerified() {
+    public boolean getVerified() {
         return verified;
     }
 
-    public void setVerified(Boolean verified) {
+    public void setVerified(boolean verified) {
         this.verified = verified;
+    }
+
+    public boolean getFreelancer() {
+        return isFreelancer;
+    }
+
+    public void setFreelancer(boolean freelancer) {
+        isFreelancer = freelancer;
     }
 
     public User() {}

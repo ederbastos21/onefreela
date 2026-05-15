@@ -1,0 +1,21 @@
+info:
+  name: valid (token)
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:8080/users/loginToken
+  headers:
+    - name: Authorization
+      value: 36b82c77-b530-46d4-bbf0-4148499a8d56
+  body:
+    type: json
+    data: ""
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

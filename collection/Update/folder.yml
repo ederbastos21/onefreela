@@ -1,0 +1,7 @@
+info:
+  name: Update
+  type: folder
+  seq: 3
+
+request:
+  auth: inherit

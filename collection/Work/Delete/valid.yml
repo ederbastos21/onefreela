@@ -1,0 +1,18 @@
+info:
+  name: valid
+  type: http
+  seq: 1
+
+http:
+  method: DELETE
+  url: http://localhost:8080/works/deleteWork/2
+  headers:
+    - name: Authorization
+      value: 36b82c77-b530-46d4-bbf0-4148499a8d56
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

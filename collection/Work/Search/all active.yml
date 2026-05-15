@@ -1,0 +1,15 @@
+info:
+  name: all active
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: http://localhost:8080/works/search
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

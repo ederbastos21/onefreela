@@ -1,0 +1,27 @@
+info:
+  name: not found
+  type: http
+  seq: 3
+
+http:
+  method: PUT
+  url: http://localhost:8080/works/updateWork/999999
+  headers:
+    - name: Authorization
+      value: 4e4ec019-2e53-4c06-bf57-169f09e3f680
+  body:
+    type: json
+    data: |-
+      {
+        "title": "API REST com Spring Boot",
+        "description": "Desenvolvo APIs REST com Java, Spring Boot, validações, banco de dados e organização em camadas.",
+        "category": "programacao",
+        "price": 950.0
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,28 @@
+info:
+  name: Untitled
+  type: http
+  seq: 1
+
+http:
+  method: PUT
+  url: http://localhost:8080/users/updateUser
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Joaosilva",
+        "oldPassword": "Abc123!232",
+        "newPassword": "teste",
+        "oldEmail": "exemploab@gmail.com",
+        "newEmail": "teste",
+        "birthday": "2000-05-20",
+        "phoneNumber": "5542999999999",
+        "profilePicturePath": "/images/profiles/joao.png"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
