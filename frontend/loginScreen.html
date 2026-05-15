@@ -504,9 +504,11 @@
 
         localStorage.setItem('of_token',     data.token);
         localStorage.setItem('of_user_type', data.userType || selectedType);
+        localStorage.setItem('of_email',     email);
+        if (data.name) localStorage.setItem('of_name', data.name);
 
         const type = data.userType || selectedType;
-        window.location.href = type === 'freelancer' ? 'chatScreenFreelancer.html' : 'exploreFreelancers.html';
+        window.location.href = type === 'freelancer' ? 'freelancerProfile.html' : 'exploreFreelancers.html';
 
       } catch {
         showMsg('Erro de conexão. Verifique sua internet.', 'error');

@@ -668,10 +668,15 @@
 
         if (!res.ok) { showMsg(data.message || 'Erro ao criar conta. Tente novamente.', 'error'); return; }
 
+        const userType = data.userType || currentType;
         localStorage.setItem('of_token',     data.token);
-        localStorage.setItem('of_user_type', data.userType || currentType);
+        localStorage.setItem('of_user_type', userType);
+        localStorage.setItem('of_name',      nome + ' ' + sobrenome);
+        localStorage.setItem('of_email',     email);
         showMsg('Conta criada com sucesso!', 'success');
-        setTimeout(() => { window.location.href = 'exploreFreelancers.html'; }, 800);
+        setTimeout(() => {
+          window.location.href = userType === 'freelancer' ? 'freelancerProfile.html' : 'exploreFreelancers.html';
+        }, 800);
 
       } catch {
         showMsg('Erro de conexão. Verifique sua internet.', 'error');

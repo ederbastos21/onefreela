@@ -593,10 +593,10 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </div>
       <div class="nav-user">
-        <div class="nav-user-name">Carlos A.</div>
-        <div class="nav-user-role">Cliente</div>
+        <div class="nav-user-name" id="navUserName"></div>
+        <div class="nav-user-role" id="navUserRole"></div>
       </div>
-      <a href="onefreela-perfil-cliente.html" class="nav-avatar">CA</a>
+      <a href="clientProfile.html" class="nav-avatar" id="navAvatar"></a>
     </div>
   </nav>
   <div class="notif-panel" id="notifPanel">
@@ -922,6 +922,7 @@
     </div>
   </footer>
 
+  <script src="auth.js"></script>
   <script>
     /* ── Cursor glow ── */
     const glow = document.getElementById('cursorGlow');
@@ -994,23 +995,7 @@
       }
     }
 
-    /* ── Update nav based on session ── */
-    (function() {
-      const type = localStorage.getItem('of_user_type');
-      const avatarEl = document.querySelector('.nav-avatar');
-      const nameEl   = document.querySelector('.nav-user-name');
-      const roleEl   = document.querySelector('.nav-user-role');
-      if (!type) return;
-      if (type === 'freelancer') {
-        if (avatarEl) { avatarEl.textContent = 'MR'; avatarEl.href = 'freelancerProfile.html'; }
-        if (nameEl)   nameEl.textContent = 'Marina R.';
-        if (roleEl)   roleEl.textContent = 'Freelancer';
-      } else {
-        if (avatarEl) { avatarEl.textContent = 'CA'; avatarEl.href = 'clientProfile.html'; }
-        if (nameEl)   nameEl.textContent = 'Carlos A.';
-        if (roleEl)   roleEl.textContent = 'Cliente';
-      }
-    })();
+    OFAuth.loadNav();
   </script>
 </body>
 </html>
