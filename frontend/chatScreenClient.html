@@ -262,10 +262,10 @@
         <span class="notif-badge" style="background:#60a5fa">2</span>
       </a>
       <div class="nav-user">
-        <div class="nav-user-name">Carlos A.</div>
-        <div class="nav-user-role">Cliente</div>
+        <div class="nav-user-name" id="navUserName"></div>
+        <div class="nav-user-role" id="navUserRole"></div>
       </div>
-      <a href="clientProfile.html" class="nav-avatar">CA</a>
+      <a href="clientProfile.html" class="nav-avatar" id="navAvatar"></a>
     </div>
   </nav>
 
@@ -521,7 +521,10 @@
 
   </div>
 
+  <script src="auth.js"></script>
   <script>
+    OFAuth.loadNav();
+
     document.getElementById('notifBtn').addEventListener('click', e => {
       e.stopPropagation();
       document.getElementById('notifPanel').classList.toggle('open');
@@ -561,7 +564,7 @@
       const div = document.createElement('div');
       div.className = 'msg mine';
       div.innerHTML = `
-        <div class="msg-avatar" style="background:#60a5fa">CA</div>
+        <div class="msg-avatar" style="background:#60a5fa">${OFAuth.getInitials(OFAuth.getName())}</div>
         <div>
           <div class="msg-bubble">${text.replace(/</g,'&lt;')}</div>
           <div class="msg-meta">${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} <span class="msg-check">✓✓</span></div>

@@ -171,7 +171,7 @@
       <span class="nav-title">Editar Perfil</span>
     </div>
     <div class="nav-right">
-      <div class="nav-avatar">MR</div>
+      <a href="freelancerProfile.html" class="nav-avatar" id="navAvatar"></a>
     </div>
   </nav>
 
@@ -239,11 +239,11 @@
           <div class="fields-grid">
             <div class="field">
               <label class="field-label">Nome</label>
-              <input class="field-input" type="text" value="Marina" />
+              <input class="field-input" type="text" id="settingNome" />
             </div>
             <div class="field">
               <label class="field-label">Sobrenome</label>
-              <input class="field-input" type="text" value="Rocha" />
+              <input class="field-input" type="text" id="settingSobrenome" />
             </div>
             <div class="field field-full">
               <label class="field-label">Título Profissional</label>
@@ -407,7 +407,11 @@
 
   <div class="toast" id="toast">✓ Perfil atualizado com sucesso!</div>
 
+  <script src="auth.js"></script>
   <script>
+    OFAuth.loadProfile();
+    document.getElementById('navAvatar').textContent = OFAuth.getInitials(OFAuth.getName());
+
     function updateCount(inputId, countId, max) {
       const val = document.getElementById(inputId).value.length;
       const el  = document.getElementById(countId);

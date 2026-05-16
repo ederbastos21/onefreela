@@ -224,10 +224,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </div>
       <div class="nav-user">
-        <div class="nav-user-name">Carlos A.</div>
-        <div class="nav-user-role">Cliente</div>
+        <div class="nav-user-name" id="navUserName"></div>
+        <div class="nav-user-role" id="navUserRole"></div>
       </div>
-      <div class="nav-avatar">CA</div>
+      <a href="clientProfile.html" class="nav-avatar" id="navAvatar"></a>
     </div>
   </nav>
 
@@ -408,7 +408,10 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="auth.js"></script>
   <script>
+    OFAuth.loadNav();
+
     let itemCount = 3;
     let discountApplied = false;
 

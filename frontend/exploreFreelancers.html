@@ -374,10 +374,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </div>
       <div class="nav-user">
-        <div class="nav-user-name">Carlos A.</div>
-        <div class="nav-user-role">Cliente</div>
+        <div class="nav-user-name" id="navUserName"></div>
+        <div class="nav-user-role" id="navUserRole"></div>
       </div>
-      <div class="nav-avatar">CA</div>
+      <a href="clientProfile.html" class="nav-avatar" id="navAvatar"></a>
     </div>
   </nav>
 
@@ -506,6 +506,7 @@
     </div>
   </div>
 
+  <script src="auth.js"></script>
   <script>
     const DATA = [
       { id:1,  name:'Marina Rocha',   adTitle:'Vou criar seu Design System completo no Figma',          emoji:'🎨', bannerBg:'linear-gradient(135deg,#0d1f0d,#1a3a1a)', tags:['Figma','Prototyping','Design System'], rating:4.98, reviews:214, price:120, color:'#7fff00', avail:'green',  badge:'TOP', cat:'design' },
@@ -754,7 +755,8 @@
     });
 
     render(DATA);
-  
+    OFAuth.loadNav();
+
     function goToChat() {
       const type = localStorage.getItem('of_user_type');
       if (type === 'freelancer') window.location.href = 'chatScreenFreelancer.html';
@@ -762,5 +764,6 @@
       else window.location.href = 'loginScreen.html';
     }
   </script>
+
 </body>
 </html>
