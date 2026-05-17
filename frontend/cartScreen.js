@@ -42,6 +42,9 @@ function applyCoupon() {
   }
 }
 
-function checkout() { showToast('✓ Redirecionando para o pagamento...'); }
+function checkout() {
+  showToast('✓ Redirecionando para o pagamento...');
+  setTimeout(() => { window.location.href = 'paymentScreen.html'; }, 900);
+}
 
 initNotifPanel();
