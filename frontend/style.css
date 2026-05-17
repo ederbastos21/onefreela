@@ -3222,3 +3222,579 @@ footer {
   .pay-steps       { display: none; }
   .boleto-info-grid{ grid-template-columns: 1fr; }
 }
+
+
+/* ============================================================
+   LAYER 8 — ORDER CONFIRMATION PAGE
+   ============================================================ */
+
+/* ── Processing state ──────────────────────────────────────── */
+
+.conf-processing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 480px;
+  padding: 48px 24px;
+}
+
+.conf-processing-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+}
+
+/* Spinner */
+
+.conf-spinner-wrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin-bottom: 36px;
+}
+
+.conf-spinner-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--green);
+  animation: spinRing 1.2s linear infinite;
+}
+
+.conf-spinner-ring--2 {
+  inset: 10px;
+  border-top-color: transparent;
+  border-right-color: rgba(127,255,0,.35);
+  animation-duration: 1.8s;
+  animation-direction: reverse;
+}
+
+.conf-spinner-core {
+  position: absolute;
+  inset: 22px;
+  border-radius: 50%;
+  background: var(--gdim);
+  border: 1px solid rgba(127,255,0,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes spinRing {
+  to { transform: rotate(360deg); }
+}
+
+/* Titles */
+
+.conf-processing-title {
+  font-size: 32px;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.conf-processing-sub {
+  font-size: 13px;
+  color: var(--muted2);
+  margin-bottom: 28px;
+  min-height: 20px;
+  transition: opacity .3s;
+}
+
+/* Progress bar */
+
+.conf-progress-track {
+  width: 100%;
+  height: 3px;
+  background: var(--border2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.conf-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--green-dim), var(--green));
+  border-radius: 99px;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 0 8px rgba(127,255,0,.5);
+}
+
+/* Step list */
+
+.conf-processing-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+}
+
+.conf-proc-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  transition: color .3s;
+}
+
+.conf-proc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  flex-shrink: 0;
+  transition: background .3s, border-color .3s, box-shadow .3s;
+}
+
+.conf-proc-dot.active {
+  background: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 6px rgba(127,255,0,.6);
+  animation: dotPulse .8s ease infinite alternate;
+}
+
+.conf-proc-dot.done {
+  background: rgba(127,255,0,.3);
+  border-color: rgba(127,255,0,.5);
+}
+
+@keyframes dotPulse {
+  from { box-shadow: 0 0 4px rgba(127,255,0,.4); }
+  to   { box-shadow: 0 0 10px rgba(127,255,0,.8); }
+}
+
+/* ── Success state entry animation ────────────────────────── */
+
+.conf-success--enter {
+  animation: fadeUp .45s ease both;
+}
+
+/* ── Hero section ──────────────────────────────────────────── */
+
+.conf-success-hero {
+  text-align: center;
+  margin-bottom: 44px;
+}
+
+.conf-check-wrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 28px;
+}
+
+.conf-check-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(127,255,0,.15);
+  animation: expandRing 1.8s ease-out infinite;
+}
+
+.conf-check-ring--outer {
+  inset: -10px;
+  animation-delay: 0s;
+}
+
+.conf-check-ring--inner {
+  inset: -2px;
+  animation-delay: .4s;
+}
+
+@keyframes expandRing {
+  0%   { transform: scale(.9); opacity: .6; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+.conf-check-circle {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(127,255,0,.1);
+  border: 2px solid rgba(127,255,0,.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.conf-check-path {
+  stroke-dasharray: 52;
+  stroke-dashoffset: 52;
+}
+
+.conf-check-circle--animate .conf-check-path {
+  animation: drawCheck .55s .1s ease forwards;
+}
+
+.conf-success-title {
+  font-size: clamp(32px, 5vw, 52px);
+  letter-spacing: 2px;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, var(--text), var(--green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.conf-success-sub {
+  font-size: 14px;
+  color: var(--muted2);
+  max-width: 500px;
+  margin: 0 auto 20px;
+  line-height: 1.75;
+}
+
+.conf-order-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--gdim);
+  border: 1px solid rgba(127,255,0,.2);
+  border-radius: var(--radius);
+  padding: 7px 18px;
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+.conf-order-badge strong {
+  color: var(--green);
+  font-family: monospace;
+  letter-spacing: 1px;
+}
+
+/* ── Two-column layout ─────────────────────────────────────── */
+
+.conf-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ── Confirmed order items ─────────────────────────────────── */
+
+.conf-count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  background: var(--gdim);
+  border: 1px solid rgba(127,255,0,.2);
+  border-radius: var(--radius);
+  padding: 3px 10px;
+  letter-spacing: .3px;
+}
+
+.conf-order-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.conf-order-item:last-child { border-bottom: none; }
+
+.conf-order-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.conf-order-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.conf-order-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.conf-order-meta {
+  font-size: 11px;
+  color: var(--muted2);
+  margin-bottom: 8px;
+}
+
+.conf-order-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.conf-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  color: var(--muted2);
+  letter-spacing: .3px;
+}
+
+.conf-tag--green {
+  background: var(--gdim);
+  border-color: rgba(127,255,0,.25);
+  color: var(--green);
+}
+
+.conf-tag--purple {
+  background: rgba(168,85,247,.1);
+  border-color: rgba(168,85,247,.3);
+  color: var(--purple);
+}
+
+.conf-order-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.conf-order-price {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--green);
+  letter-spacing: .5px;
+}
+
+.conf-chat-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted2);
+  padding: 4px 10px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  transition: border-color .2s, color .2s;
+}
+
+.conf-chat-link:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* ── Payment summary inside card ───────────────────────────── */
+
+.conf-payment-summary {
+  padding-top: 16px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.conf-ps-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted2);
+  margin-bottom: 8px;
+}
+
+.conf-ps-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0;
+}
+
+.conf-ps-total {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.conf-payment-method {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted2);
+}
+
+/* ── Receipt button ────────────────────────────────────────── */
+
+.conf-receipt-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px;
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: var(--rc);
+  color: var(--muted2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .2s, color .2s;
+}
+
+.conf-receipt-btn:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+/* ── Timeline ──────────────────────────────────────────────── */
+
+.conf-timeline {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.conf-timeline::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  left: 16px;
+  width: 1px;
+  background: var(--border2);
+}
+
+.conf-tl-item {
+  display: flex;
+  gap: 16px;
+  padding: 0 0 24px;
+  position: relative;
+}
+
+.conf-tl-item:last-child { padding-bottom: 0; }
+
+.conf-tl-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--muted);
+  position: relative;
+  z-index: 1;
+}
+
+.conf-tl-icon--pulse {
+  background: var(--gdim);
+  border-color: rgba(127,255,0,.3);
+  color: var(--green);
+  animation: dotPulse .9s ease infinite alternate;
+}
+
+.conf-tl-icon--pending {
+  color: var(--muted);
+  opacity: .5;
+}
+
+.conf-tl-item--done .conf-tl-icon {
+  background: var(--gdim);
+  border-color: rgba(127,255,0,.35);
+  color: var(--green);
+}
+
+.conf-tl-body { padding-top: 5px; }
+
+.conf-tl-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+.conf-tl-item--pending .conf-tl-title,
+.conf-tl-item:not(.conf-tl-item--done):not(.conf-tl-item--active) .conf-tl-title {
+  color: var(--muted2);
+}
+
+.conf-tl-desc {
+  font-size: 12px;
+  color: var(--muted2);
+  line-height: 1.6;
+  margin-bottom: 4px;
+}
+
+.conf-tl-time {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .3px;
+}
+
+.conf-tl-item--done .conf-tl-time  { color: var(--green); }
+.conf-tl-item--active .conf-tl-time { color: var(--text); }
+
+/* ── Guarantee strip ───────────────────────────────────────── */
+
+.conf-guarantee-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.conf-guarantee-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.conf-guarantee-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.conf-guarantee-desc {
+  font-size: 11px;
+  color: var(--muted2);
+  line-height: 1.5;
+}
+
+/* ── CTA block ─────────────────────────────────────────────── */
+
+.conf-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.conf-actions-secondary {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+
+@media (max-width: 960px) {
+  .conf-layout { grid-template-columns: 1fr; }
+  .conf-guarantee-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .conf-success-title { font-size: 28px; }
+  .conf-actions-secondary { flex-direction: column; }
+  .conf-order-title { white-space: normal; }
+}

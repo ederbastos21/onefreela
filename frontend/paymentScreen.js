@@ -105,13 +105,22 @@ function confirmPayment() {
   if (currentMethod === 'card' && !validateCard()) return;
 
   const btn = document.getElementById('confirmBtn');
-  btn.textContent = 'PROCESSANDO...';
-  btn.disabled    = true;
+  btn.textContent   = 'PROCESSANDO...';
+  btn.disabled      = true;
   btn.style.opacity = '.7';
+
+  /* persist order context for the confirmation page */
+  const rand = Math.floor(Math.random() * 90000) + 10000;
+  sessionStorage.setItem('of_last_order', JSON.stringify({
+    orderId: '#OF-2026-' + rand,
+    method:  currentMethod,
+    date:    new Date().toLocaleDateString('pt-BR'),
+  }));
+  sessionStorage.removeItem('of_payment_done');
 
   setTimeout(() => {
     clearInterval(pixInterval);
-    document.getElementById('successOverlay').classList.add('show');
+    window.location.href = 'orderConfirmation.html';
   }, 1800);
 }
 

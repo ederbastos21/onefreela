@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Confirmação do Pedido</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo" style="display:flex;align-items:center;gap:10px">
+        <div class="nav-logo-icon">OF</div>
+        <div class="nav-logo-text">One<span>Freela</span></div>
+      </a>
+      <div class="nav-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar freelancers, habilidades..." />
+      </div>
+    </div>
+    <div class="nav-right">
+      <a href="cartScreen.html" class="nav-icon-btn" title="Carrinho">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </a>
+      <div class="nav-icon-btn" id="notifBtn" style="position:relative">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-badge">2</span>
+      </div>
+      <div class="nav-user">
+        <div class="nav-user-name" id="navUserName"></div>
+        <div class="nav-user-role" id="navUserRole"></div>
+      </div>
+      <a href="clientProfile.html" class="nav-avatar" id="navAvatar"></a>
+    </div>
+  </nav>
+
+  <!-- NOTIF PANEL -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-title">Notificações</div>
+    <div class="notif-item">
+      <div class="notif-dot"></div>
+      <div>
+        <div class="notif-text"><strong>Marina Rocha</strong> confirmou disponibilidade.</div>
+        <div class="notif-time">Há 10 min</div>
+      </div>
+    </div>
+    <div class="notif-item">
+      <div class="notif-dot"></div>
+      <div>
+        <div class="notif-text"><strong>Lucas Ferreira</strong> está pronto para começar.</div>
+        <div class="notif-time">Há 30 min</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE -->
+  <div class="page">
+    <div class="container">
+
+      <!-- BREADCRUMB -->
+      <div class="breadcrumb">
+        <a href="exploreFreelancers.html">Explorar</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="cartScreen.html">Carrinho</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="paymentScreen.html">Pagamento</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Confirmação</span>
+      </div>
+
+      <!-- PROGRESS STEPS -->
+      <div class="pay-steps">
+        <div class="pay-step done">
+          <div class="pay-step-circle">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span>Carrinho</span>
+        </div>
+        <div class="pay-step-line done"></div>
+        <div class="pay-step done">
+          <div class="pay-step-circle">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span>Pagamento</span>
+        </div>
+        <div class="pay-step-line done"></div>
+        <div class="pay-step active">
+          <div class="pay-step-circle">3</div>
+          <span>Confirmação</span>
+        </div>
+      </div>
+
+      <!-- ════════════ PROCESSING STATE ════════════ -->
+      <div class="conf-processing" id="processingState">
+        <div class="conf-processing-inner">
+
+          <div class="conf-spinner-wrap">
+            <div class="conf-spinner-ring"></div>
+            <div class="conf-spinner-ring conf-spinner-ring--2"></div>
+            <div class="conf-spinner-core">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+          </div>
+
+          <h2 class="font-display conf-processing-title" id="processingTitle">PROCESSANDO PAGAMENTO</h2>
+          <p class="conf-processing-sub" id="processingSubtitle">Autorizando transação junto ao banco...</p>
+
+          <div class="conf-progress-track">
+            <div class="conf-progress-bar" id="progressBar"></div>
+          </div>
+
+          <div class="conf-processing-steps">
+            <div class="conf-proc-step" id="procStep1">
+              <div class="conf-proc-dot active"></div>
+              <span>Verificando dados</span>
+            </div>
+            <div class="conf-proc-step" id="procStep2">
+              <div class="conf-proc-dot"></div>
+              <span>Autorizando pagamento</span>
+            </div>
+            <div class="conf-proc-step" id="procStep3">
+              <div class="conf-proc-dot"></div>
+              <span>Confirmando pedido</span>
+            </div>
+            <div class="conf-proc-step" id="procStep4">
+              <div class="conf-proc-dot"></div>
+              <span>Notificando freelancers</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ════════════ SUCCESS STATE ════════════ -->
+      <div class="conf-success hidden" id="successState">
+
+        <!-- Hero -->
+        <div class="conf-success-hero">
+          <div class="conf-check-wrap">
+            <div class="conf-check-ring conf-check-ring--outer"></div>
+            <div class="conf-check-ring conf-check-ring--inner"></div>
+            <div class="conf-check-circle" id="checkCircle">
+              <svg width="40" height="40" viewBox="0 0 52 52" fill="none"
+                   stroke="var(--green)" stroke-width="4"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <polyline class="conf-check-path" points="14,27 22,35 38,19"/>
+              </svg>
+            </div>
+          </div>
+
+          <h1 class="font-display conf-success-title">PEDIDO CONFIRMADO!</h1>
+          <p class="conf-success-sub">
+            Pagamento aprovado com sucesso. Os freelancers foram notificados e seus projetos já estão na fila.
+          </p>
+
+          <div class="conf-order-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M3 10h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10z"/><line x1="3" y1="10" x2="3" y2="6"/><line x1="21" y1="10" x2="21" y2="6"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+            Pedido <strong id="orderIdDisplay">#OF-2026-08471</strong>
+            &nbsp;·&nbsp;
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-1px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="orderDateDisplay">17/05/2026</span>
+          </div>
+        </div>
+
+        <!-- Grid: orders + next steps -->
+        <div class="conf-layout">
+
+          <!-- LEFT: confirmed orders -->
+          <div>
+            <div class="section-card mb-24">
+              <div class="section-card-header">
+                <h3 class="font-display" style="font-size:17px;letter-spacing:1px">SERVIÇOS CONTRATADOS</h3>
+                <span class="conf-count-badge" id="serviceCount">3 serviços</span>
+              </div>
+
+              <div id="confirmedItems">
+                <!-- Item 1 -->
+                <div class="conf-order-item">
+                  <div class="conf-order-thumb" style="background:linear-gradient(135deg,#0d1f0d,#1a3a1a)">🎨</div>
+                  <div class="conf-order-body">
+                    <div class="conf-order-title">Design System completo no Figma</div>
+                    <div class="conf-order-meta">Marina Rocha &middot; Pacote Padrão</div>
+                    <div class="conf-order-tags">
+                      <span class="conf-tag conf-tag--green">Aprovado</span>
+                      <span class="conf-tag">Entrega em 10 dias</span>
+                    </div>
+                  </div>
+                  <div class="conf-order-right">
+                    <div class="conf-order-price">R$1.200</div>
+                    <a href="chatScreenClient.html" class="conf-chat-link">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      Chat
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="conf-order-item">
+                  <div class="conf-order-thumb" style="background:linear-gradient(135deg,#0d0d1f,#1a1a3a)">💻</div>
+                  <div class="conf-order-body">
+                    <div class="conf-order-title">Front-end com React e Next.js</div>
+                    <div class="conf-order-meta">Lucas Ferreira &middot; Pacote Básico</div>
+                    <div class="conf-order-tags">
+                      <span class="conf-tag conf-tag--green">Aprovado</span>
+                      <span class="conf-tag">Entrega em 7 dias</span>
+                    </div>
+                  </div>
+                  <div class="conf-order-right">
+                    <div class="conf-order-price">R$950</div>
+                    <a href="chatScreenClient.html" class="conf-chat-link">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      Chat
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Item 3 -->
+                <div class="conf-order-item">
+                  <div class="conf-order-thumb" style="background:linear-gradient(135deg,#1f0d0d,#3a1a1a)">📱</div>
+                  <div class="conf-order-body">
+                    <div class="conf-order-title">Gestão de redes sociais</div>
+                    <div class="conf-order-meta">Ana Beatriz &middot; Pacote Mensal</div>
+                    <div class="conf-order-tags">
+                      <span class="conf-tag conf-tag--green">Aprovado</span>
+                      <span class="conf-tag conf-tag--purple">Recorrente</span>
+                    </div>
+                  </div>
+                  <div class="conf-order-right">
+                    <div class="conf-order-price">R$900</div>
+                    <a href="chatScreenClient.html" class="conf-chat-link">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                      Chat
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment summary -->
+              <div class="conf-payment-summary">
+                <div class="conf-ps-row">
+                  <span>Subtotal</span><span>R$&nbsp;3.050,00</span>
+                </div>
+                <div class="conf-ps-row">
+                  <span>Taxa de serviço (10%)</span><span>R$&nbsp;305,00</span>
+                </div>
+                <div class="conf-ps-divider"></div>
+                <div class="conf-ps-row conf-ps-total">
+                  <span class="font-display" style="letter-spacing:.5px">TOTAL PAGO</span>
+                  <span class="font-display" style="font-size:22px;color:var(--green)">R$&nbsp;3.355</span>
+                </div>
+                <div class="conf-payment-method" id="paymentMethodDisplay">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  Pago via PIX
+                </div>
+              </div>
+            </div>
+
+            <!-- Receipt download -->
+            <button class="conf-receipt-btn" onclick="downloadReceipt()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Baixar comprovante PDF
+            </button>
+          </div>
+
+          <!-- RIGHT: next steps + timeline -->
+          <div>
+
+            <!-- What happens next -->
+            <div class="section-card mb-24">
+              <div class="section-card-header">
+                <h3 class="font-display" style="font-size:17px;letter-spacing:1px">PRÓXIMOS PASSOS</h3>
+              </div>
+
+              <div class="conf-timeline">
+
+                <div class="conf-tl-item conf-tl-item--done">
+                  <div class="conf-tl-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                  <div class="conf-tl-body">
+                    <div class="conf-tl-title">Pagamento confirmado</div>
+                    <div class="conf-tl-desc">Transação autorizada. Valor em custódia segura.</div>
+                    <div class="conf-tl-time">Agora</div>
+                  </div>
+                </div>
+
+                <div class="conf-tl-item conf-tl-item--active">
+                  <div class="conf-tl-icon conf-tl-icon--pulse">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  </div>
+                  <div class="conf-tl-body">
+                    <div class="conf-tl-title">Freelancers notificados</div>
+                    <div class="conf-tl-desc">Marina, Lucas e Ana foram avisados. Aguarde o contato deles pelo chat.</div>
+                    <div class="conf-tl-time">Em instantes</div>
+                  </div>
+                </div>
+
+                <div class="conf-tl-item">
+                  <div class="conf-tl-icon conf-tl-icon--pending">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  </div>
+                  <div class="conf-tl-body">
+                    <div class="conf-tl-title">Alinhamento inicial</div>
+                    <div class="conf-tl-desc">Combine briefing, referências e prazos com cada freelancer via chat.</div>
+                    <div class="conf-tl-time">Hoje — 17/05</div>
+                  </div>
+                </div>
+
+                <div class="conf-tl-item">
+                  <div class="conf-tl-icon conf-tl-icon--pending">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <div class="conf-tl-body">
+                    <div class="conf-tl-title">Execução dos projetos</div>
+                    <div class="conf-tl-desc">Acompanhe o progresso pelo chat. Solicite revisões a qualquer momento.</div>
+                    <div class="conf-tl-time">A partir de 18/05</div>
+                  </div>
+                </div>
+
+                <div class="conf-tl-item">
+                  <div class="conf-tl-icon conf-tl-icon--pending">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  </div>
+                  <div class="conf-tl-body">
+                    <div class="conf-tl-title">Liberação do pagamento</div>
+                    <div class="conf-tl-desc">Após sua aprovação da entrega, o valor é liberado ao freelancer automaticamente.</div>
+                    <div class="conf-tl-time">Após entrega aprovada</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Guarantee reminder -->
+            <div class="section-card mb-24">
+              <div class="conf-guarantee-grid">
+                <div class="conf-guarantee-item">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                  <div>
+                    <div class="conf-guarantee-title">Reembolso garantido</div>
+                    <div class="conf-guarantee-desc">Devolvemos 100% se o freelancer não entregar</div>
+                  </div>
+                </div>
+                <div class="conf-guarantee-item">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <div>
+                    <div class="conf-guarantee-title">Pagamento em custódia</div>
+                    <div class="conf-guarantee-desc">Liberado só após você aprovar a entrega</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CTAs -->
+            <div class="conf-actions">
+              <a href="chatScreenClient.html" class="btn-checkout" style="display:block;text-align:center;text-decoration:none">
+                IR PARA O CHAT
+              </a>
+              <div class="conf-actions-secondary">
+                <a href="clientProfile.html" class="btn-secondary" style="flex:1;text-align:center;padding:12px">
+                  VER MEUS PEDIDOS
+                </a>
+                <a href="exploreFreelancers.html" class="btn-secondary" style="flex:1;text-align:center;padding:12px">
+                  CONTINUAR EXPLORANDO
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="auth.js"></script>
+  <script src="main.js"></script>
+  <script src="orderConfirmation.js"></script>
+</body>
+</html>
