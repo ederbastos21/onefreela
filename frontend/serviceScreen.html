@@ -7,290 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --black:  #080808;
-      --surface:#0f0f0f;
-      --card:   #141414;
-      --card2:  #1a1a1a;
-      --input:  #1e1e1e;
-      --border: #242424;
-      --border2:#2e2e2e;
-      --green:  #7fff00;
-      --gdim:   rgba(127,255,0,.1);
-      --text:   #f0f0f0;
-      --muted:  #666;
-      --muted2: #999;
-      --radius: 999px;
-      --rc:     14px;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body { font-family: 'Syne', sans-serif; background: var(--black); color: var(--text); min-height: 100vh; }
-    body::before {
-      content: ''; position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 9998; opacity: .25;
-    }
-
-    /* NAV */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
-      height: 64px; display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px; background: rgba(8,8,8,.95); border-bottom: 1px solid var(--border);
-    }
-    .nav-left { display: flex; align-items: center; gap: 20px; }
-    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); }
-    .nav-logo-icon { width: 28px; height: 28px; background: var(--green); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #000; }
-    .nav-logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; }
-    .nav-logo-text span { color: var(--green); }
-    .nav-sep { width: 1px; height: 20px; background: var(--border2); }
-    .nav-back { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--muted2); text-decoration: none; transition: color .2s; }
-    .nav-back:hover { color: var(--green); }
-    .nav-back:hover svg { transform: translateX(-3px); }
-    .nav-back svg { transition: transform .2s; }
-    .nav-right { display: flex; align-items: center; gap: 14px; }
-    .nav-icon-btn { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); transition: border-color .2s, color .2s; }
-    .nav-icon-btn:hover { border-color: var(--green); color: var(--green); }
-    .nav-avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--green); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #000; border: 2px solid var(--green); }
-    .nav-user { display: flex; flex-direction: column; }
-    .nav-user-name { font-size: 12px; font-weight: 700; line-height: 1; }
-    .nav-user-role { font-size: 10px; color: var(--muted); margin-top: 2px; }
-
-    /* BREADCRUMB */
-    .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 24px; flex-wrap: wrap; }
-    .breadcrumb a { color: var(--muted2); text-decoration: none; transition: color .2s; }
-    .breadcrumb a:hover { color: var(--green); }
-    .breadcrumb-sep { color: var(--border2); }
-    .breadcrumb-current { color: var(--text); font-weight: 600; }
-
-    /* LAYOUT */
-    .page { padding: 88px 0 80px; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
-
-    .service-layout {
-      display: grid;
-      grid-template-columns: 1fr 360px;
-      gap: 40px;
-      align-items: flex-start;
-    }
-
-    /* ── LEFT COLUMN ── */
-    .left-col { min-width: 0; }
-
-    /* Título */
-    .service-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 4vw, 42px); letter-spacing: 1px; line-height: 1.05; margin-bottom: 16px; }
-
-    /* Meta row */
-    .service-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
-    .meta-rating { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: var(--green); }
-    .meta-rating span { color: var(--muted2); font-weight: 400; }
-    .meta-orders { font-size: 12px; color: var(--muted2); }
-    .meta-avail { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted2); }
-    .avail-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-    .meta-cat { background: var(--gdim); border: 1px solid rgba(127,255,0,.2); border-radius: var(--radius); padding: 3px 10px; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--green); }
-
-    /* GALERIA */
-    .gallery { margin-bottom: 32px; }
-    .gallery-main {
-      width: 100%; aspect-ratio: 16/9; border-radius: var(--rc);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 80px; position: relative; overflow: hidden; margin-bottom: 10px;
-      cursor: pointer; border: 1px solid var(--border);
-      transition: border-color .2s;
-    }
-    .gallery-main:hover { border-color: rgba(127,255,0,.3); }
-    .gallery-main-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,.4) 100%); }
-    .gallery-play {
-      position: absolute; width: 56px; height: 56px; border-radius: 50%;
-      background: rgba(127,255,0,.9); display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: transform .2s, background .2s; z-index: 1;
-    }
-    .gallery-play:hover { transform: scale(1.1); background: var(--green); }
-    .gallery-play svg { color: #000; margin-left: 3px; }
-    .gallery-thumbs { display: flex; gap: 8px; }
-    .gallery-thumb {
-      flex: 1; aspect-ratio: 16/9; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px; cursor: pointer; border: 2px solid transparent;
-      transition: border-color .2s, transform .15s; overflow: hidden;
-    }
-    .gallery-thumb:hover { transform: scale(1.03); }
-    .gallery-thumb.active { border-color: var(--green); }
-
-    /* DESCRIÇÃO */
-    .section-block { margin-bottom: 32px; }
-    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-    .description { font-size: 14px; line-height: 1.85; color: var(--muted2); }
-    .description p { margin-bottom: 12px; }
-    .description strong { color: var(--text); }
-
-    /* O QUE ESTÁ INCLUÍDO */
-    .includes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .include-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; }
-    .include-icon { font-size: 18px; flex-shrink: 0; }
-    .include-text { font-size: 13px; color: var(--muted2); line-height: 1.4; }
-    .include-text strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 12px; }
-
-    /* FREELANCER CARD */
-    .freelancer-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--rc);
-      padding: 20px; margin-bottom: 32px;
-      transition: border-color .2s;
-    }
-    .freelancer-card:hover { border-color: rgba(127,255,0,.2); }
-    .freelancer-card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
-    .fl-avatar-lg { width: 54px; height: 54px; border-radius: 14px; background: var(--green); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #000; flex-shrink: 0; border: 2px solid rgba(127,255,0,.3); }
-    .fl-card-info { flex: 1; }
-    .fl-card-name { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
-    .fl-card-role { font-size: 12px; color: var(--muted2); }
-    .fl-card-rating { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--green); font-weight: 700; margin-top: 4px; }
-    .fl-card-rating span { color: var(--muted); font-weight: 400; }
-    .btn-ver-perfil {
-      padding: 8px 16px; border: 1px solid var(--border2); border-radius: 10px;
-      background: none; color: var(--muted2); font-family: 'Syne', sans-serif;
-      font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none;
-      display: inline-flex; align-items: center; gap: 6px;
-      transition: border-color .2s, color .2s;
-    }
-    .btn-ver-perfil:hover { border-color: var(--green); color: var(--green); }
-    .fl-card-stats { display: flex; gap: 16px; }
-    .fl-stat { display: flex; flex-direction: column; gap: 2px; }
-    .fl-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--text); line-height: 1; }
-    .fl-stat-lbl { font-size: 10px; color: var(--muted); }
-    .fl-card-bio { font-size: 12px; color: var(--muted2); line-height: 1.6; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
-
-    /* AVALIAÇÕES */
-    .reviews-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    .reviews-summary { display: flex; align-items: center; gap: 16px; }
-    .reviews-big-score { font-family: 'Bebas Neue', sans-serif; font-size: 52px; color: var(--green); line-height: 1; }
-    .reviews-bars { display: flex; flex-direction: column; gap: 4px; }
-    .bar-row { display: flex; align-items: center; gap: 8px; }
-    .bar-label { font-size: 11px; color: var(--muted2); width: 12px; text-align: right; flex-shrink: 0; }
-    .bar-track { flex: 1; height: 4px; background: var(--border2); border-radius: 4px; overflow: hidden; }
-    .bar-fill { height: 100%; background: var(--green); border-radius: 4px; }
-    .bar-count { font-size: 10px; color: var(--muted); width: 16px; flex-shrink: 0; }
-
-    .review-list { display: flex; flex-direction: column; gap: 20px; }
-    .review-item { padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-    .review-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .review-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .review-avatar { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #000; flex-shrink: 0; }
-    .review-meta { flex: 1; }
-    .review-name { font-size: 13px; font-weight: 700; }
-    .review-date { font-size: 11px; color: var(--muted); }
-    .review-stars { color: var(--green); font-size: 12px; }
-    .review-text { font-size: 13px; color: var(--muted2); line-height: 1.7; }
-
-    /* FAQ */
-    .faq-item { border-bottom: 1px solid var(--border); }
-    .faq-item:first-child { border-top: 1px solid var(--border); }
-    .faq-q { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; cursor: pointer; font-size: 13px; font-weight: 600; gap: 20px; }
-    .faq-icon { width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--muted); transition: background .2s, border-color .2s, color .2s, transform .3s; flex-shrink: 0; }
-    .faq-item.open .faq-icon { background: var(--green); border-color: var(--green); color: #000; transform: rotate(45deg); }
-    .faq-a { font-size: 13px; color: var(--muted2); line-height: 1.75; max-height: 0; overflow: hidden; transition: max-height .4s ease, padding .3s; }
-    .faq-item.open .faq-a { max-height: 200px; padding-bottom: 16px; }
-
-    /* ── RIGHT COLUMN (sticky) ── */
-    .right-col { position: sticky; top: 80px; }
-
-    .purchase-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--rc);
-      overflow: hidden; margin-bottom: 16px;
-    }
-    .purchase-card::before { content: ''; display: block; height: 3px; background: linear-gradient(90deg, var(--green), transparent); }
-
-    /* Pacotes */
-    .packages { display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1px solid var(--border); }
-    .package-tab { padding: 14px 8px; text-align: center; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--muted2); border-right: 1px solid var(--border); transition: background .2s, color .2s; }
-    .package-tab:last-child { border-right: none; }
-    .package-tab.active { background: var(--gdim); color: var(--green); }
-    .package-tab-name { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; display: block; }
-    .package-tab-price { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--text); display: block; margin-top: 2px; }
-    .package-tab.active .package-tab-price { color: var(--green); }
-
-    /* Detalhes do pacote */
-    .package-detail { padding: 20px; }
-    .package-desc { font-size: 13px; color: var(--muted2); line-height: 1.6; margin-bottom: 16px; }
-    .package-features { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-    .pkg-feat { display: flex; align-items: center; gap: 9px; font-size: 12px; color: var(--muted2); }
-    .pkg-feat-check { width: 16px; height: 16px; border-radius: 50%; background: var(--gdim); border: 1px solid rgba(127,255,0,.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 9px; color: var(--green); }
-    .pkg-feat-x { background: rgba(255,255,255,.04); border-color: var(--border2); color: var(--muted); }
-
-    /* Observação */
-    .obs-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-    .obs-input {
-      width: 100%; background: var(--input); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px 14px;
-      font-family: 'Syne', sans-serif; font-size: 13px; color: var(--text);
-      resize: none; outline: none; min-height: 80px;
-      transition: border-color .25s, box-shadow .25s;
-    }
-    .obs-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(127,255,0,.08); }
-    .obs-input::placeholder { color: #333; }
-    .obs-counter { text-align: right; font-size: 10px; color: var(--muted); margin-top: 4px; margin-bottom: 16px; }
-
-    /* Botões de compra */
-    .btn-buy {
-      width: 100%; padding: 15px; background: var(--green); color: #000;
-      border: none; border-radius: var(--radius);
-      font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 2px;
-      cursor: pointer; position: relative; overflow: hidden;
-      transition: transform .18s, box-shadow .18s; margin-bottom: 10px;
-    }
-    .btn-buy::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent); transform: translateX(-100%); transition: transform .5s; }
-    .btn-buy:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(127,255,0,.35); }
-    .btn-buy:hover::before { transform: translateX(100%); }
-
-    .btn-cart {
-      width: 100%; padding: 13px; background: none;
-      border: 1px solid var(--border2); border-radius: var(--radius);
-      color: var(--text); font-family: 'Syne', sans-serif;
-      font-size: 13px; font-weight: 700; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: border-color .2s, color .2s; margin-bottom: 14px;
-    }
-    .btn-cart:hover { border-color: var(--green); color: var(--green); }
-    .btn-cart.added { border-color: var(--green); color: var(--green); background: var(--gdim); }
-
-    .purchase-guarantees { display: flex; flex-direction: column; gap: 8px; }
-    .guarantee { display: flex; align-items: center; gap: 9px; font-size: 11px; color: var(--muted2); }
-    .guarantee svg { color: var(--green); flex-shrink: 0; }
-
-    /* SIMILAR */
-    .similar-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 40px; }
-    .similar-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--rc); overflow: hidden; cursor: pointer; transition: border-color .2s, transform .2s; }
-    .similar-card:hover { border-color: rgba(127,255,0,.25); transform: translateY(-3px); }
-    .similar-thumb { aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; font-size: 32px; }
-    .similar-body { padding: 12px; }
-    .similar-title { font-size: 12px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .similar-footer { display: flex; align-items: center; justify-content: space-between; }
-    .similar-rating { font-size: 11px; color: var(--green); font-weight: 700; }
-    .similar-price { font-family: 'Bebas Neue', sans-serif; font-size: 15px; }
-
-    /* TOAST */
-    .toast { position: fixed; bottom: 28px; right: 28px; background: var(--card2); border: 1px solid rgba(127,255,0,.3); border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--green); z-index: 9999; box-shadow: 0 12px 40px rgba(0,0,0,.5); transform: translateY(20px); opacity: 0; transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .3s; }
-    .toast.show { transform: translateY(0); opacity: 1; }
-
-    @media (max-width: 960px) {
-      .service-layout { grid-template-columns: 1fr; }
-      .right-col { position: static; }
-      .similar-grid { grid-template-columns: 1fr 1fr; }
-    }
-  
-    .notif-badge { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--green); color: #000; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--black); }
-    .notif-panel { position: fixed; top: 72px; right: 20px; width: 300px; background: var(--card2); border: 1px solid var(--border2); border-radius: 16px; padding: 16px; z-index: 9999; box-shadow: 0 20px 60px rgba(0,0,0,.75); display: none; }
-    .notif-panel.open { display: block; animation: dropIn .2s ease both; }
-    .notif-title { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-    .notif-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .notif-item:last-child { border-bottom: none; }
-    .notif-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-top: 4px; flex-shrink: 0; }
-    .notif-text { font-size: 12px; color: var(--muted2); line-height: 1.5; }
-    .notif-text strong { color: var(--text); }
-    .notif-time { font-size: 10px; color: var(--muted); margin-top: 3px; }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
@@ -357,7 +74,7 @@
             </div>
             <div class="meta-orders">382 pedidos realizados</div>
             <div class="meta-avail">
-              <span class="avail-dot" style="background:#22c55e"></span>
+              <span class="avail-dot avail-green"></span>
               Disponível agora
             </div>
             <span class="meta-cat">Design & Arte</span>
@@ -366,7 +83,7 @@
           <!-- GALERIA -->
           <div class="gallery">
             <div class="gallery-main" id="galleryMain" style="background:linear-gradient(135deg,#0d1f0d,#1a3a1a)">
-              <span style="position:relative;z-index:1;font-size:90px">🎨</span>
+              <span class="gallery-emoji">🎨</span>
               <div class="gallery-main-overlay"></div>
               <div class="gallery-play" id="playBtn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -454,11 +171,11 @@
               <div class="reviews-summary">
                 <div class="reviews-big-score">4.98</div>
                 <div class="reviews-bars">
-                  <div class="bar-row"><span class="bar-label">5</span><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div><span class="bar-count">206</span></div>
-                  <div class="bar-row"><span class="bar-label">4</span><div class="bar-track"><div class="bar-fill" style="width:4%"></div></div><span class="bar-count">8</span></div>
-                  <div class="bar-row"><span class="bar-label">3</span><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">0</span></div>
-                  <div class="bar-row"><span class="bar-label">2</span><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">0</span></div>
-                  <div class="bar-row"><span class="bar-label">1</span><div class="bar-track"><div class="bar-fill" style="width:0%"></div></div><span class="bar-count">0</span></div>
+                  <div class="bar-row"><span class="bar-label">5</span><div class="bar-track"><div class="bar-fill fill-96"></div></div><span class="bar-count">206</span></div>
+                  <div class="bar-row"><span class="bar-label">4</span><div class="bar-track"><div class="bar-fill fill-4"></div></div><span class="bar-count">8</span></div>
+                  <div class="bar-row"><span class="bar-label">3</span><div class="bar-track"><div class="bar-fill fill-0"></div></div><span class="bar-count">0</span></div>
+                  <div class="bar-row"><span class="bar-label">2</span><div class="bar-track"><div class="bar-fill fill-0"></div></div><span class="bar-count">0</span></div>
+                  <div class="bar-row"><span class="bar-label">1</span><div class="bar-track"><div class="bar-fill fill-0"></div></div><span class="bar-count">0</span></div>
                 </div>
               </div>
             </div>
@@ -639,104 +356,7 @@
   <div class="toast" id="toast"></div>
 
   <script src="auth.js"></script>
-  <script>
-    OFAuth.loadNav();
-
-    const packages = [
-      {
-        desc: 'Design System básico com 30 componentes essenciais e paleta de cores. Ideal para MVPs e projetos menores. Inclui 1 revisão.',
-        features: [
-          [true,  '30 componentes no Figma'],
-          [true,  'Paleta de cores e tipografia'],
-          [true,  'Grid básico'],
-          [true,  '1 revisão incluída'],
-          [true,  'Entrega em 5 dias'],
-          [false, 'Tokens de design'],
-          [false, 'Dark mode'],
-          [false, 'Handoff para dev'],
-        ]
-      },
-      {
-        desc: 'Design System completo com 60+ componentes, tokens de design, guia de estilo e documentação para dev. Inclui 3 revisões.',
-        features: [
-          [true,  '60+ componentes no Figma'],
-          [true,  'Tokens de design'],
-          [true,  'Guia de tipografia e cores'],
-          [true,  'Grid responsivo'],
-          [true,  '3 revisões incluídas'],
-          [true,  'Entrega em 10 dias'],
-          [false, 'Dark mode'],
-          [false, 'Handoff para dev'],
-        ]
-      },
-      {
-        desc: 'Design System enterprise com 100+ componentes, dark mode, tokens avançados, handoff completo para dev e revisões ilimitadas.',
-        features: [
-          [true, '100+ componentes no Figma'],
-          [true, 'Tokens de design avançados'],
-          [true, 'Dark mode completo'],
-          [true, 'Handoff para dev'],
-          [true, 'Revisões ilimitadas'],
-          [true, 'Entrega em 15 dias'],
-          [true, 'Suporte pós-entrega (30 dias)'],
-          [true, 'Treinamento da equipe (1h)'],
-        ]
-      }
-    ];
-
-    function setPackage(el, idx) {
-      document.querySelectorAll('.package-tab').forEach(t => t.classList.remove('active'));
-      el.classList.add('active');
-      const p = packages[idx];
-      document.getElementById('pkgDesc').textContent = p.desc;
-      document.getElementById('pkgFeatures').innerHTML = p.features.map(([ok, txt]) =>
-        `<div class="pkg-feat"><span class="pkg-feat-check${ok?'':' pkg-feat-x'}">${ok?'✓':'✗'}</span> ${txt}</div>`
-      ).join('');
-    }
-
-    function setThumb(el, bg, emoji) {
-      document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
-      el.classList.add('active');
-      const main = document.getElementById('galleryMain');
-      main.style.background = bg;
-      main.querySelector('span').textContent = emoji;
-    }
-
-    function updateObs() {
-      document.getElementById('obsCount').textContent = document.getElementById('obsInput').value.length;
-    }
-
-    function addToCart() {
-      const btn = document.getElementById('cartBtn');
-      btn.classList.add('added');
-      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Adicionado ao carrinho`;
-      showToast('🛒 Serviço adicionado ao carrinho!');
-    }
-
-    function buyNow() { showToast('✓ Redirecionando para o pagamento...'); }
-
-    function toggleFaq(el) {
-      const item = el.closest('.faq-item');
-      const isOpen = item.classList.contains('open');
-      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
-      if (!isOpen) item.classList.add('open');
-    }
-
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 3000);
-    }
-  
-    document.getElementById('notifBtn').addEventListener('click', e => {
-      e.stopPropagation();
-      document.getElementById('notifPanel').classList.toggle('open');
-    });
-    document.addEventListener('click', e => {
-      if (!e.target.closest('#notifBtn') && !e.target.closest('#notifPanel'))
-        document.getElementById('notifPanel').classList.remove('open');
-    });
-  </script>
+  <script src="main.js"></script>
+  <script src="serviceScreen.js"></script>
 </body>
 </html>

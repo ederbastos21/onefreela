@@ -2266,3 +2266,149 @@ footer {
 /* ── Edit profile — toast above action bar ──────────────── */
 
 .toast.toast-edit { bottom: 80px; }
+
+
+/* ============================================================
+   LAYER 6 — UTILITIES & SHARED OVERRIDES
+   ============================================================ */
+
+/* ── Visibility ──────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ── Text colours ────────────────────────────────────────── */
+.text-green { color: var(--green); }
+
+/* ── Badge colours ───────────────────────────────────────── */
+.badge-blue { background: #60a5fa; }
+
+/* ── Availability dot colours (semantic) ─────────────────── */
+.avail-green  { background: #22c55e; }
+.avail-yellow { background: #eab308; }
+.avail-red    { background: #ef4444; }
+
+/* ── Stagger animation delays ────────────────────────────── */
+.anim-d1 { animation-delay:  .05s; }
+.anim-d2 { animation-delay:  .10s; }
+.anim-d3 { animation-delay:  .15s; }
+.anim-d4 { animation-delay:  .20s; }
+.anim-d5 { animation-delay:  .25s; }
+
+/* ── Drag source ghost ───────────────────────────────────── */
+.drag-source { opacity: .25; }
+
+/* ── Cart item removal (JS adds class, setTimeout removes el) */
+.removing {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity .3s, transform .3s;
+}
+
+/* ── OTP error border flash ──────────────────────────────── */
+.input-otp-error { border-color: #ef4444 !important; }
+
+/* ── Resize utility ──────────────────────────────────────── */
+.resize-v { resize: vertical; }
+
+/* ── Bottom spacer ───────────────────────────────────────── */
+.spacer-72 { height: 72px; }
+
+/* ── Flex row utilities ──────────────────────────────────── */
+.d-flex-gap8       { display: flex; align-items: center; gap: 8px; }
+.price-range-label { display: flex; align-items: center; color: var(--muted); font-size: 12px; flex-shrink: 0; }
+
+/* ── Navbar active link on scroll ────────────────────────── */
+.nav-active { color: var(--green) !important; }
+
+/* ── Clean anchor (no underline) ────────────────────────── */
+.link-clean { text-decoration: none; }
+
+/* ── Price "/hr" small unit ──────────────────────────────── */
+.price-unit { font-family: var(--font-body); font-size: 10px; color: var(--muted); }
+
+/* ── Rating review count ─────────────────────────────────── */
+.fl-rating span,
+.fl-list-rating span { color: var(--muted); font-weight: 400; }
+
+/* ── Progress / bar fill fixed widths ────────────────────── */
+.fill-0  { width:  0%; }
+.fill-4  { width:  4%; }
+.fill-33 { width: 33%; }
+.fill-35 { width: 35%; }
+.fill-70 { width: 70%; }
+.fill-96 { width: 96%; }
+
+/* ── Danger zone card border + text ─────────────────────── */
+.card-box-danger { border-color: rgba(239,68,68,.2) !important; }
+.text-danger-sm  { font-size: 13px; color: var(--muted2); margin-bottom: 16px; }
+
+/* ── Nav logout / danger link ────────────────────────────── */
+.nav-item-danger { margin-top: auto; color: #ef4444; }
+
+/* ── aboutUs stat-float fixed positions ─────────────────── */
+.stat-float-tr { top: -24px; right: -20px; }
+.stat-float-bl { bottom: -20px; left: -20px; animation-delay: -3s; }
+
+/* ── serviceScreen gallery emoji ─────────────────────────── */
+.gallery-emoji { position: relative; z-index: 1; font-size: 90px; }
+
+/* ── chatScreenFreelancer deliver button ─────────────────── */
+.btn-attach-delivery {
+  background: var(--gdim);
+  border-color: rgba(127,255,0,.3);
+  color: var(--green);
+}
+
+/* ── chatScreenFreelancer msg-file spacing ───────────────── */
+.msg-file-mb { margin-bottom: 10px; }
+
+/* ── exploreFreelancers: fl-list default display ─────────── */
+.fl-list { display: flex; flex-direction: column; gap: 12px; }
+
+/* ── loginScreen type-toggle widget ─────────────────────── */
+.login-type-wrap   { margin-bottom: 20px; }
+.login-type-label  {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 10px;
+}
+.login-type-toggle {
+  display: grid; grid-template-columns: 1fr 1fr;
+  background: var(--input); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 4px; position: relative;
+}
+.login-type-pill {
+  position: absolute; top: 4px; left: 4px;
+  width: calc(50% - 4px); height: calc(100% - 8px);
+  background: var(--green); border-radius: var(--radius);
+  transition: transform .35s cubic-bezier(.34,1.2,.64,1);
+  z-index: 0;
+}
+.login-type-pill.freelancer { transform: translateX(100%); }
+.login-type-btn {
+  position: relative; z-index: 1;
+  padding: 10px; border: none; background: none;
+  font-family: var(--font-display); font-size: 14px;
+  letter-spacing: 2px; color: var(--muted);
+  cursor: pointer; border-radius: var(--radius);
+  transition: color .3s;
+}
+.login-type-btn.active { color: #000; }
+
+/* ── signupScreen toggle pill + buttons (referenced by HTML) */
+.toggle-pill {
+  position: absolute; top: 4px; left: 4px;
+  width: calc(50% - 4px); height: calc(100% - 8px);
+  background: var(--green); border-radius: var(--radius);
+  transition: transform .35s cubic-bezier(.34,1.2,.64,1), background .6s;
+  z-index: 0;
+}
+.toggle-pill.freelancer { transform: translateX(100%); background: var(--purple); }
+.toggle-btn {
+  position: relative; z-index: 1;
+  padding: 11px; border: none; background: none;
+  font-family: var(--font-display); font-size: 15px;
+  letter-spacing: 2px; color: var(--muted);
+  cursor: pointer; border-radius: var(--radius);
+  transition: color .3s;
+}
+.toggle-btn.active { color: #000; }

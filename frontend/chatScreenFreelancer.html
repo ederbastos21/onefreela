@@ -7,196 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --black:  #080808; --surface:#0f0f0f; --card:#141414; --card2:#1a1a1a;
-      --input:  #1e1e1e; --border:#242424; --border2:#2e2e2e;
-      --green:  #7fff00; --gdim:rgba(127,255,0,.1);
-      --text:   #f0f0f0; --muted:#666; --muted2:#999;
-      --radius: 999px; --rc:14px;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
-    body { font-family: 'Syne', sans-serif; background: var(--black); color: var(--text); }
-    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:9998; opacity:.25; }
-
-    nav { position:fixed; top:0; left:0; right:0; z-index:500; height:64px; display:flex; align-items:center; justify-content:space-between; padding:0 32px; background:rgba(8,8,8,.95); border-bottom:1px solid var(--border); }
-    .nav-left { display:flex; align-items:center; gap:28px; }
-    .nav-logo { display:flex; align-items:center; gap:8px; text-decoration:none; color:var(--text); }
-    .nav-logo-icon { width:28px; height:28px; background:var(--green); border-radius:7px; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:14px; color:#000; }
-    .nav-logo-text { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px; }
-    .nav-logo-text span { color:var(--green); }
-    .nav-right { display:flex; align-items:center; gap:14px; }
-    .nav-icon-btn { position:relative; width:36px; height:36px; border:1px solid var(--border); border-radius:10px; background:var(--card); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted); transition:border-color .2s,color .2s; text-decoration:none; }
-    .nav-icon-btn:hover, .nav-icon-btn.active-page { border-color:var(--green); color:var(--green); background:var(--gdim); }
-    .notif-badge { position:absolute; top:-4px; right:-4px; width:16px; height:16px; border-radius:50%; background:var(--green); color:#000; font-size:9px; font-weight:800; display:flex; align-items:center; justify-content:center; border:2px solid var(--black); }
-    .nav-avatar { width:36px; height:36px; border-radius:10px; background:var(--green); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:15px; color:#000; border:2px solid var(--green); text-decoration:none; }
-    .nav-user { display:flex; flex-direction:column; }
-    .nav-user-name { font-size:12px; font-weight:700; line-height:1; }
-    .nav-user-role { font-size:10px; color:var(--muted); margin-top:2px; }
-
-    .notif-panel { position:fixed; top:72px; right:20px; width:300px; background:var(--card2); border:1px solid var(--border2); border-radius:16px; padding:16px; z-index:9999; box-shadow:0 20px 60px rgba(0,0,0,.75); display:none; }
-    .notif-panel.open { display:block; animation:dropIn .2s ease both; }
-    @keyframes dropIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-    .notif-title { font-size:12px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
-    .notif-item { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
-    .notif-item:last-child { border-bottom:none; }
-    .notif-dot { width:7px; height:7px; border-radius:50%; background:var(--green); margin-top:4px; flex-shrink:0; }
-    .notif-text { font-size:12px; color:var(--muted2); line-height:1.5; }
-    .notif-text strong { color:var(--text); }
-    .notif-time { font-size:10px; color:var(--muted); margin-top:3px; }
-
-    .chat-wrap { display:flex; height:100vh; padding-top:64px; }
-
-    /* SIDEBAR */
-    .conv-sidebar { width:300px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; height:100%; }
-    .conv-header { padding:20px 18px 14px; border-bottom:1px solid var(--border); }
-    .conv-title { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1px; margin-bottom:12px; }
-    .conv-search { display:flex; align-items:center; gap:9px; background:var(--input); border:1px solid var(--border); border-radius:var(--radius); padding:0 14px; height:36px; transition:border-color .2s; }
-    .conv-search:focus-within { border-color:var(--green); }
-    .conv-search input { flex:1; background:none; border:none; outline:none; font-family:'Syne',sans-serif; font-size:13px; color:var(--text); }
-    .conv-search input::placeholder { color:var(--muted); }
-    .conv-search svg { color:var(--muted); flex-shrink:0; }
-    .conv-filter { display:flex; gap:6px; padding:12px 18px; border-bottom:1px solid var(--border); }
-    .filter-chip { padding:5px 12px; border-radius:var(--radius); font-size:11px; font-weight:700; cursor:pointer; transition:background .2s,color .2s; border:1px solid var(--border); color:var(--muted2); background:none; }
-    .filter-chip.active { background:var(--gdim); border-color:rgba(127,255,0,.3); color:var(--green); }
-    .conv-list { flex:1; overflow-y:auto; }
-    .conv-list::-webkit-scrollbar { width:3px; }
-    .conv-list::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
-
-    .conv-item { display:flex; align-items:center; gap:12px; padding:14px 18px; cursor:pointer; border-bottom:1px solid var(--border); transition:background .15s; position:relative; }
-    .conv-item:hover { background:var(--card2); }
-    .conv-item.active { background:var(--gdim); border-right:2px solid var(--green); }
-    .conv-avatar { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:17px; color:#000; flex-shrink:0; position:relative; }
-    .conv-online { position:absolute; bottom:-2px; right:-2px; width:10px; height:10px; border-radius:50%; background:#22c55e; border:2px solid var(--surface); }
-    .conv-online.away { background:#eab308; }
-    .conv-online.offline { background:var(--border2); }
-    .conv-info { flex:1; min-width:0; }
-    .conv-name { font-size:13px; font-weight:700; margin-bottom:3px; display:flex; align-items:center; justify-content:space-between; }
-    .conv-name-text { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .conv-time { font-size:10px; color:var(--muted); white-space:nowrap; flex-shrink:0; }
-    .conv-preview { font-size:12px; color:var(--muted2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .conv-unread { background:var(--green); color:#000; font-size:10px; font-weight:800; border-radius:var(--radius); padding:1px 6px; flex-shrink:0; }
-    .conv-service-tag { font-size:10px; color:var(--green); font-weight:700; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-    /* STATUS BADGE */
-    .status-badge { font-size:9px; font-weight:800; letter-spacing:.5px; border-radius:var(--radius); padding:2px 7px; margin-top:3px; display:inline-block; }
-    .status-active { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.25); color:#4ade80; }
-    .status-pending { background:rgba(234,179,8,.1); border:1px solid rgba(234,179,8,.2); color:#fbbf24; }
-    .status-done { background:var(--gdim); border:1px solid rgba(127,255,0,.2); color:var(--green); }
-
-    /* CHAT AREA */
-    .chat-area { flex:1; display:flex; flex-direction:column; height:100%; min-width:0; }
-    .chat-header { padding:0 24px; height:70px; flex-shrink:0; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--card); }
-    .chat-header-left { display:flex; align-items:center; gap:14px; }
-    .chat-header-avatar { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:17px; color:#000; flex-shrink:0; }
-    .chat-header-info { display:flex; flex-direction:column; gap:2px; }
-    .chat-header-name { font-size:14px; font-weight:800; }
-    .chat-header-status { font-size:11px; color:var(--muted2); display:flex; align-items:center; gap:5px; }
-    .chat-header-status-dot { width:6px; height:6px; border-radius:50%; background:#22c55e; }
-    .chat-header-right { display:flex; align-items:center; gap:10px; }
-    .chat-action-btn { width:34px; height:34px; border:1px solid var(--border); border-radius:10px; background:none; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted2); transition:border-color .2s,color .2s; }
-    .chat-action-btn:hover { border-color:var(--green); color:var(--green); }
-
-    .service-bar { background:var(--gdim); border-bottom:1px solid rgba(127,255,0,.15); padding:10px 24px; display:flex; align-items:center; gap:12px; flex-shrink:0; }
-    .service-bar-icon { font-size:20px; }
-    .service-bar-info { flex:1; min-width:0; }
-    .service-bar-title { font-size:12px; font-weight:700; color:var(--green); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .service-bar-sub { font-size:11px; color:var(--muted2); }
-    .service-bar-price { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--green); flex-shrink:0; }
-    .service-bar-status { padding:5px 12px; background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.25); border-radius:var(--radius); font-size:11px; font-weight:800; color:#4ade80; flex-shrink:0; }
-
-    .chat-messages { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:16px; }
-    .chat-messages::-webkit-scrollbar { width:4px; }
-    .chat-messages::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
-
-    .msg-date { text-align:center; font-size:11px; color:var(--muted); margin:8px 0; font-weight:600; letter-spacing:.5px; }
-    .msg { display:flex; gap:10px; align-items:flex-end; }
-    .msg.mine { flex-direction:row-reverse; }
-    .msg-avatar { width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:12px; color:#000; flex-shrink:0; }
-    .msg-bubble { max-width:62%; padding:11px 15px; border-radius:16px; font-size:13px; line-height:1.6; color:var(--text); background:var(--card2); border:1px solid var(--border); border-bottom-left-radius:4px; }
-    .msg.mine .msg-bubble { background:var(--gdim); border-color:rgba(127,255,0,.2); border-bottom-left-radius:16px; border-bottom-right-radius:4px; }
-    .msg-meta { font-size:10px; color:var(--muted); margin-top:4px; display:flex; align-items:center; gap:4px; }
-    .msg.mine .msg-meta { justify-content:flex-end; }
-    .msg-check { color:var(--green); }
-
-    .msg-file { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:10px; padding:10px 14px; margin-top:8px; cursor:pointer; transition:border-color .2s; }
-    .msg-file:hover { border-color:var(--green); }
-    .msg-file-icon { font-size:22px; flex-shrink:0; }
-    .msg-file-info { flex:1; min-width:0; }
-    .msg-file-name { font-size:12px; font-weight:700; }
-    .msg-file-size { font-size:10px; color:var(--muted); }
-
-    /* Entrega especial */
-    .delivery-bubble { background:var(--card); border:1px solid rgba(127,255,0,.3); border-radius:16px; padding:16px; max-width:70%; }
-    .delivery-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:12px; font-weight:800; color:var(--green); }
-    .delivery-title { font-size:13px; font-weight:700; margin-bottom:4px; }
-    .delivery-desc { font-size:12px; color:var(--muted2); margin-bottom:12px; line-height:1.5; }
-    .delivery-btn { padding:8px 16px; background:var(--green); color:#000; border:none; border-radius:8px; font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:1px; cursor:pointer; transition:transform .15s; }
-    .delivery-btn:hover { transform:translateY(-1px); }
-
-    .typing-bubble { display:flex; align-items:center; gap:5px; padding:12px 16px; background:var(--card2); border:1px solid var(--border); border-radius:16px; border-bottom-left-radius:4px; width:fit-content; }
-    .typing-dot { width:6px; height:6px; border-radius:50%; background:var(--muted2); animation:typingAnim 1.4s infinite; }
-    .typing-dot:nth-child(2) { animation-delay:.2s; }
-    .typing-dot:nth-child(3) { animation-delay:.4s; }
-    @keyframes typingAnim { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-5px);opacity:1} }
-
-    .chat-input-area { border-top:1px solid var(--border); padding:14px 20px; background:var(--card); flex-shrink:0; }
-
-    /* Quick replies */
-    .quick-replies { display:flex; gap:8px; margin-bottom:10px; overflow-x:auto; padding-bottom:4px; }
-    .quick-replies::-webkit-scrollbar { height:0; }
-    .quick-reply { padding:5px 12px; border:1px solid var(--border2); border-radius:var(--radius); font-size:11px; font-weight:600; color:var(--muted2); cursor:pointer; white-space:nowrap; transition:border-color .2s,color .2s; background:none; }
-    .quick-reply:hover { border-color:var(--green); color:var(--green); }
-
-    .chat-input-row { display:flex; align-items:flex-end; gap:10px; }
-    .chat-input-left { display:flex; gap:6px; }
-    .chat-input-attach { width:36px; height:36px; border:1px solid var(--border); border-radius:10px; background:none; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted2); transition:border-color .2s,color .2s; flex-shrink:0; }
-    .chat-input-attach:hover { border-color:var(--green); color:var(--green); }
-    .chat-input-wrap { flex:1; background:var(--input); border:1px solid var(--border); border-radius:14px; padding:10px 14px; transition:border-color .2s,box-shadow .2s; }
-    .chat-input-wrap:focus-within { border-color:var(--green); box-shadow:0 0 0 3px rgba(127,255,0,.08); }
-    .chat-textarea { width:100%; background:none; border:none; outline:none; font-family:'Syne',sans-serif; font-size:13px; color:var(--text); resize:none; min-height:20px; max-height:120px; line-height:1.5; }
-    .chat-textarea::placeholder { color:var(--muted); }
-    .chat-send { width:40px; height:40px; background:var(--green); border:none; border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#000; transition:transform .15s,box-shadow .15s; flex-shrink:0; }
-    .chat-send:hover { transform:scale(1.08); box-shadow:0 4px 16px rgba(127,255,0,.35); }
-
-    /* INFO PANEL */
-    .info-panel { width:260px; flex-shrink:0; background:var(--surface); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; height:100%; }
-    .info-panel::-webkit-scrollbar { width:3px; }
-    .info-panel::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
-    .info-section { padding:18px; border-bottom:1px solid var(--border); }
-    .info-section-title { font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
-
-    .client-mini { display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; }
-    .client-avatar { width:52px; height:52px; border-radius:14px; background:#60a5fa; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:22px; color:#000; }
-    .client-name { font-size:13px; font-weight:800; }
-    .client-meta { font-size:11px; color:var(--muted2); }
-    .client-rating { font-size:11px; color:var(--green); font-weight:700; }
-    .btn-view-profile { padding:6px 14px; border:1px solid var(--border2); border-radius:8px; background:none; color:var(--muted2); font-family:'Syne',sans-serif; font-size:11px; font-weight:700; cursor:pointer; transition:border-color .2s,color .2s; }
-    .btn-view-profile:hover { border-color:var(--green); color:var(--green); }
-
-    .earning-card { background:var(--card); border:1px solid var(--border); border-radius:var(--rc); padding:16px; text-align:center; }
-    .earning-val { font-family:'Bebas Neue',sans-serif; font-size:32px; color:var(--green); line-height:1; }
-    .earning-label { font-size:11px; color:var(--muted2); margin-top:4px; }
-    .earning-sub { font-size:10px; color:var(--muted); margin-top:2px; }
-
-    .progress-item { margin-bottom:12px; }
-    .progress-item:last-child { margin-bottom:0; }
-    .progress-label { display:flex; justify-content:space-between; font-size:12px; color:var(--muted2); margin-bottom:6px; font-weight:600; }
-    .progress-label span { color:var(--green); font-weight:800; }
-    .progress-track { height:4px; background:var(--border2); border-radius:4px; overflow:hidden; }
-    .progress-fill { height:100%; background:var(--green); border-radius:4px; }
-
-    .btn-deliver { width:100%; padding:11px; background:var(--green); color:#000; border:none; border-radius:var(--radius); font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:2px; cursor:pointer; transition:transform .15s,box-shadow .15s; }
-    .btn-deliver:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(127,255,0,.3); }
-    .btn-extend { width:100%; padding:10px; background:none; border:1px solid var(--border2); border-radius:var(--radius); color:var(--muted2); font-family:'Syne',sans-serif; font-size:12px; font-weight:700; cursor:pointer; margin-top:8px; transition:border-color .2s,color .2s; }
-    .btn-extend:hover { border-color:var(--green); color:var(--green); }
-
-    .shortcut-list { display:flex; flex-direction:column; gap:6px; }
-    .shortcut { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:9px; cursor:pointer; font-size:12px; color:var(--muted2); transition:background .2s,color .2s; }
-    .shortcut:hover { background:var(--card2); color:var(--text); }
-    .shortcut svg { flex-shrink:0; }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
@@ -214,7 +25,7 @@
       </div>
       <a href="chatScreenFreelancer.html" class="nav-icon-btn active-page" title="Mensagens">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span class="notif-badge" style="background:#60a5fa">1</span>
+        <span class="notif-badge badge-blue">1</span>
       </a>
       <div class="nav-user">
         <div class="nav-user-name" id="navUserName"></div>
@@ -393,7 +204,7 @@
               </div>
               <div class="delivery-title">Paleta de cores e tipografia</div>
               <div class="delivery-desc">Carlos, aqui está a primeira versão da paleta e tipografia. Usei Inter como fonte principal e criei tokens para todas as variações. Aguardo seu feedback!</div>
-              <div class="msg-file" style="margin-bottom:10px">
+              <div class="msg-file msg-file-mb">
                 <span class="msg-file-icon">🎨</span>
                 <div class="msg-file-info">
                   <div class="msg-file-name">paleta-tipografia-v1.fig</div>
@@ -427,7 +238,7 @@
             <button class="chat-input-attach" title="Anexar arquivo">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
             </button>
-            <button class="chat-input-attach" title="Enviar entrega" style="background:var(--gdim);border-color:rgba(127,255,0,.3);color:var(--green)">
+            <button class="chat-input-attach btn-attach-delivery" title="Enviar entrega">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </button>
           </div>
@@ -467,15 +278,15 @@
         <div class="info-section-title">Meu Progresso</div>
         <div class="progress-item">
           <div class="progress-label">Conclusão geral <span>35%</span></div>
-          <div class="progress-track"><div class="progress-fill" style="width:35%"></div></div>
+          <div class="progress-track"><div class="progress-fill fill-35"></div></div>
         </div>
         <div class="progress-item">
           <div class="progress-label">Componentes <span>20/60</span></div>
-          <div class="progress-track"><div class="progress-fill" style="width:33%"></div></div>
+          <div class="progress-track"><div class="progress-fill fill-33"></div></div>
         </div>
         <div class="progress-item">
           <div class="progress-label">Dias restantes <span>7</span></div>
-          <div class="progress-track"><div class="progress-fill" style="width:70%"></div></div>
+          <div class="progress-track"><div class="progress-fill fill-70"></div></div>
         </div>
       </div>
 
@@ -507,62 +318,7 @@
   </div>
 
   <script src="auth.js"></script>
-  <script>
-    OFAuth.loadNav();
-
-    document.getElementById('notifBtn').addEventListener('click', e => {
-      e.stopPropagation();
-      document.getElementById('notifPanel').classList.toggle('open');
-    });
-    document.addEventListener('click', e => {
-      if (!e.target.closest('#notifBtn') && !e.target.closest('#notifPanel'))
-        document.getElementById('notifPanel').classList.remove('open');
-    });
-
-    document.querySelectorAll('.filter-chip').forEach(btn => {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-
-    document.querySelectorAll('.conv-item').forEach(item => {
-      item.addEventListener('click', function() {
-        document.querySelectorAll('.conv-item').forEach(i => i.classList.remove('active'));
-        this.classList.add('active');
-        this.querySelector('.conv-unread')?.remove();
-      });
-    });
-
-    function useQuick(btn) {
-      document.getElementById('msgInput').value = btn.textContent;
-      document.getElementById('msgInput').focus();
-    }
-
-    function sendMsg() {
-      const input = document.getElementById('msgInput');
-      const text  = input.value.trim();
-      if (!text) return;
-      const msgs   = document.getElementById('chatMessages');
-      const typing = document.getElementById('typingIndicator');
-      const div = document.createElement('div');
-      div.className = 'msg mine';
-      div.innerHTML = `
-        <div class="msg-avatar" style="background:#7fff00">${OFAuth.getInitials(OFAuth.getName())}</div>
-        <div>
-          <div class="msg-bubble">${text.replace(/</g,'&lt;')}</div>
-          <div class="msg-meta">${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} <span class="msg-check">✓</span></div>
-        </div>`;
-      msgs.insertBefore(div, typing);
-      input.value = '';
-      input.style.height = 'auto';
-      msgs.scrollTop = msgs.scrollHeight;
-    }
-
-    function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
-    function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
-
-    document.getElementById('chatMessages').scrollTop = 99999;
-  </script>
+  <script src="main.js"></script>
+  <script src="chatScreenFreelancer.js"></script>
 </body>
 </html>
