@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Blog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">OF</div>
+      <div class="nav-logo-text">One<span>Freela</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html#categorias">Categorias</a></li>
+      <li><a href="index.html#freelancers">Freelancers</a></li>
+      <li><a href="aboutUs.html">Sobre nós</a></li>
+      <li><a href="blog.html" class="active">Blog</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="loginScreen.html" class="btn-outline">Entrar</a>
+      <a href="signupScreen.html" class="btn-green">Começar</a>
+    </div>
+  </nav>
+
+  <!-- ══ HERO ══ -->
+  <section class="page-hero">
+    <div class="page-hero-inner">
+      <p class="page-label">Conteúdo & Insights</p>
+      <h1 class="page-title">
+        BLOG DA<br>
+        <span class="green">ONE</span><span class="stroke">FREELA</span>
+      </h1>
+      <p class="page-hero-sub">
+        Dicas, tendências e histórias sobre o universo freelancer no Brasil.
+      </p>
+    </div>
+    <div class="deco-line"></div>
+  </section>
+
+  <!-- ══ FILTROS ══ -->
+  <section class="blog-filter-section">
+    <div class="blog-filters" id="blogFilters">
+      <button class="blog-filter-btn active" data-cat="todos">Todos</button>
+      <button class="blog-filter-btn" data-cat="carreira">Carreira</button>
+      <button class="blog-filter-btn" data-cat="negocios">Negócios</button>
+      <button class="blog-filter-btn" data-cat="tecnologia">Tecnologia</button>
+      <button class="blog-filter-btn" data-cat="design">Design</button>
+      <button class="blog-filter-btn" data-cat="produtividade">Produtividade</button>
+    </div>
+  </section>
+
+  <!-- ══ DESTAQUE ══ -->
+  <section class="section blog-featured-section">
+    <div class="blog-featured reveal" data-cat="carreira">
+      <div class="blog-featured-meta">
+        <span class="blog-tag">Carreira</span>
+        <span class="blog-read-time">8 min de leitura</span>
+      </div>
+      <h2 class="blog-featured-title">Como cobrar o preço justo pelo seu trabalho freelancer</h2>
+      <p class="blog-featured-excerpt">
+        Precificar serviços é um dos maiores desafios para quem começa na área. Veja como calcular seu valor hora, pesquisar o mercado e negociar com confiança sem perder clientes.
+      </p>
+      <div class="blog-featured-author">
+        <div class="blog-author-avatar" style="background:#7fff00">MR</div>
+        <div>
+          <div class="blog-author-name">Marina Rocha</div>
+          <div class="blog-author-date">12 Mai 2026</div>
+        </div>
+      </div>
+      <a href="#" class="blog-featured-link">Ler artigo completo →</a>
+    </div>
+  </section>
+
+  <!-- ══ ARTIGOS ══ -->
+  <section class="section blog-grid-section" id="artigos">
+    <div class="blog-grid" id="blogGrid">
+
+      <article class="blog-card reveal" data-cat="tecnologia">
+        <div class="blog-card-header">
+          <span class="blog-tag">Tecnologia</span>
+          <span class="blog-read-time">5 min</span>
+        </div>
+        <h3 class="blog-card-title">IA generativa: ameaça ou oportunidade para freelancers?</h3>
+        <p class="blog-card-excerpt">Entenda como usar ferramentas de IA para multiplicar sua produtividade em vez de competir com elas.</p>
+        <div class="blog-card-footer">
+          <div class="blog-author-avatar sm" style="background:#b0ff4e">LF</div>
+          <span class="blog-author-name-sm">Lucas Ferreira · 8 Mai 2026</span>
+        </div>
+      </article>
+
+      <article class="blog-card reveal" data-cat="negocios">
+        <div class="blog-card-header">
+          <span class="blog-tag">Negócios</span>
+          <span class="blog-read-time">6 min</span>
+        </div>
+        <h3 class="blog-card-title">Contratos para freelancers: o que não pode faltar</h3>
+        <p class="blog-card-excerpt">Proteja seu trabalho com cláusulas essenciais que evitam calotes e mal-entendidos com clientes.</p>
+        <div class="blog-card-footer">
+          <div class="blog-author-avatar sm" style="background:#a3e635">JS</div>
+          <span class="blog-author-name-sm">Julia Santos · 5 Mai 2026</span>
+        </div>
+      </article>
+
+      <article class="blog-card reveal" data-cat="design">
+        <div class="blog-card-header">
+          <span class="blog-tag">Design</span>
+          <span class="blog-read-time">4 min</span>
+        </div>
+        <h3 class="blog-card-title">Portfolio que converte: 7 dicas de designers top da plataforma</h3>
+        <p class="blog-card-excerpt">Veja como montar um portfólio que atrai projetos premium e comunica o valor do seu trabalho de forma instantânea.</p>
+        <div class="blog-card-footer">
+          <div class="blog-author-avatar sm" style="background:#5bbd00">PC</div>
+          <span class="blog-author-name-sm">Pedro Castro · 2 Mai 2026</span>
+        </div>
+      </article>
+
+      <article class="blog-card reveal" data-cat="produtividade">
+        <div class="blog-card-header">
+          <span class="blog-tag">Produtividade</span>
+          <span class="blog-read-time">7 min</span>
+        </div>
+        <h3 class="blog-card-title">Gestão de tempo para quem trabalha com múltiplos clientes</h3>
+        <p class="blog-card-excerpt">Técnicas comprovadas para equilibrar prazos, evitar burnout e ainda ter tempo para se desenvolver.</p>
+        <div class="blog-card-footer">
+          <div class="blog-author-avatar sm" style="background:#7fff00">MR</div>
+          <span class="blog-author-name-sm">Marina Rocha · 28 Abr 2026</span>
+        </div>
+      </article>
+
+      <article class="blog-card reveal" data-cat="carreira">
+        <div class="blog-card-header">
+          <span class="blog-tag">Carreira</span>
+          <span class="blog-read-time">5 min</span>
+        </div>
+        <h3 class="blog-card-title">Do CLT ao freelance: como fazer a transição sem riscos</h3>
+        <p class="blog-card-excerpt">Um guia prático para quem quer sair do emprego fixo e construir uma carreira autônoma com segurança financeira.</p>
+        <div class="blog-card-footer">
+          <div class="blog-author-avatar sm" style="background:#b0ff4e">LF</div>
+          <span class="blog-author-name-sm">Lucas Ferreira · 24 Abr 2026</span>
+        </div>
+      </article>
+
+      <article class="blog-card reveal" data-cat="negocios">
+        <div class="blog-card-header">
+          <span class="blog-tag">Negócios</span>
+          <span class="blog-read-time">9 min</span>
+        </div>
+        <h3 class="blog-card-title">Como declarar impostos sendo MEI freelancer em 2026</h3>
+        <p class="blog-card-excerpt">Tudo o que você precisa saber sobre obrigações fiscais, DAS, DASN e limites de faturamento do MEI.</p>
+        <div class="blog-card-footer">
+          <div class="blog-author-avatar sm" style="background:#a3e635">JS</div>
+          <span class="blog-author-name-sm">Julia Santos · 20 Abr 2026</span>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="blog-load-more reveal">
+      <button class="btn-secondary" id="loadMoreBtn">Carregar mais artigos</button>
+    </div>
+  </section>
+
+  <!-- ══ NEWSLETTER ══ -->
+  <section class="blog-newsletter-section">
+    <div class="blog-newsletter-inner reveal">
+      <p class="page-label">Fique por dentro</p>
+      <h2 class="blog-newsletter-title">RECEBA OS MELHORES<br>CONTEÚDOS <span class="green">SEMANAIS</span></h2>
+      <p class="blog-newsletter-sub">Mais de 12.000 freelancers já recebem nossas dicas toda semana. Sem spam, só valor.</p>
+      <form class="blog-newsletter-form" id="newsletterForm">
+        <input type="email" class="blog-newsletter-input" placeholder="seu@email.com" required />
+        <button type="submit" class="btn-green blog-newsletter-btn">Quero receber</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-icon">OF</div>
+          <div class="footer-logo-text">One<span>Freela</span></div>
+        </div>
+        <p class="footer-desc">A plataforma brasileira que conecta empresas e pessoas a freelancers talentosos, com segurança e agilidade.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Plataforma</h4>
+        <ul>
+          <li><a href="#">Como funciona</a></li>
+          <li><a href="#">Categorias</a></li>
+          <li><a href="signupScreen.html">Seja um freelancer</a></li>
+          <li><a href="#">Planos</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Empresa</h4>
+        <ul>
+          <li><a href="aboutUs.html">Sobre nós</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="careers.html">Carreiras</a></li>
+          <li><a href="contact.html">Contato</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Termos de uso</a></li>
+          <li><a href="#">Privacidade</a></li>
+          <li><a href="#">Cookies</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">© 2026 <span>OneFreela</span>. Feito com ♥ no Brasil.</p>
+      <div class="footer-socials">
+        <a href="#" class="social-btn" title="Instagram">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <a href="#" class="social-btn" title="LinkedIn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a href="#" class="social-btn" title="GitHub">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+  <script src="blog.js"></script>
+</body>
+</html>
