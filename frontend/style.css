@@ -3859,9 +3859,9 @@ footer {
 .drag-hint { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); text-align: center; margin-top: 20px; opacity: .5; }
 
 .float-tag { position: fixed; font-family: var(--font-display); font-size: 88px; letter-spacing: 6px; color: rgba(255,255,255,.025); pointer-events: none; user-select: none; white-space: nowrap; z-index: 1; }
-.float-tag:nth-child(2) { top: 10%; left: 5%; }
-.float-tag:nth-child(3) { top: 50%; right: -5%; }
-.float-tag:nth-child(4) { bottom: 5%; left: 20%; }
+.float-tag:nth-child(5) { top: 10%; left: 5%; }
+.float-tag:nth-child(6) { top: 50%; right: -5%; }
+.float-tag:nth-child(7) { bottom: 5%; left: 20%; }
 
 .forgot { font-size: 12px; color: var(--muted2); transition: color .2s; }
 .forgot:hover { color: var(--green); }
@@ -3869,8 +3869,6 @@ footer {
 /* ── forgotPassword / loginScreen – logo above card ─────── */
 
 .logo { display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 32px; }
-.logo .logo-icon,
-.logo .logo-text { /* reuse existing .logo-icon/.logo-text styles */ }
 
 .back-link {
   position: fixed;
@@ -4611,8 +4609,6 @@ footer {
 
 /* status indicator aliases */
 .offline { opacity: .5; }
-.away    { }
-.pending { }
 
 /* shortcut-list alias */
 .shortcut-list { display: flex; flex-direction: column; }
