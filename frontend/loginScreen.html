@@ -6,88 +6,115 @@
   <title>OneFreela — Login</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <div class="bg"></div>
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
+  <div class="bg" id="bg"></div>
   <div class="cursor-glow" id="cursorGlow"></div>
 
-  <!-- Floating decorative text -->
-  <div class="float-tag">ONEFREELA</div>
-  <div class="float-tag">FREELANCER</div>
-  <div class="float-tag">CONECTE-SE</div>
+  <div class="signup-page" id="page">
 
-  <div class="scene">
-    <div class="card" id="card">
+    <div class="left-panel" id="leftPanel">
+      <div class="left-grid"></div>
+      <div class="left-content">
 
-      <!-- Logo -->
-      <div class="logo-wrap draggable" id="logo">
-        <div class="logo-icon">OF</div>
-        <div class="logo-text">One<span>Freela</span></div>
-      </div>
+        <a href="index.html" class="nav-logo">
+          <div class="nav-logo-icon" id="logoIcon">OF</div>
+          <div class="nav-logo-text">One<span id="logoSpan">Freela</span></div>
+        </a>
 
-      <!-- Heading -->
-      <div class="heading draggable" id="heading">BEM-VINDO<br>DE VOLTA!</div>
+        <p class="left-label" id="leftLabel">Para clientes</p>
+        <h2 class="left-title" id="leftTitle">
+          BEM-VINDO<br>DE<br><span class="accent" id="leftAccent">VOLTA!</span>
+        </h2>
+        <p class="left-desc" id="leftDesc">
+          Acesse sua conta e retome de onde parou — projetos, freelancers e pagamentos em um só lugar.
+        </p>
 
-      <!-- Subtitle -->
-      <p class="subtitle draggable" id="subtitle">
-        Não tem uma conta? <a href="signupScreen.html">Crie uma agora!</a>
-      </p>
+        <div class="perks" id="perksWrap"></div>
 
-      <!-- Email -->
-      <div class="field">
-        <div class="label-row"><label for="email">E-mail</label></div>
-        <div class="input-wrap">
-          <input type="email" id="email" placeholder="seu@email.com" autocomplete="off" />
+        <div class="testimonial" id="testimonial">
+          <div class="test-stars" id="testStars">★★★★★</div>
+          <p class="test-quote" id="testQuote">"Já usei várias plataformas, mas a OneFreela é a que mais me entrega resultado. Simples e confiável."</p>
+          <div class="test-author">
+            <div class="test-avatar" id="testAvatar">MA</div>
+            <div>
+              <div class="test-name" id="testName">Marina Alves</div>
+              <div class="test-role" id="testRole">Diretora de Marketing, AgênciaMX</div>
+            </div>
+          </div>
         </div>
+
       </div>
-
-      <!-- Password -->
-      <div class="field">
-        <div class="label-row">
-          <label for="senha">Senha</label>
-          <a href="forgotPassword.html" class="forgot">Esqueceu a senha?</a>
-        </div>
-        <div class="input-wrap">
-          <input type="password" id="senha" placeholder="••••••••" />
-          <button class="eye-btn" id="eyeBtn" type="button" aria-label="Mostrar senha">
-            <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Toggle -->
-      <div class="toggle-row">
-        <div class="toggle" id="toggle"></div>
-        <span>Manter-me conectado</span>
-      </div>
-
-      <!-- Tipo de usuário -->
-      <div class="login-type-wrap">
-        <div class="login-type-label">Entrar como</div>
-        <div class="login-type-toggle">
-          <div id="typePill" class="login-type-pill"></div>
-          <button id="btnCliente" class="login-type-btn active" onclick="setUserType('cliente')">CLIENTE</button>
-          <button id="btnFreelancer" class="login-type-btn" onclick="setUserType('freelancer')">FREELANCER</button>
-        </div>
-      </div>
-
-      <!-- Button -->
-      <div id="formMsg" class="form-msg"></div>
-      <button class="btn draggable" id="loginBtn" onclick="handleLogin()">ENTRAR</button>
-
-      <!-- Drag hint -->
-      <p class="drag-hint">✦ ARRASTE OS ELEMENTOS ACIMA ✦</p>
-
     </div>
+
+    <div class="right-panel">
+      <div class="form-card" id="formCard">
+
+        <div class="type-toggle">
+          <div class="toggle-pill" id="togglePill"></div>
+          <button class="toggle-btn active" id="btnCliente" onclick="setType('cliente')">CLIENTE</button>
+          <button class="toggle-btn" id="btnFreelancer" onclick="setType('freelancer')">FREELANCER</button>
+        </div>
+
+        <h2 class="form-heading">ENTRAR</h2>
+        <p class="form-sub">
+          Não tem uma conta?
+          <a href="signupScreen.html" id="signupLink">Crie uma agora!</a>
+        </p>
+
+        <div class="fields-wrap" id="fieldsWrap">
+
+          <div class="field">
+            <label for="email">E-mail</label>
+            <div class="input-wrap has-icon">
+              <span class="field-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </span>
+              <input type="email" id="email" placeholder="seu@email.com" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="label-row">
+              <label for="senha">Senha</label>
+              <a href="forgotPassword.html" class="forgot">Esqueceu a senha?</a>
+            </div>
+            <div class="input-wrap has-icon">
+              <span class="field-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </span>
+              <input type="password" id="senha" placeholder="••••••••" />
+              <button class="eye-btn" id="eyeBtn" type="button" aria-label="Mostrar senha">
+                <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle" id="toggle"></div>
+            <span>Manter-me conectado</span>
+          </div>
+
+          <div id="formMsg" class="form-msg"></div>
+
+          <button class="btn-submit" id="loginBtn" onclick="handleLogin()">ENTRAR</button>
+
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="main.js"></script>

@@ -3944,8 +3944,10 @@ footer {
   color: var(--muted2);
   transition: color .22s;
 }
-.signup-page .field:focus-within > label { color: var(--green); }
-.signup-page .fields-wrap.freelancer-mode .field:focus-within > label { color: var(--purple); }
+.signup-page .field:focus-within > label,
+.signup-page .field:focus-within .label-row label { color: var(--green); }
+.signup-page .fields-wrap.freelancer-mode .field:focus-within > label,
+.signup-page .fields-wrap.freelancer-mode .field:focus-within .label-row label { color: var(--purple); }
 
 /* ── field icon ──────────────────────────────────────────── */
 .field-icon {
