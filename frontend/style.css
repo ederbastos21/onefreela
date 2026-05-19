@@ -3937,6 +3937,106 @@ footer {
 .freelancer-only { display: none; }
 .freelancer-only.show { display: block; }
 
+/* ── signup field labels ─────────────────────────────────── */
+.signup-page .field > label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  color: var(--muted2);
+  transition: color .22s;
+}
+.signup-page .field:focus-within > label { color: var(--green); }
+.signup-page .fields-wrap.freelancer-mode .field:focus-within > label { color: var(--purple); }
+
+/* ── field icon ──────────────────────────────────────────── */
+.field-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  transition: color .25s;
+  z-index: 1;
+}
+.signup-page .input-wrap:focus-within .field-icon { color: var(--green); }
+.signup-page .fields-wrap.freelancer-mode .input-wrap:focus-within .field-icon { color: var(--purple); }
+
+/* left padding shift when icon is present */
+.signup-page .input-wrap.has-icon input,
+.signup-page .input-wrap.has-icon select { padding-left: 42px; }
+
+/* ── signup inputs: enhanced base ────────────────────────── */
+.signup-page .input-wrap input {
+  width: 100%;
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 16px 13px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color .25s, box-shadow .25s, background .25s;
+}
+.signup-page .input-wrap input[type="password"] { padding-right: 44px; }
+
+.signup-page .input-wrap input:focus {
+  border-color: var(--green);
+  background: rgba(127,255,0,.03);
+  box-shadow: 0 0 0 4px rgba(127,255,0,.08);
+}
+.signup-page .fields-wrap.freelancer-mode .input-wrap input:focus {
+  border-color: var(--purple);
+  background: rgba(168,85,247,.03);
+  box-shadow: 0 0 0 4px rgba(168,85,247,.08);
+}
+
+/* input hover (not focused) */
+.signup-page .input-wrap input:hover:not(:focus) { border-color: var(--border2); }
+
+/* ── signup select ───────────────────────────────────────── */
+.signup-page .input-wrap select {
+  width: 100%;
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 36px 13px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color .25s, box-shadow .25s, background .25s;
+}
+.signup-page .input-wrap select:focus {
+  border-color: var(--green);
+  background: rgba(127,255,0,.03);
+  box-shadow: 0 0 0 4px rgba(127,255,0,.08);
+}
+.signup-page .fields-wrap.freelancer-mode .input-wrap select:focus {
+  border-color: var(--purple);
+  background: rgba(168,85,247,.03);
+  box-shadow: 0 0 0 4px rgba(168,85,247,.08);
+}
+.signup-page .input-wrap select:hover:not(:focus) { border-color: var(--border2); }
+.signup-page .input-wrap select option { background: var(--card); color: var(--text); }
+
+/* ── date input native picker icon ──────────────────────── */
+.signup-page input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(.55) brightness(1.8);
+  cursor: pointer;
+  opacity: .5;
+  margin-right: 2px;
+  transition: opacity .2s;
+}
+.signup-page input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+
 /* ── aboutUs page ─────────────────────────────────────────── */
 
 .btn-outline {
