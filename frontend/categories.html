@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Categorias</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">OF</div>
+      <div class="nav-logo-text">One<span>Freela</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="howItWorks.html">Como funciona</a></li>
+      <li><a href="categories.html" class="active">Categorias</a></li>
+      <li><a href="beAFreelancer.html">Seja um freelancer</a></li>
+      <li><a href="plans.html">Planos</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="loginScreen.html" class="btn-outline">Entrar</a>
+      <a href="signupScreen.html" class="btn-green">Começar</a>
+    </div>
+  </nav>
+
+  <!-- ══ HERO ══ -->
+  <section class="page-hero">
+    <div class="page-hero-inner">
+      <p class="page-label">Explore por área</p>
+      <h1 class="page-title">
+        <span class="green">CATE</span><span class="stroke">GORIAS</span><br>
+        DE SERVIÇOS
+      </h1>
+      <p class="page-hero-sub">
+        Mais de 4.800 freelancers distribuídos em 16 categorias. Encontre exatamente o que você precisa.
+      </p>
+    </div>
+    <div class="deco-line"></div>
+  </section>
+
+  <!-- ══ SEARCH ══ -->
+  <section class="cat-search-section">
+    <div class="cat-search-wrap">
+      <div class="cat-search-bar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="catSearch" placeholder="Buscar categoria ou habilidade..." oninput="filterCategories(this.value)" />
+      </div>
+      <div class="cat-sort-wrap">
+        <button class="cat-sort-btn active" onclick="sortCategories('popular', this)">Mais populares</button>
+        <button class="cat-sort-btn" onclick="sortCategories('az', this)">A — Z</button>
+        <button class="cat-sort-btn" onclick="sortCategories('new', this)">Em alta</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ GRID ══ -->
+  <section class="section cat-full-section" id="catSection">
+    <div class="cat-full-grid" id="catGrid">
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="design arte">
+        <div class="cat-full-icon">🎨</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Design & Arte</div>
+          <div class="cat-full-count">1.240 serviços</div>
+          <div class="cat-full-tags">
+            <span>UI/UX</span><span>Branding</span><span>Ilustração</span><span>Logo</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="desenvolvimento programação código">
+        <div class="cat-full-icon">💻</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Desenvolvimento</div>
+          <div class="cat-full-count">980 serviços</div>
+          <div class="cat-full-tags">
+            <span>Web</span><span>Mobile</span><span>Backend</span><span>APIs</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="marketing digital social media ads">
+        <div class="cat-full-icon">📱</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Marketing Digital</div>
+          <div class="cat-full-count">760 serviços</div>
+          <div class="cat-full-tags">
+            <span>Social Media</span><span>Google Ads</span><span>Email</span><span>SEO</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="redação conteúdo texto escrita copywriting">
+        <div class="cat-full-icon">✍️</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Redação & Conteúdo</div>
+          <div class="cat-full-count">540 serviços</div>
+          <div class="cat-full-tags">
+            <span>Blog</span><span>Copywriting</span><span>Roteiro</span><span>E-book</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="vídeo animação edição motion">
+        <div class="cat-full-icon">🎬</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Vídeo & Animação</div>
+          <div class="cat-full-count">430 serviços</div>
+          <div class="cat-full-tags">
+            <span>Motion</span><span>Edição</span><span>2D/3D</span><span>Reels</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="dados bi análise dashboard excel">
+        <div class="cat-full-icon">📊</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Dados & BI</div>
+          <div class="cat-full-count">320 serviços</div>
+          <div class="cat-full-tags">
+            <span>Power BI</span><span>Python</span><span>SQL</span><span>Tableau</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="cibersegurança segurança pentest">
+        <div class="cat-full-icon">🔒</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Cibersegurança</div>
+          <div class="cat-full-count">210 serviços</div>
+          <div class="cat-full-tags">
+            <span>Pentest</span><span>LGPD</span><span>Auditoria</span><span>DevSecOps</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card cat-full-card--hot reveal" data-name="inteligência artificial ia machine learning llm">
+        <div class="cat-full-hot-badge">EM ALTA</div>
+        <div class="cat-full-icon">🤖</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Inteligência Artificial</div>
+          <div class="cat-full-count">195 serviços</div>
+          <div class="cat-full-tags">
+            <span>LLM</span><span>Automação</span><span>Chatbot</span><span>ML</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="fotografia foto produto evento">
+        <div class="cat-full-icon">📷</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Fotografia</div>
+          <div class="cat-full-count">310 serviços</div>
+          <div class="cat-full-tags">
+            <span>Produto</span><span>Evento</span><span>Editorial</span><span>Retoque</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="música áudio jingle podcast trilha">
+        <div class="cat-full-icon">🎵</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Música & Áudio</div>
+          <div class="cat-full-count">180 serviços</div>
+          <div class="cat-full-tags">
+            <span>Jingle</span><span>Podcast</span><span>Locução</span><span>Trilha</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="tradução idioma inglês espanhol legenda">
+        <div class="cat-full-icon">🌐</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Tradução & Idiomas</div>
+          <div class="cat-full-count">240 serviços</div>
+          <div class="cat-full-tags">
+            <span>Inglês</span><span>Espanhol</span><span>Legenda</span><span>Técnico</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="consultoria gestão estratégia negócios">
+        <div class="cat-full-icon">💡</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Consultoria</div>
+          <div class="cat-full-count">290 serviços</div>
+          <div class="cat-full-tags">
+            <span>Estratégia</span><span>Gestão</span><span>Startup</span><span>RH</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="finanças contabilidade fiscal tributário">
+        <div class="cat-full-icon">💰</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Finanças</div>
+          <div class="cat-full-count">165 serviços</div>
+          <div class="cat-full-tags">
+            <span>Contabilidade</span><span>Fiscal</span><span>Planejamento</span><span>Controladoria</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="educação treinamento curso aula professor">
+        <div class="cat-full-icon">📚</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Educação & Treinamento</div>
+          <div class="cat-full-count">140 serviços</div>
+          <div class="cat-full-tags">
+            <span>EaD</span><span>Mentoria</span><span>Workshops</span><span>Instrutoria</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="arquitetura engenharia 3d projeto civil">
+        <div class="cat-full-icon">🏗️</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Arquitetura & Engenharia</div>
+          <div class="cat-full-count">120 serviços</div>
+          <div class="cat-full-tags">
+            <span>CAD</span><span>3D</span><span>Civil</span><span>Render</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+      <a href="exploreFreelancers.html" class="cat-full-card reveal" data-name="legal jurídico contrato advogado">
+        <div class="cat-full-icon">⚖️</div>
+        <div class="cat-full-body">
+          <div class="cat-full-name">Jurídico</div>
+          <div class="cat-full-count">95 serviços</div>
+          <div class="cat-full-tags">
+            <span>Contratos</span><span>LGPD</span><span>Societário</span><span>Trabalhista</span>
+          </div>
+        </div>
+        <span class="cat-full-arrow">↗</span>
+      </a>
+
+    </div>
+
+    <!-- Empty state -->
+    <div class="cat-empty" id="catEmpty" style="display:none">
+      <span class="cat-empty-icon">🔍</span>
+      <div class="cat-empty-title">Nenhuma categoria encontrada</div>
+      <p class="cat-empty-desc">Tente buscar por outro termo ou explore todas as categorias.</p>
+      <button class="btn-cta-ghost" onclick="clearSearch()">Ver todas</button>
+    </div>
+  </section>
+
+  <!-- ══ CTA ══ -->
+  <section class="cta-section">
+    <div class="cta-orbit">
+      <div class="orbit-dot" style="--r:220px;--dur:18s;top:50%;left:50%;margin:-2px"></div>
+      <div class="orbit-dot" style="--r:300px;--dur:26s;top:50%;left:50%;margin:-2px;animation-delay:-8s"></div>
+    </div>
+    <div class="cta-inner">
+      <p class="cta-label reveal">Não sabe por onde começar?</p>
+      <h2 class="cta-title reveal">ENCONTRE O TALENTO<br><span class="green">CERTO AGORA</span></h2>
+      <p class="cta-sub reveal">Explore perfis verificados e receba propostas dos melhores freelancers do Brasil.</p>
+      <div class="cta-buttons reveal">
+        <a href="exploreFreelancers.html" class="btn-cta-main">Explorar freelancers</a>
+        <a href="howItWorks.html" class="btn-cta-ghost">Como funciona →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-icon">OF</div>
+          <div class="footer-logo-text">One<span>Freela</span></div>
+        </div>
+        <p class="footer-desc">A plataforma brasileira que conecta empresas e pessoas a freelancers talentosos, com segurança e agilidade.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Plataforma</h4>
+        <ul>
+          <li><a href="howItWorks.html">Como funciona</a></li>
+          <li><a href="categories.html">Categorias</a></li>
+          <li><a href="beAFreelancer.html">Seja um freelancer</a></li>
+          <li><a href="plans.html">Planos</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Empresa</h4>
+        <ul>
+          <li><a href="aboutUs.html">Sobre nós</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="careers.html">Carreiras</a></li>
+          <li><a href="contact.html">Contato</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Termos de uso</a></li>
+          <li><a href="#">Privacidade</a></li>
+          <li><a href="#">Cookies</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">© 2026 <span>OneFreela</span>. Feito com ♥ no Brasil.</p>
+      <div class="footer-socials">
+        <a href="#" class="social-btn" title="Instagram">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <a href="#" class="social-btn" title="LinkedIn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a href="#" class="social-btn" title="GitHub">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+  <script src="categories.js"></script>
+</body>
+</html>
