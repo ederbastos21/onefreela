@@ -1,1 +1,0 @@
-SELECT * FROM `user`;8888

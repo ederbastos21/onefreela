@@ -18,7 +18,7 @@ public class User {
     private LocalDate birthday;
     private String phoneNumber;
 
-    //automatic data
+    //automatic data,
     private String registerDate;
     private String profilePicturePath;
     private boolean isAdmin;
