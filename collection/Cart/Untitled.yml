@@ -1,0 +1,25 @@
+info:
+  name: Untitled
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:8080/cart/addItem
+  headers:
+    - name: Authorization
+      value: fe6c269b-f429-4deb-9e40-c96151c985a7
+  body:
+    type: json
+    data: |-
+      {
+        "WorkId" : "1",
+        "amount" : "1"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
