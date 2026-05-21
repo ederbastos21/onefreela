@@ -25,7 +25,7 @@ public class User {
     private boolean isFreelancer;
     private boolean verified;
 
-    @OneToOne (mappedBy = "cart")
+    @OneToOne (mappedBy = "user")
     private Cart cart;
 
     public Long getId() {
