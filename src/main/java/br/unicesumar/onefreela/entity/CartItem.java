@@ -13,6 +13,7 @@ public class CartItem {
 
     @ManyToOne
     @NotNull (message = "serviço nao pode ser nulo")
+    @JsonIgnore
     private Work work;
 
     @ManyToOne

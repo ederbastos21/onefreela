@@ -1,5 +1,6 @@
 package br.unicesumar.onefreela.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -26,6 +27,7 @@ public class User {
     private boolean verified;
 
     @OneToOne (mappedBy = "user")
+    @JsonIgnore
     private Cart cart;
 
     public Long getId() {
