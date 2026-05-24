@@ -35,6 +35,10 @@ public class WorkService {
         return repository.findById(id).orElseThrow();
     }
 
+    public List<Work> findAll(){
+        return repository.findAll();
+    }
+
     @Transactional
     public WorkResponse registerWork(User authenticatedUser, WorkRegisterDTO workRegisterDTO) {
         List<ErrorDetail> errors = new ArrayList<>();
