@@ -8,6 +8,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .fl-work-desc { font-size: 11px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .explore-loading, .explore-error { grid-column: 1 / -1; text-align: center; padding: 48px 0; font-size: 14px; }
+    .explore-loading { color: var(--muted2); }
+    .explore-error   { color: #ef4444; }
+  </style>
 </head>
 <body>
 
@@ -44,13 +50,12 @@
   <div class="app-page">
     <div class="filter-bar">
       <div class="filter-top">
-        <div class="results-info"><strong id="resultCount">12</strong> freelancers encontrados</div>
+        <div class="results-info"><strong id="resultCount">0</strong> serviços encontrados</div>
         <div class="filter-top-right">
           <select class="sort-select" id="sortSelect" onchange="applyFilters()">
             <option value="relevancia">Ordenar: Relevância</option>
             <option value="preco-asc">Menor preço</option>
             <option value="preco-desc">Maior preço</option>
-            <option value="nota">Melhor nota</option>
           </select>
           <div class="view-toggle">
             <button class="view-btn active" id="btnGrid" onclick="setView('grid')" title="Grade">
@@ -66,8 +71,6 @@
         <span class="filter-pill-label">Filtrar:</span>
         <div class="fpill" id="pillCat" data-dd="ddCat"><span id="pillCatLabel">Categoria</span> <span class="fpill-arrow">▾</span></div>
         <div class="fpill" id="pillPreco" data-dd="ddPreco"><span id="pillPrecoLabel">Preço</span> <span class="fpill-arrow">▾</span></div>
-        <div class="fpill" id="pillStar" data-dd="ddStar"><span id="pillStarLabel">Avaliação</span> <span class="fpill-arrow">▾</span></div>
-        <div class="fpill" id="pillAvail" data-dd="ddAvail"><span id="pillAvailLabel">Disponibilidade</span> <span class="fpill-arrow">▾</span></div>
         <div class="pill-divider"></div>
         <div id="activeChips" class="d-flex-gap8"></div>
       </div>
@@ -101,48 +104,19 @@
 
   <div class="filter-dropdown" id="ddCat">
     <div class="dd-title">Categoria</div>
-    <div class="dd-options">
-      <div class="dd-opt active" data-cat="todos"  onclick="pickCat(this)"><span>🔥 Todos</span><span class="dd-count">12</span></div>
-      <div class="dd-opt" data-cat="design" onclick="pickCat(this)"><span>🎨 Design & Arte</span><span class="dd-count">3</span></div>
-      <div class="dd-opt" data-cat="dev"    onclick="pickCat(this)"><span>💻 Desenvolvimento</span><span class="dd-count">3</span></div>
-      <div class="dd-opt" data-cat="mkt"    onclick="pickCat(this)"><span>📱 Marketing</span><span class="dd-count">2</span></div>
-      <div class="dd-opt" data-cat="copy"   onclick="pickCat(this)"><span>✍️ Redação</span><span class="dd-count">1</span></div>
-      <div class="dd-opt" data-cat="video"  onclick="pickCat(this)"><span>🎬 Vídeo & Animação</span><span class="dd-count">2</span></div>
-      <div class="dd-opt" data-cat="dados"  onclick="pickCat(this)"><span>📊 Dados & BI</span><span class="dd-count">1</span></div>
-      <div class="dd-opt" data-cat="ia"     onclick="pickCat(this)"><span>🤖 I.A.</span><span class="dd-count">1</span></div>
-    </div>
+    <div class="dd-options"></div>
   </div>
 
   <div class="filter-dropdown dd-price" id="ddPreco">
-    <div class="dd-title">Faixa de preço / hora</div>
+    <div class="dd-title">Faixa de preço</div>
     <div class="dd-price-row">
-      <div class="dd-pinput-wrap"><span class="dd-plabel">R$</span><input type="number" class="dd-pinput" id="priceMin" value="0" min="0" max="500" /></div>
+      <div class="dd-pinput-wrap"><span class="dd-plabel">R$</span><input type="number" class="dd-pinput" id="priceMin" value="0" min="0" max="10000" /></div>
       <div class="price-range-label">até</div>
-      <div class="dd-pinput-wrap"><span class="dd-plabel">R$</span><input type="number" class="dd-pinput" id="priceMax" value="500" min="0" max="500" oninput="syncSlider()" /></div>
+      <div class="dd-pinput-wrap"><span class="dd-plabel">R$</span><input type="number" class="dd-pinput" id="priceMax" value="10000" min="0" max="10000" oninput="syncSlider()" /></div>
     </div>
-    <input type="range" class="range-slider" id="priceSlider" min="0" max="500" value="500" oninput="syncMax()" />
-    <div class="range-val" id="rangeVal">Até R$ 500/hr</div>
+    <input type="range" class="range-slider" id="priceSlider" min="0" max="10000" value="10000" oninput="syncMax()" />
+    <div class="range-val" id="rangeVal">Até R$ 10000</div>
     <button class="dd-apply-btn" onclick="applyPrice()">APLICAR</button>
-  </div>
-
-  <div class="filter-dropdown" id="ddStar">
-    <div class="dd-title">Avaliação mínima</div>
-    <div class="dd-stars">
-      <div class="dd-star active" data-val="0"   onclick="pickStar(this)"><span class="star-txt">⭐</span><span class="star-lbl">Qualquer nota</span><span class="radio-dot"></span></div>
-      <div class="dd-star"        data-val="4.5" onclick="pickStar(this)"><span class="star-txt">★★★★★</span><span class="star-lbl">4.5 ou mais</span><span class="radio-dot"></span></div>
-      <div class="dd-star"        data-val="4.0" onclick="pickStar(this)"><span class="star-txt">★★★★☆</span><span class="star-lbl">4.0 ou mais</span><span class="radio-dot"></span></div>
-      <div class="dd-star"        data-val="3.5" onclick="pickStar(this)"><span class="star-txt">★★★½☆</span><span class="star-lbl">3.5 ou mais</span><span class="radio-dot"></span></div>
-    </div>
-  </div>
-
-  <div class="filter-dropdown" id="ddAvail">
-    <div class="dd-title">Disponibilidade</div>
-    <div class="dd-avail">
-      <div class="dd-av active" data-val="todos"  onclick="pickAvail(this)"><span class="av-dot avail-green"></span>Qualquer</div>
-      <div class="dd-av"        data-val="green"  onclick="pickAvail(this)"><span class="av-dot avail-green"></span>Disponível agora</div>
-      <div class="dd-av"        data-val="yellow" onclick="pickAvail(this)"><span class="av-dot avail-yellow"></span>Esta semana</div>
-      <div class="dd-av"        data-val="red"    onclick="pickAvail(this)"><span class="av-dot avail-red"></span>Este mês</div>
-    </div>
   </div>
 
   <!-- AUTH MODAL -->

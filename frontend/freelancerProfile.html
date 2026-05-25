@@ -8,6 +8,24 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Work form modal ─────────────────────────── */
+    .work-form-modal { width: 100%; max-width: 540px; }
+    .work-form { display: flex; flex-direction: column; gap: 14px; margin: 20px 0; }
+    .work-form .setting-item { display: flex; flex-direction: column; gap: 5px; }
+    .wf-hint { font-size: 11px; color: var(--muted); }
+    .wf-char  { font-size: 11px; color: var(--muted); text-align: right; }
+    .wf-msg   { font-size: 12px; min-height: 16px; }
+    .wf-msg-error   { color: #ef4444; }
+    .wf-msg-success { color: var(--green); }
+
+    /* ── Service card extras ─────────────────────── */
+    .btn-sm-danger { border-color: rgba(239,68,68,.3) !important; color: #ef4444 !important; }
+    .btn-sm-danger:hover { border-color: #ef4444 !important; color: #fff !important; background: rgba(239,68,68,.15) !important; }
+    .service-cat-tag { font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+    .works-loading { color: var(--muted2); font-size: 13px; padding: 12px 0; }
+    .works-error   { color: #ef4444;       font-size: 13px; padding: 12px 0; }
+  </style>
 </head>
 <body>
 
@@ -38,10 +56,6 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Perfil
       </a>
-      <a href="#stats" class="nav-item">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        Estatísticas
-      </a>
       <a href="#portfolio" class="nav-item">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         Portfólio
@@ -49,7 +63,7 @@
       <a href="#servicos" class="nav-item">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
         Serviços
-        <span class="nav-item-badge">3</span>
+        <span class="nav-item-badge" id="worksBadge" style="display:none">0</span>
       </a>
       <a href="#config" class="nav-item">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -79,63 +93,14 @@
           <div class="profile-info">
             <div class="profile-name" id="profileName"></div>
             <div class="profile-type">✦ Freelancer</div>
-            <div class="profile-role">UI/UX Designer Sênior</div>
-            <div class="profile-tags">
-              <span class="profile-tag">Figma</span>
-              <span class="profile-tag">Prototyping</span>
-              <span class="profile-tag">Design System</span>
-              <span class="profile-tag">UX Research</span>
-            </div>
-            <div class="profile-bio">Designer com 6 anos de experiência em produtos digitais. Especialista em criar interfaces que equilibram estética e usabilidade.</div>
-            <div class="profile-meta">
-              <div class="profile-meta-item">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                São Paulo, SP
-              </div>
-              <div class="profile-meta-item">⭐ 4.98 (214 avaliações)</div>
-              <div class="profile-meta-item">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                Disponível agora
-              </div>
-            </div>
+            <div class="profile-email" id="profileEmail" style="font-size:13px;color:var(--muted2);margin-top:4px"></div>
           </div>
           <div class="profile-actions">
-            <button class="btn-edit">
+            <a href="freelancerEditProfile.html" class="btn-edit">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Editar Perfil
-            </button>
-            <button class="btn-preview">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Ver como cliente
-            </button>
+            </a>
           </div>
-        </div>
-      </div>
-
-      <div id="stats" class="stats-grid reveal">
-        <div class="stat-card">
-          <div class="stat-icon">✅</div>
-          <div class="stat-val">48</div>
-          <div class="stat-label">Projetos Concluídos</div>
-          <div class="stat-diff">↑ 4 este mês</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">💰</div>
-          <div class="stat-val">R$42k</div>
-          <div class="stat-label">Total Recebido</div>
-          <div class="stat-diff">↑ R$6.8k este mês</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">⭐</div>
-          <div class="stat-val">4.98</div>
-          <div class="stat-label">Avaliação Média</div>
-          <div class="stat-diff">Top 2% da plataforma</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">🔁</div>
-          <div class="stat-val">87%</div>
-          <div class="stat-label">Taxa de Retorno</div>
-          <div class="stat-diff">↑ 3% vs mês anterior</div>
         </div>
       </div>
 
@@ -179,54 +144,7 @@
 
       <div id="servicos" class="section-block reveal">
         <div class="block-title">Meus Serviços</div>
-        <div class="services-list">
-          <div class="service-card">
-            <div class="service-icon">🎨</div>
-            <div class="service-info">
-              <div class="service-name">Design de Interface (UI)</div>
-              <div class="service-desc">Criação de telas, componentes e guias de estilo no Figma</div>
-            </div>
-            <div class="service-right">
-              <span class="service-status status-active">Ativo</span>
-              <div class="service-price">R$120/hr</div>
-              <div class="service-actions">
-                <button class="btn-sm">Editar</button>
-                <button class="btn-sm">Pausar</button>
-              </div>
-            </div>
-          </div>
-          <div class="service-card">
-            <div class="service-icon">🔍</div>
-            <div class="service-info">
-              <div class="service-name">Pesquisa de Usuário (UX)</div>
-              <div class="service-desc">Entrevistas, testes de usabilidade e relatório de insights</div>
-            </div>
-            <div class="service-right">
-              <span class="service-status status-active">Ativo</span>
-              <div class="service-price">R$150/hr</div>
-              <div class="service-actions">
-                <button class="btn-sm">Editar</button>
-                <button class="btn-sm">Pausar</button>
-              </div>
-            </div>
-          </div>
-          <div class="service-card">
-            <div class="service-icon">📐</div>
-            <div class="service-info">
-              <div class="service-name">Prototipagem Interativa</div>
-              <div class="service-desc">Protótipos navegáveis de alta fidelidade para validação</div>
-            </div>
-            <div class="service-right">
-              <span class="service-status status-paused">Pausado</span>
-              <div class="service-price">R$90/hr</div>
-              <div class="service-actions">
-                <button class="btn-sm">Editar</button>
-                <button class="btn-sm">Ativar</button>
-              </div>
-            </div>
-          </div>
-          <button class="btn-add-service">+ Adicionar novo serviço</button>
-        </div>
+        <div class="services-list" id="servicesList"></div>
       </div>
 
       <div id="config" class="section-block reveal">
@@ -244,22 +162,6 @@
             <div class="setting-item">
               <label class="setting-label">E-mail</label>
               <input class="setting-input" type="email" id="settingEmail" />
-            </div>
-            <div class="setting-item">
-              <label class="setting-label">Valor/hora (R$)</label>
-              <input class="setting-input" type="number" value="120" />
-            </div>
-            <div class="setting-item">
-              <label class="setting-label">Área de atuação</label>
-              <input class="setting-input" type="text" value="Design & Arte" />
-            </div>
-            <div class="setting-item">
-              <label class="setting-label">Cidade</label>
-              <input class="setting-input" type="text" value="São Paulo, SP" />
-            </div>
-            <div class="setting-item setting-full">
-              <label class="setting-label">Bio</label>
-              <textarea class="setting-input resize-v" rows="3">Designer com 6 anos de experiência em produtos digitais. Especialista em criar interfaces que equilibram estética e usabilidade.</textarea>
             </div>
           </div>
           <button class="btn-save">SALVAR ALTERAÇÕES</button>
@@ -330,6 +232,43 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- Work modal (add / edit) -->
+  <div class="auth-overlay" id="workModal">
+    <div class="auth-modal work-form-modal">
+      <button class="btn-auth-close" onclick="closeWorkModal()">×</button>
+      <h2 class="auth-modal-title" id="workModalTitle">NOVO SERVIÇO</h2>
+
+      <div class="work-form">
+        <div class="setting-item">
+          <label class="setting-label">Título</label>
+          <input id="wfTitle" class="setting-input" type="text" placeholder="Ex: Desenvolvo seu app em Flutter" maxlength="100" />
+          <span class="wf-hint">Entre 5 e 100 caracteres</span>
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">Categoria</label>
+          <input id="wfCategory" class="setting-input" type="text" placeholder="Ex: Desenvolvimento Mobile" maxlength="100" />
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">Preço (R$)</label>
+          <input id="wfPrice" class="setting-input" type="number" placeholder="0.00" min="0" step="0.01" />
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">Descrição</label>
+          <textarea id="wfDescription" class="setting-input resize-v" rows="4"
+            placeholder="Descreva seu serviço com detalhes..." maxlength="2000"></textarea>
+          <span class="wf-hint">Entre 20 e 2000 caracteres</span>
+        </div>
+
+        <div class="wf-msg" id="wfMsg"></div>
+      </div>
+
+      <button class="btn-save" id="wfSubmitBtn" onclick="submitWork()">CADASTRAR SERVIÇO</button>
+    </div>
   </div>
 
   <script src="auth.js"></script>
