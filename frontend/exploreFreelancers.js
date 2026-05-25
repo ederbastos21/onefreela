@@ -127,6 +127,8 @@ function render(data) {
     const gc = document.createElement('div');
     gc.className = 'fl-card';
     gc.style.animationDelay = (i * 40) + 'ms';
+    gc.style.cursor = 'pointer';
+    gc.addEventListener('click', () => openWork(w));
     gc.innerHTML = `
       <div class="fl-banner" style="background:${bg}">
         <span style="position:relative;z-index:1">${emoji}</span>
@@ -154,6 +156,8 @@ function render(data) {
     const lc = document.createElement('div');
     lc.className = 'fl-list-card';
     lc.style.animationDelay = (i * 30) + 'ms';
+    lc.style.cursor = 'pointer';
+    lc.addEventListener('click', () => openWork(w));
     lc.innerHTML = `
       <div class="fl-list-thumb" style="background:${bg}">${emoji}</div>
       <div class="fl-list-body">
@@ -321,6 +325,11 @@ document.querySelectorAll('.page-btn').forEach(btn => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
+
+function openWork(w) {
+  localStorage.setItem('of_selected_work', JSON.stringify(w));
+  window.location.href = 'serviceScreen.html';
+}
 
 async function init() {
   setLoading(true);

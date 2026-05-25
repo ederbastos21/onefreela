@@ -56,9 +56,9 @@
         <span class="breadcrumb-sep">›</span>
         <a href="exploreFreelancers.html">Explorar</a>
         <span class="breadcrumb-sep">›</span>
-        <a href="exploreServices.html">Design & Arte</a>
+        <a href="exploreFreelancers.html" id="breadcrumbCat">Design & Arte</a>
         <span class="breadcrumb-sep">›</span>
-        <span class="breadcrumb-current">Design System no Figma</span>
+        <span class="breadcrumb-current" id="breadcrumbTitle">Design System no Figma</span>
       </div>
 
       <div class="service-layout">
@@ -66,224 +66,45 @@
         <!-- ══ LEFT ══ -->
         <div class="left-col">
 
-          <h1 class="service-title">Vou criar seu Design System completo no Figma</h1>
+          <h1 class="service-title" id="serviceTitle">Vou criar seu Design System completo no Figma</h1>
 
           <div class="service-meta">
-            <div class="meta-rating">
-              ★ 4.98 <span>(214 avaliações)</span>
-            </div>
-            <div class="meta-orders">382 pedidos realizados</div>
-            <div class="meta-avail">
-              <span class="avail-dot avail-green"></span>
-              Disponível agora
-            </div>
-            <span class="meta-cat">Design & Arte</span>
+            <span class="meta-cat" id="serviceCat">Design & Arte</span>
           </div>
 
           <!-- GALERIA -->
           <div class="gallery">
             <div class="gallery-main" id="galleryMain" style="background:linear-gradient(135deg,#0d1f0d,#1a3a1a)">
-              <span class="gallery-emoji">🎨</span>
+              <span class="gallery-emoji" id="galleryEmoji">🎨</span>
               <div class="gallery-main-overlay"></div>
               <div class="gallery-play" id="playBtn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               </div>
             </div>
-            <div class="gallery-thumbs">
-              <div class="gallery-thumb active" style="background:linear-gradient(135deg,#0d1f0d,#1a3a1a)" onclick="setThumb(this, 'linear-gradient(135deg,#0d1f0d,#1a3a1a)', '🎨')">🎨</div>
-              <div class="gallery-thumb" style="background:linear-gradient(135deg,#0d0d1f,#1a1a3a)" onclick="setThumb(this, 'linear-gradient(135deg,#0d0d1f,#1a1a3a)', '🖼️')">🖼️</div>
-              <div class="gallery-thumb" style="background:linear-gradient(135deg,#1f1a0d,#3a300d)" onclick="setThumb(this, 'linear-gradient(135deg,#1f1a0d,#3a300d)', '📐')">📐</div>
-              <div class="gallery-thumb" style="background:linear-gradient(135deg,#1a0d1f,#2a0d3a)" onclick="setThumb(this, 'linear-gradient(135deg,#1a0d1f,#2a0d3a)', '✏️')">✏️</div>
-            </div>
           </div>
 
           <!-- FREELANCER -->
           <div class="section-block">
-            <div class="section-title">Sobre a Freelancer</div>
+            <div class="section-title">Sobre o Freelancer</div>
             <div class="freelancer-card">
               <div class="freelancer-card-header">
-                <div class="fl-avatar-lg">MR</div>
+                <div class="fl-avatar-lg" id="serviceOwnerAvatar">?</div>
                 <div class="fl-card-info">
-                  <div class="fl-card-name">Marina Rocha</div>
-                  <div class="fl-card-role">UI/UX Designer Sênior</div>
-                  <div class="fl-card-rating">★ 4.98 <span>(214 avaliações)</span></div>
+                  <div class="fl-card-name" id="serviceOwnerName">—</div>
+                  <div class="fl-card-role" id="serviceOwnerRole"></div>
                 </div>
-                <a href="freelancerProfile.html" class="btn-ver-perfil">
+                <a href="freelancerProfile.html" class="btn-ver-perfil" id="serviceProfileLink">
                   Ver perfil
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 </a>
               </div>
-              <div class="fl-card-stats">
-                <div class="fl-stat"><div class="fl-stat-val">48</div><div class="fl-stat-lbl">Projetos</div></div>
-                <div class="fl-stat"><div class="fl-stat-val">6 anos</div><div class="fl-stat-lbl">Experiência</div></div>
-                <div class="fl-stat"><div class="fl-stat-val">100%</div><div class="fl-stat-lbl">Satisfação</div></div>
-                <div class="fl-stat"><div class="fl-stat-val">2h</div><div class="fl-stat-lbl">Resp. média</div></div>
-              </div>
-              <div class="fl-card-bio">Designer com 6 anos de experiência em produtos digitais. Especialista em criar interfaces que equilibram estética e usabilidade, com foco em resultados de negócio.</div>
             </div>
           </div>
 
           <!-- DESCRIÇÃO -->
           <div class="section-block">
             <div class="section-title">Descrição do Serviço</div>
-            <div class="description">
-              <p>Olá! Sou Marina, designer sênior com foco em produtos digitais e sistemas de design. Vou criar um <strong>Design System completo e escalável no Figma</strong> para o seu produto, garantindo consistência visual e agilidade no desenvolvimento.</p>
-              <p>Um Design System bem estruturado é o alicerce de qualquer produto digital moderno. Ele elimina inconsistências, acelera o desenvolvimento e mantém sua marca coesa em todos os pontos de contato.</p>
-              <p><strong>O que você vai receber:</strong> biblioteca de componentes, guia de tipografia, paleta de cores, ícones, espaçamentos e tokens de design — tudo documentado e pronto para uso imediato pela sua equipe de desenvolvimento.</p>
-            </div>
-          </div>
-
-          <!-- O QUE ESTÁ INCLUÍDO -->
-          <div class="section-block">
-            <div class="section-title">O que está incluído</div>
-            <div class="includes-grid">
-              <div class="include-item">
-                <span class="include-icon">🧩</span>
-                <div class="include-text"><strong>Biblioteca de componentes</strong>Botões, inputs, cards, modais e mais — tudo no Figma</div>
-              </div>
-              <div class="include-item">
-                <span class="include-icon">🎨</span>
-                <div class="include-text"><strong>Guia de cores e tipografia</strong>Paleta completa com variantes e hierarquia tipográfica</div>
-              </div>
-              <div class="include-item">
-                <span class="include-icon">📐</span>
-                <div class="include-text"><strong>Grid e espaçamentos</strong>Sistema de grid responsivo e escala de espaçamentos</div>
-              </div>
-              <div class="include-item">
-                <span class="include-icon">📖</span>
-                <div class="include-text"><strong>Documentação</strong>Guia de uso para sua equipe de dev e design</div>
-              </div>
-              <div class="include-item">
-                <span class="include-icon">🔄</span>
-                <div class="include-text"><strong>Revisões incluídas</strong>Até 3 rodadas de revisão sem custo adicional</div>
-              </div>
-              <div class="include-item">
-                <span class="include-icon">📦</span>
-                <div class="include-text"><strong>Entrega em arquivo Figma</strong>Arquivo organizado com variáveis e auto-layout</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- AVALIAÇÕES -->
-          <div class="section-block">
-            <div class="section-title">Avaliações</div>
-            <div class="reviews-header">
-              <div class="reviews-summary">
-                <div class="reviews-big-score">4.98</div>
-                <div class="reviews-bars">
-                  <div class="bar-row"><span class="bar-label">5</span><div class="bar-track"><div class="bar-fill fill-96"></div></div><span class="bar-count">206</span></div>
-                  <div class="bar-row"><span class="bar-label">4</span><div class="bar-track"><div class="bar-fill fill-4"></div></div><span class="bar-count">8</span></div>
-                  <div class="bar-row"><span class="bar-label">3</span><div class="bar-track"><div class="bar-fill fill-0"></div></div><span class="bar-count">0</span></div>
-                  <div class="bar-row"><span class="bar-label">2</span><div class="bar-track"><div class="bar-fill fill-0"></div></div><span class="bar-count">0</span></div>
-                  <div class="bar-row"><span class="bar-label">1</span><div class="bar-track"><div class="bar-fill fill-0"></div></div><span class="bar-count">0</span></div>
-                </div>
-              </div>
-            </div>
-            <div class="review-list">
-              <div class="review-item">
-                <div class="review-header">
-                  <div class="review-avatar" style="background:#60a5fa">RP</div>
-                  <div class="review-meta">
-                    <div class="review-name">Ricardo Pinto</div>
-                    <div class="review-date">Abril 2026</div>
-                  </div>
-                  <div class="review-stars">★★★★★</div>
-                </div>
-                <div class="review-text">Trabalho impecável. A Marina entregou muito além do esperado — o Design System está completo, bem documentado e já está sendo usado pela nossa equipe de dev. Comunicação excelente durante todo o processo.</div>
-              </div>
-              <div class="review-item">
-                <div class="review-header">
-                  <div class="review-avatar" style="background:#f59e0b">FS</div>
-                  <div class="review-meta">
-                    <div class="review-name">Fernanda Souza</div>
-                    <div class="review-date">Março 2026</div>
-                  </div>
-                  <div class="review-stars">★★★★★</div>
-                </div>
-                <div class="review-text">Superou todas as expectativas. Os componentes são precisos, o arquivo no Figma está super organizado e as revisões foram rápidas. Com certeza vou contratar novamente.</div>
-              </div>
-              <div class="review-item">
-                <div class="review-header">
-                  <div class="review-avatar" style="background:#a3e635">TM</div>
-                  <div class="review-meta">
-                    <div class="review-name">Thiago Melo</div>
-                    <div class="review-date">Fevereiro 2026</div>
-                  </div>
-                  <div class="review-stars">★★★★★</div>
-                </div>
-                <div class="review-text">Profissionalismo do início ao fim. Entendeu exatamente o que precisávamos e entregou no prazo. O Design System já economizou horas de trabalho para nosso time.</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- FAQ -->
-          <div class="section-block">
-            <div class="section-title">Perguntas Frequentes</div>
-            <div class="faq-item">
-              <div class="faq-q" onclick="toggleFaq(this)">
-                Quais informações preciso fornecer para começar?
-                <span class="faq-icon">+</span>
-              </div>
-              <div class="faq-a">Preciso do briefing do seu produto, paleta de cores (se existir), logo em vetor, fontes utilizadas e referências visuais que você goste. Quanto mais contexto, melhor o resultado.</div>
-            </div>
-            <div class="faq-item">
-              <div class="faq-q" onclick="toggleFaq(this)">
-                Em quanto tempo é feita a entrega?
-                <span class="faq-icon">+</span>
-              </div>
-              <div class="faq-a">Depende do pacote escolhido. O básico é entregue em 5 dias, o padrão em 10 dias e o premium em 15 dias. Prazos contam a partir do envio do briefing completo.</div>
-            </div>
-            <div class="faq-item">
-              <div class="faq-q" onclick="toggleFaq(this)">
-                Posso pedir alterações após a entrega?
-                <span class="faq-icon">+</span>
-              </div>
-              <div class="faq-a">Sim! O número de revisões varia por pacote: 1 no básico, 3 no padrão e ilimitadas no premium. Revisões além do incluído têm custo adicional combinado.</div>
-            </div>
-            <div class="faq-item">
-              <div class="faq-q" onclick="toggleFaq(this)">
-                O arquivo Figma fica com minha equipe?
-                <span class="faq-icon">+</span>
-              </div>
-              <div class="faq-a">Sim, você recebe o arquivo Figma completo com todos os direitos de uso e pode editar livremente. Também posso fazer a transferência direta para o seu workspace.</div>
-            </div>
-          </div>
-
-          <!-- SIMILARES -->
-          <div class="section-block">
-            <div class="section-title">Serviços Similares</div>
-            <div class="similar-grid">
-              <div class="similar-card">
-                <div class="similar-thumb" style="background:linear-gradient(135deg,#0d0d1f,#1a1a3a)">🖌️</div>
-                <div class="similar-body">
-                  <div class="similar-title">Desenvolvo a identidade visual completa da sua marca</div>
-                  <div class="similar-footer">
-                    <span class="similar-rating">★ 4.76</span>
-                    <span class="similar-price">R$70/hr</span>
-                  </div>
-                </div>
-              </div>
-              <div class="similar-card">
-                <div class="similar-thumb" style="background:linear-gradient(135deg,#0d1a1f,#0d2a2a)">💻</div>
-                <div class="similar-body">
-                  <div class="similar-title">Desenvolvo seu front-end com React e Next.js</div>
-                  <div class="similar-footer">
-                    <span class="similar-rating">★ 4.95</span>
-                    <span class="similar-price">R$95/hr</span>
-                  </div>
-                </div>
-              </div>
-              <div class="similar-card">
-                <div class="similar-thumb" style="background:linear-gradient(135deg,#1f1a0d,#3a2e0d)">✍️</div>
-                <div class="similar-body">
-                  <div class="similar-title">Escrevo textos otimizados para SEO que convertem</div>
-                  <div class="similar-footer">
-                    <span class="similar-rating">★ 4.99</span>
-                    <span class="similar-price">R$65/hr</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div class="description" id="serviceDesc"></div>
           </div>
 
         </div>
@@ -292,37 +113,11 @@
         <div class="right-col">
           <div class="purchase-card">
 
-            <!-- Pacotes -->
-            <div class="packages">
-              <div class="package-tab" onclick="setPackage(this,0)">
-                <span class="package-tab-name">BÁSICO</span>
-                <span class="package-tab-price">R$600</span>
-              </div>
-              <div class="package-tab active" onclick="setPackage(this,1)">
-                <span class="package-tab-name">PADRÃO</span>
-                <span class="package-tab-price">R$1.200</span>
-              </div>
-              <div class="package-tab" onclick="setPackage(this,2)">
-                <span class="package-tab-name">PREMIUM</span>
-                <span class="package-tab-price">R$2.400</span>
-              </div>
-            </div>
-
             <div class="package-detail">
-              <div class="package-desc" id="pkgDesc">Design System completo com 60+ componentes, tokens de design, guia de estilo e documentação para dev. Inclui 3 revisões.</div>
-              <div class="package-features" id="pkgFeatures">
-                <div class="pkg-feat"><span class="pkg-feat-check">✓</span> 60+ componentes no Figma</div>
-                <div class="pkg-feat"><span class="pkg-feat-check">✓</span> Tokens de design</div>
-                <div class="pkg-feat"><span class="pkg-feat-check">✓</span> Guia de tipografia e cores</div>
-                <div class="pkg-feat"><span class="pkg-feat-check">✓</span> Grid responsivo</div>
-                <div class="pkg-feat"><span class="pkg-feat-check">✓</span> 3 revisões incluídas</div>
-                <div class="pkg-feat"><span class="pkg-feat-check">✓</span> Entrega em 10 dias</div>
-                <div class="pkg-feat"><span class="pkg-feat-check pkg-feat-x">✗</span> Dark mode</div>
-                <div class="pkg-feat"><span class="pkg-feat-check pkg-feat-x">✗</span> Handoff para dev</div>
-              </div>
+              <div class="purchase-price" id="servicePrice">—</div>
 
               <div class="obs-label">Observações / Briefing</div>
-              <textarea class="obs-input" id="obsInput" maxlength="400" placeholder="Descreva seu produto, cores da marca, referências, ou qualquer detalhe importante para o projeto..." oninput="updateObs()"></textarea>
+              <textarea class="obs-input" id="obsInput" maxlength="400" placeholder="Descreva seu projeto, referências ou qualquer detalhe importante..." oninput="updateObs()"></textarea>
               <div class="obs-counter"><span id="obsCount">0</span>/400</div>
 
               <button class="btn-buy" onclick="buyNow()">CONTRATAR AGORA</button>

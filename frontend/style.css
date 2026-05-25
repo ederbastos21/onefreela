@@ -4467,6 +4467,7 @@ footer {
 .purchase-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--rc); overflow: hidden; }
 .purchase-card::before { content: ''; display: block; height: 3px; background: linear-gradient(90deg, var(--green), transparent); }
 .package-detail { padding: 18px; }
+.purchase-price { font-family: var(--font-display); font-size: 36px; color: var(--green); letter-spacing: 2px; margin-bottom: 18px; }
 .package-desc { font-size: 13px; color: var(--muted2); line-height: 1.7; margin-bottom: 16px; }
 .package-features { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
 .pkg-feat { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--muted2); }

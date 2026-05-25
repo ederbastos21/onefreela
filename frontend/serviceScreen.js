@@ -1,63 +1,78 @@
 OFAuth.loadNav();
 
-const packages = [
-  {
-    desc: 'Design System básico com 30 componentes essenciais e paleta de cores. Ideal para MVPs e projetos menores. Inclui 1 revisão.',
-    features: [
-      [true,  '30 componentes no Figma'],
-      [true,  'Paleta de cores e tipografia'],
-      [true,  'Grid básico'],
-      [true,  '1 revisão incluída'],
-      [true,  'Entrega em 5 dias'],
-      [false, 'Tokens de design'],
-      [false, 'Dark mode'],
-      [false, 'Handoff para dev'],
-    ]
-  },
-  {
-    desc: 'Design System completo com 60+ componentes, tokens de design, guia de estilo e documentação para dev. Inclui 3 revisões.',
-    features: [
-      [true,  '60+ componentes no Figma'],
-      [true,  'Tokens de design'],
-      [true,  'Guia de tipografia e cores'],
-      [true,  'Grid responsivo'],
-      [true,  '3 revisões incluídas'],
-      [true,  'Entrega em 10 dias'],
-      [false, 'Dark mode'],
-      [false, 'Handoff para dev'],
-    ]
-  },
-  {
-    desc: 'Design System enterprise com 100+ componentes, dark mode, tokens avançados, handoff completo para dev e revisões ilimitadas.',
-    features: [
-      [true, '100+ componentes no Figma'],
-      [true, 'Tokens de design avançados'],
-      [true, 'Dark mode completo'],
-      [true, 'Handoff para dev'],
-      [true, 'Revisões ilimitadas'],
-      [true, 'Entrega em 15 dias'],
-      [true, 'Suporte pós-entrega (30 dias)'],
-      [true, 'Treinamento da equipe (1h)'],
-    ]
-  }
+const GRADIENTS = [
+  'linear-gradient(135deg,#0d1f0d,#1a3a1a)',
+  'linear-gradient(135deg,#0d0d1f,#1a1a3a)',
+  'linear-gradient(135deg,#1f1a0d,#3a2e0d)',
+  'linear-gradient(135deg,#1f0d1f,#3a1a3a)',
+  'linear-gradient(135deg,#1f0d0d,#3a1a1a)',
+  'linear-gradient(135deg,#0d1a1f,#0d2a2a)',
+  'linear-gradient(135deg,#0d0d1a,#1a1a2a)',
+  'linear-gradient(135deg,#1a1a0d,#2a2a0d)',
+  'linear-gradient(135deg,#0d1a0d,#1a2a1a)',
+  'linear-gradient(135deg,#1a0d0d,#2a1a1a)',
+  'linear-gradient(135deg,#0d1f1f,#0d3030)',
+  'linear-gradient(135deg,#1a0d1a,#2a0d2a)',
 ];
+const COLORS = ['#7fff00','#b0ff4e','#a3e635','#5bbd00','#84cc16','#65a30d','#4d7c0f'];
 
-function setPackage(el, idx) {
-  document.querySelectorAll('.package-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  const p = packages[idx];
-  document.getElementById('pkgDesc').textContent = p.desc;
-  document.getElementById('pkgFeatures').innerHTML = p.features.map(([ok, txt]) =>
-    `<div class="pkg-feat"><span class="pkg-feat-check${ok ? '' : ' pkg-feat-x'}">${ok ? '✓' : '✗'}</span> ${txt}</div>`
-  ).join('');
+function workGradient(id)  { return GRADIENTS[Number(id) % GRADIENTS.length]; }
+function workColor(id)     { return COLORS[Number(id) % COLORS.length]; }
+
+function catEmoji(cat) {
+  if (!cat) return '🛠️';
+  const c = cat.toLowerCase();
+  if (c.includes('design') || c.includes('arte') || c.includes('figma')) return '🎨';
+  if (c.includes('dev') || c.includes('programa') || c.includes('web') || c.includes('front') || c.includes('back') || c.includes('react') || c.includes('flutter')) return '💻';
+  if (c.includes('market') || c.includes('redes') || c.includes('social') || c.includes('instagram') || c.includes('tiktok')) return '📱';
+  if (c.includes('redaç') || c.includes('texto') || c.includes('copy') || c.includes('conteú')) return '✍️';
+  if (c.includes('vídeo') || c.includes('video') || c.includes('anim') || c.includes('motion') || c.includes('youtube')) return '🎬';
+  if (c.includes('dados') || c.includes('data') || c.includes(' bi') || c.includes('anali')) return '📊';
+  if (c.includes(' ia') || c.includes('intelig') || c.includes('machine') || c.includes(' ml') || c.includes('llm')) return '🤖';
+  if (c.includes('foto') || c.includes('photo')) return '📷';
+  if (c.includes('mús') || c.includes('audio') || c.includes('áudio') || c.includes('som')) return '🎵';
+  return '🛠️';
 }
 
-function setThumb(el, bg, emoji) {
-  document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  const main = document.getElementById('galleryMain');
-  main.style.background = bg;
-  main.querySelector('span').textContent = emoji;
+function getInitials(name) {
+  if (!name || !name.trim()) return '?';
+  const p = name.trim().split(/\s+/);
+  return p.length === 1 ? p[0][0].toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
+}
+
+function formatPrice(price) {
+  if (price == null) return '—';
+  const n = Number(price);
+  return 'R$ ' + (Number.isInteger(n) ? n : n.toFixed(2).replace('.', ','));
+}
+
+function populateWork(w) {
+  const bg    = workGradient(w.id);
+  const color = workColor(w.ownerId || w.id);
+  const ini   = getInitials(w.ownerName);
+  const emoji = catEmoji(w.category);
+  const name  = w.ownerName || 'Freelancer';
+
+  document.getElementById('serviceTitle').textContent    = w.title || '';
+  document.getElementById('breadcrumbTitle').textContent = w.title || '';
+  document.getElementById('serviceCat').textContent      = w.category || '';
+  document.getElementById('breadcrumbCat').textContent   = w.category || 'Explorar';
+
+  document.getElementById('galleryMain').style.background = bg;
+  document.getElementById('galleryEmoji').textContent     = emoji;
+
+  document.getElementById('serviceOwnerAvatar').textContent      = ini;
+  document.getElementById('serviceOwnerAvatar').style.background = color;
+  document.getElementById('serviceOwnerName').textContent        = name;
+  document.getElementById('serviceOwnerRole').textContent        = w.category || '';
+  document.getElementById('serviceProfileLink').href             = `freelancerProfile.html?userId=${w.ownerId}`;
+
+  document.getElementById('serviceDesc').innerHTML =
+    w.description ? `<p>${w.description.replace(/\n/g, '</p><p>')}</p>` : '';
+
+  document.getElementById('servicePrice').textContent = formatPrice(w.price);
+
+  document.title = `OneFreela — ${w.title || 'Serviço'}`;
 }
 
 function updateObs() {
@@ -73,11 +88,14 @@ function addToCart() {
 
 function buyNow() { showToast('✓ Redirecionando para o pagamento...'); }
 
-function toggleFaq(el) {
-  const item = el.closest('.faq-item');
-  const isOpen = item.classList.contains('open');
-  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
-  if (!isOpen) item.classList.add('open');
-}
-
 initNotifPanel();
+
+(function loadSelectedWork() {
+  const raw = localStorage.getItem('of_selected_work');
+  if (!raw) return;
+  try {
+    populateWork(JSON.parse(raw));
+  } catch (e) {
+    console.error('Erro ao carregar serviço:', e);
+  }
+})();
