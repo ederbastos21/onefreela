@@ -144,6 +144,7 @@ async function handleLogin() {
     localStorage.setItem('of_user_type', userType);
     localStorage.setItem('of_email',     email);
     if (userData.name) localStorage.setItem('of_name', userData.name);
+    localStorage.setItem('of_is_admin', userData.admin ? 'true' : 'false');
 
     window.location.href = userType === 'freelancer' ? 'profile.html' : 'exploreFreelancers.html';
 
