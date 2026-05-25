@@ -45,7 +45,7 @@
       var initials    = getInitials(name);
       var shortName   = getShortName(name);
       var roleLabel   = type === 'freelancer' ? 'Freelancer' : 'Cliente';
-      var profileHref = type === 'freelancer' ? 'freelancerProfile.html' : 'clientProfile.html';
+      var profileHref = 'profile.html';
 
       var navAvatar   = document.getElementById('navAvatar');
       var navUserName = document.getElementById('navUserName');

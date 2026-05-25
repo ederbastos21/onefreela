@@ -7,6 +7,60 @@ function authHeader() {
   return { 'Authorization': OFAuth.getToken() };
 }
 
+function show(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = '';
+}
+
+function hide(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+
+function initProfile() {
+  if (!OFAuth.requireLogin()) return;
+
+  const isFreelancer = OFAuth.getType() === 'freelancer';
+
+  // Profile hero
+  document.getElementById('profileType').textContent = isFreelancer ? '✦ Freelancer' : '✦ Cliente';
+  document.getElementById('editProfileLink').href     = isFreelancer ? 'freelancerEditProfile.html' : 'clientEditProfile.html';
+
+  // Nav logo and home links
+  const homeUrl = isFreelancer ? 'exploreFreelancers.html' : 'index.html';
+  const navLogo = document.getElementById('navLogoLink');
+  if (navLogo) navLogo.href = homeUrl;
+  const sidebarHome = document.getElementById('sidebarHome');
+  if (sidebarHome) sidebarHome.href = homeUrl;
+
+  // Sidebar items
+  if (isFreelancer) show('sidebarServicos'); else hide('sidebarServicos');
+  if (!isFreelancer) show('sidebarExplorar'); else hide('sidebarExplorar');
+
+  // Main sections
+  if (isFreelancer) show('servicos'); else hide('servicos');
+
+  // Client-only settings fields
+  document.querySelectorAll('.client-only').forEach(function (el) {
+    el.style.display = isFreelancer ? 'none' : '';
+  });
+
+  // Notification labels differ by role
+  const notifLabel1 = document.getElementById('notifLabel1');
+  const notifDesc1  = document.getElementById('notifDesc1');
+  if (isFreelancer) {
+    if (notifLabel1) notifLabel1.textContent = 'Novas propostas de clientes';
+    if (notifDesc1)  notifDesc1.textContent  = 'Receba um e-mail quando um cliente entrar em contato com você';
+  } else {
+    if (notifLabel1) notifLabel1.textContent = 'Novas propostas de freelancers';
+    if (notifDesc1)  notifDesc1.textContent  = 'Receba um e-mail quando alguém enviar uma proposta para seus projetos';
+  }
+
+  if (isFreelancer) loadWorks();
+}
+
+/* ── Freelancer: works ────────────────────────────────────────────── */
+
 function catEmoji(cat) {
   if (!cat) return '🛠️';
   const c = cat.toLowerCase();
@@ -34,8 +88,6 @@ function truncate(str, max) {
 }
 
 async function loadWorks() {
-  if (!OFAuth.requireLogin()) return;
-
   const list = document.getElementById('servicesList');
   list.innerHTML = '<p class="works-loading">Carregando serviços...</p>';
 
@@ -66,7 +118,7 @@ function renderWorks() {
     badge.style.display = works.length > 0 ? '' : 'none';
   }
 
-  works.forEach(w => {
+  works.forEach(function (w) {
     const isActive = w.status === 'ACTIVE';
     const card = document.createElement('div');
     card.className = 'service-card';
@@ -91,7 +143,7 @@ function renderWorks() {
   const addBtn = document.createElement('button');
   addBtn.className = 'btn-add-service';
   addBtn.innerHTML = '+ Adicionar novo serviço';
-  addBtn.addEventListener('click', () => openWorkModal(null));
+  addBtn.addEventListener('click', function () { openWorkModal(null); });
   list.appendChild(addBtn);
 }
 
@@ -105,7 +157,7 @@ function openWorkModal(workId) {
   clearFormMsg();
 
   if (workId !== null) {
-    const w = works.find(x => x.id === workId);
+    const w = works.find(function (x) { return x.id === workId; });
     if (w) {
       document.getElementById('wfTitle').value       = w.title       || '';
       document.getElementById('wfCategory').value    = w.category    || '';
@@ -156,9 +208,9 @@ async function submitWork() {
     return;
   }
 
-  const btn     = document.getElementById('wfSubmitBtn');
-  const isEdit  = editingWorkId !== null;
-  btn.disabled  = true;
+  const btn    = document.getElementById('wfSubmitBtn');
+  const isEdit = editingWorkId !== null;
+  btn.disabled = true;
   btn.textContent = 'SALVANDO...';
 
   const url    = isEdit
@@ -174,9 +226,9 @@ async function submitWork() {
     });
 
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json().catch(function () { return {}; });
       const msg  = Array.isArray(data.errors) && data.errors.length
-        ? data.errors.map(e => e.message).join(' • ')
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
         : 'Erro ao salvar serviço.';
       showFormMsg(msg, 'error');
       return;
@@ -193,7 +245,7 @@ async function submitWork() {
 }
 
 async function confirmDeleteWork(workId) {
-  const w    = works.find(x => x.id === workId);
+  const w    = works.find(function (x) { return x.id === workId; });
   const name = w ? `"${w.title}"` : 'este serviço';
   if (!confirm(`Excluir ${name}? Esta ação não pode ser desfeita.`)) return;
 
@@ -204,9 +256,9 @@ async function confirmDeleteWork(workId) {
     });
 
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json().catch(function () { return {}; });
       const msg  = Array.isArray(data.errors) && data.errors.length
-        ? data.errors.map(e => e.message).join(' • ')
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
         : 'Erro ao excluir serviço.';
       alert(msg);
       return;
@@ -218,12 +270,14 @@ async function confirmDeleteWork(workId) {
   }
 }
 
-document.getElementById('workModal').addEventListener('click', function(e) {
+document.getElementById('workModal').addEventListener('click', function (e) {
   if (e.target === this) closeWorkModal();
 });
 
+/* ── Init ─────────────────────────────────────────────────────────── */
+
 OFAuth.loadNav();
 OFAuth.loadProfile();
+initProfile();
 initScrollReveal(0.08, null, 60);
 initSidebarNavActive();
-loadWorks();

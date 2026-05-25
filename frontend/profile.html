@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OneFreela — Meu Perfil Freelancer</title>
+  <title>OneFreela — Meu Perfil</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -31,7 +31,7 @@
 
   <nav class="nav-app">
     <div class="nav-left">
-      <a href="exploreFreelancers.html" class="nav-logo">
+      <a href="index.html" class="nav-logo" id="navLogoLink">
         <div class="nav-logo-icon">OF</div>
         <div class="nav-logo-text">One<span>Freela</span></div>
       </a>
@@ -44,7 +44,7 @@
         <div class="nav-user-name" id="navUserName"></div>
         <div class="nav-user-role" id="navUserRole"></div>
       </div>
-      <a href="freelancerProfile.html" class="nav-avatar" id="navAvatar"></a>
+      <a href="profile.html" class="nav-avatar" id="navAvatar"></a>
     </div>
   </nav>
 
@@ -56,17 +56,28 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Perfil
       </a>
-      <a href="#servicos" class="nav-item">
+
+      <!-- Freelancer only -->
+      <a href="#servicos" class="nav-item" id="sidebarServicos" style="display:none">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
         Serviços
         <span class="nav-item-badge" id="worksBadge" style="display:none">0</span>
       </a>
+
       <a href="#config" class="nav-item">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         Configurações
       </a>
+
       <span class="sidebar-label">Navegação</span>
-      <a href="exploreFreelancers.html" class="nav-item">
+
+      <!-- Client only -->
+      <a href="exploreFreelancers.html" class="nav-item" id="sidebarExplorar" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Explorar Freelancers
+      </a>
+
+      <a href="index.html" class="nav-item" id="sidebarHome">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Página Inicial
       </a>
@@ -78,6 +89,7 @@
 
     <main class="main">
 
+      <!-- Profile hero (both) -->
       <div id="perfil" class="profile-hero reveal">
         <div class="profile-hero-inner">
           <div class="profile-avatar-wrap">
@@ -88,11 +100,11 @@
           </div>
           <div class="profile-info">
             <div class="profile-name" id="profileName"></div>
-            <div class="profile-type">✦ Freelancer</div>
+            <div class="profile-type" id="profileType"></div>
             <div class="profile-email" id="profileEmail" style="font-size:13px;color:var(--muted2);margin-top:4px"></div>
           </div>
           <div class="profile-actions">
-            <a href="freelancerEditProfile.html" class="btn-edit">
+            <a href="#" class="btn-edit" id="editProfileLink">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Editar Perfil
             </a>
@@ -100,11 +112,13 @@
         </div>
       </div>
 
-      <div id="servicos" class="section-block reveal">
+      <!-- Freelancer only: services -->
+      <div id="servicos" class="section-block reveal" style="display:none">
         <div class="block-title">Meus Serviços</div>
         <div class="services-list" id="servicesList"></div>
       </div>
 
+      <!-- Both: personal info -->
       <div id="config" class="section-block reveal">
         <div class="block-title">Informações Pessoais</div>
         <div class="card-box">
@@ -121,53 +135,130 @@
               <label class="setting-label">E-mail</label>
               <input class="setting-input" type="email" id="settingEmail" />
             </div>
+            <!-- Client only -->
+            <div class="setting-item client-only" style="display:none">
+              <label class="setting-label">Telefone</label>
+              <input class="setting-input" type="text" placeholder="+55 11 99999-0000" />
+            </div>
+            <div class="setting-item client-only" style="display:none">
+              <label class="setting-label">Cidade</label>
+              <input class="setting-input" type="text" placeholder="São Paulo" />
+            </div>
+            <div class="setting-item client-only" style="display:none">
+              <label class="setting-label">Estado</label>
+              <input class="setting-input" type="text" placeholder="SP" />
+            </div>
+            <div class="setting-item setting-full client-only" style="display:none">
+              <label class="setting-label">Bio</label>
+              <textarea class="setting-input resize-v" rows="3" placeholder="Conte um pouco sobre você..."></textarea>
+            </div>
           </div>
           <button class="btn-save">SALVAR ALTERAÇÕES</button>
+        </div>
+      </div>
+
+      <!-- Both: security -->
+      <div class="section-block reveal">
+        <div class="block-title">Segurança</div>
+        <div class="card-box">
+          <div class="settings-grid">
+            <div class="setting-item">
+              <label class="setting-label">Senha Atual</label>
+              <input class="setting-input" type="password" placeholder="••••••••" />
+            </div>
+            <div class="setting-item">
+              <label class="setting-label">Nova Senha</label>
+              <input class="setting-input" type="password" placeholder="••••••••" />
+            </div>
+            <div class="setting-item setting-full">
+              <label class="setting-label">Confirmar Nova Senha</label>
+              <input class="setting-input" type="password" placeholder="••••••••" />
+            </div>
+          </div>
+          <button class="btn-save">ALTERAR SENHA</button>
+        </div>
+      </div>
+
+      <!-- Both: notifications -->
+      <div class="section-block reveal">
+        <div class="block-title">Notificações</div>
+        <div class="card-box">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-name" id="notifLabel1"></div>
+              <div class="toggle-desc" id="notifDesc1"></div>
+            </div>
+            <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-name">Atualizações de projeto</div>
+              <div class="toggle-desc">Seja notificado sobre entregas e atualizações dos seus projetos</div>
+            </div>
+            <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-name">Novidades da plataforma</div>
+              <div class="toggle-desc">Dicas, novas funcionalidades e comunicados da OneFreela</div>
+            </div>
+            <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-name">Alertas de pagamento</div>
+              <div class="toggle-desc">Confirmações de pagamento e lembretes de cobrança</div>
+            </div>
+            <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Both: danger zone -->
+      <div class="section-block reveal">
+        <div class="block-title">Zona de Perigo</div>
+        <div class="card-box card-box-danger">
+          <p class="text-danger-sm">Ações irreversíveis. Tenha certeza antes de prosseguir.</p>
+          <button class="btn-danger">Excluir minha conta permanentemente</button>
         </div>
       </div>
 
     </main>
   </div>
 
-  <!-- Work modal (add / edit) -->
+  <!-- Work modal (freelancer only) -->
   <div class="auth-overlay" id="workModal">
     <div class="auth-modal work-form-modal">
       <button class="btn-auth-close" onclick="closeWorkModal()">×</button>
       <h2 class="auth-modal-title" id="workModalTitle">NOVO SERVIÇO</h2>
-
       <div class="work-form">
         <div class="setting-item">
           <label class="setting-label">Título</label>
           <input id="wfTitle" class="setting-input" type="text" placeholder="Ex: Desenvolvo seu app em Flutter" maxlength="100" />
           <span class="wf-hint">Entre 5 e 100 caracteres</span>
         </div>
-
         <div class="setting-item">
           <label class="setting-label">Categoria</label>
           <input id="wfCategory" class="setting-input" type="text" placeholder="Ex: Desenvolvimento Mobile" maxlength="100" />
         </div>
-
         <div class="setting-item">
           <label class="setting-label">Preço (R$)</label>
           <input id="wfPrice" class="setting-input" type="number" placeholder="0.00" min="0" step="0.01" />
         </div>
-
         <div class="setting-item">
           <label class="setting-label">Descrição</label>
           <textarea id="wfDescription" class="setting-input resize-v" rows="4"
             placeholder="Descreva seu serviço com detalhes..." maxlength="2000"></textarea>
           <span class="wf-hint">Entre 20 e 2000 caracteres</span>
         </div>
-
         <div class="wf-msg" id="wfMsg"></div>
       </div>
-
       <button class="btn-save" id="wfSubmitBtn" onclick="submitWork()">CADASTRAR SERVIÇO</button>
     </div>
   </div>
 
   <script src="auth.js"></script>
   <script src="main.js"></script>
-  <script src="freelancerProfile.js"></script>
+  <script src="profile.js"></script>
 </body>
 </html>

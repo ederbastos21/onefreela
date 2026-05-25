@@ -145,7 +145,7 @@ async function handleLogin() {
     localStorage.setItem('of_email',     email);
     if (userData.name) localStorage.setItem('of_name', userData.name);
 
-    window.location.href = userType === 'freelancer' ? 'freelancerProfile.html' : 'exploreFreelancers.html';
+    window.location.href = userType === 'freelancer' ? 'profile.html' : 'exploreFreelancers.html';
 
   } catch {
     showMsg('Erro de conexão. Verifique sua internet.', 'error');
