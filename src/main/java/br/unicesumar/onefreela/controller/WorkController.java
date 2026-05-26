@@ -2,6 +2,7 @@ package br.unicesumar.onefreela.controller;
 
 import br.unicesumar.onefreela.dto.WorkRegisterDTO;
 import br.unicesumar.onefreela.dto.WorkResponse;
+import br.unicesumar.onefreela.dto.WorkReviewDTO;
 import br.unicesumar.onefreela.dto.WorkUpdateDTO;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.service.AuthService;
@@ -54,6 +55,22 @@ public class WorkController {
     @GetMapping("/search")
     public ResponseEntity<List<WorkResponse>> search(@RequestParam(required = false) String q, @RequestParam(required = false) String category, @RequestParam(required = false) String minPrice, @RequestParam(required = false) String maxPrice, @RequestParam(required = false) String ownerId) {
         List<WorkResponse> response = workService.search(q, category, minPrice, maxPrice, ownerId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/admin/status")
+    public ResponseEntity<List<WorkResponse>> findByStatusForAdmin(HttpServletRequest httpServletRequest, @RequestParam String status) {
+        User admin = authService.getAuthenticatedUser(httpServletRequest);
+        authService.checkAdmin(httpServletRequest, admin);
+        List<WorkResponse> response = workService.findByStatusForAdmin(status);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/admin/reviewWork/{id}")
+    public ResponseEntity<WorkResponse> reviewWork(HttpServletRequest httpServletRequest, @PathVariable Long id, @Valid @RequestBody WorkReviewDTO workReviewDTO) {
+        User admin = authService.getAuthenticatedUser(httpServletRequest);
+        authService.checkAdmin(httpServletRequest, admin);
+        WorkResponse response = workService.reviewWork(admin, id, workReviewDTO);
         return ResponseEntity.ok(response);
     }
 }
