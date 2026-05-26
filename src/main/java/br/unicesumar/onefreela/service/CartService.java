@@ -3,10 +3,7 @@ package br.unicesumar.onefreela.service;
 import br.unicesumar.onefreela.dto.AddCartItemDTO;
 import br.unicesumar.onefreela.dto.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
-import br.unicesumar.onefreela.entity.Cart;
-import br.unicesumar.onefreela.entity.CartItem;
-import br.unicesumar.onefreela.entity.User;
-import br.unicesumar.onefreela.entity.Work;
+import br.unicesumar.onefreela.entity.*;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.CartItemRepository;
 import br.unicesumar.onefreela.repository.CartRepository;
@@ -49,6 +46,7 @@ public class CartService {
         List <ErrorDetail> errors = new ArrayList<>();
 
         Cart cart = user.getCart();
+        List<CartItem> cartItemList = cart.getCartItemList();
 
         if (cart == null){
             errors.add (new ErrorDetail(ErrorCode.CART_NOT_FOUND, "cart", "o usuario nao possui um carrinho"));
@@ -62,11 +60,41 @@ public class CartService {
         }
 
         CartItem cartItem = new CartItem();
-        cartItem.setWork(work);
         cartItem.setCart(cart);
-        cartItem.setAmount(addCartItemDTO.getAmount());
-        cart.getCartItemList().add(cartItem);
-        return cartRepository.save(cart);
+
+        if (work.getStatus() == WorkStatus.INACTIVE){
+            errors.add(new ErrorDetail(ErrorCode.WORK_INACTIVE, "cart", "o serviço está indisponivel"));
+        }
+        if (addCartItemDTO.getAmount() < 1){
+            errors.add((new ErrorDetail(ErrorCode.CART_ITEM_AMOUNT_TOO_LOW, "cart", "a quantidade nao pode ser zero ou negativa")));
+        }
+
+        //checks for existing work
+        for (CartItem ci : cartItemList){
+            if (ci.getWork().getId().equals(addCartItemDTO.getWorkId())){
+                if ((ci.getAmount() + addCartItemDTO.getAmount()) > 20){
+                    errors.add((new ErrorDetail(ErrorCode.CART_ITEM_AMOUNT_TOO_HIGH, "cart", "a quantidade nao pode ser maior que 20")));
+                } else {
+                    ci.setAmount(ci.getAmount() + addCartItemDTO.getAmount());
+                    if (errors.isEmpty()){
+                        cart.setCartItemList(cartItemList);
+                        return cartRepository.save(cart);
+                    } else {
+                        throw new ValidationException(errors);
+                    }
+                }
+            }
+        }
+
+        if (errors.isEmpty()){
+            cart.getCartItemList().add(cartItem);
+            cartItem.setAmount(addCartItemDTO.getAmount());
+            cartItem.setWork(work);
+            return cartRepository.save(cart);
+        } else {
+            throw new ValidationException(errors);
+        }
+
     }
 
     @Transactional
