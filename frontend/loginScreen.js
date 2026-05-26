@@ -81,7 +81,13 @@ async function handleLogin() {
     if (userData.name) localStorage.setItem('of_name', userData.name);
     localStorage.setItem('of_is_admin', userData.admin ? 'true' : 'false');
 
-    window.location.href = userType === 'freelancer' ? 'profile.html' : 'exploreFreelancers.html';
+    if (userData.admin) {
+      window.location.href = 'adminScreen.html';
+    } else if (userType === 'freelancer') {
+      window.location.href = 'profile.html';
+    } else {
+      window.location.href = 'exploreFreelancers.html';
+    }
 
   } catch {
     showMsg('Erro de conexão. Verifique sua internet.', 'error');

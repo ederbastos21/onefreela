@@ -39,12 +39,8 @@ function initProfile() {
   if (isFreelancer) show('sidebarServicos'); else hide('sidebarServicos');
   if (!isFreelancer) show('sidebarExplorar'); else hide('sidebarExplorar');
 
-  // Admin sidebar items
-  if (isAdmin) { show('sidebarAdminLabel'); show('sidebarAdminUsuarios'); }
-
   // Main sections
   if (isFreelancer) show('servicos'); else hide('servicos');
-  if (isAdmin) show('adminUsuarios');
 
   // Client-only settings fields
   document.querySelectorAll('.client-only').forEach(function (el) {
@@ -63,7 +59,6 @@ function initProfile() {
   }
 
   if (isFreelancer) loadWorks();
-  if (isAdmin) loadAdminUsers();
 }
 
 /* ── Freelancer: works ────────────────────────────────────────────── */
@@ -280,66 +275,6 @@ async function confirmDeleteWork(workId) {
 document.getElementById('workModal').addEventListener('click', function (e) {
   if (e.target === this) closeWorkModal();
 });
-
-/* ── Admin: user list ─────────────────────────────────────────────── */
-
-async function loadAdminUsers() {
-  const list = document.getElementById('adminUserList');
-  list.innerHTML = '<p class="admin-list-loading">Carregando usuários...</p>';
-
-  try {
-    const res = await fetch(`${API_BASE}/admin/users`, { headers: authHeader() });
-
-    if (res.status === 401 || res.status === 403) {
-      OFAuth.logout();
-      return;
-    }
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-
-    const users = await res.json();
-    renderAdminUsers(users);
-  } catch (e) {
-    console.error('loadAdminUsers:', e);
-    list.innerHTML = '<p class="admin-list-error">Erro ao carregar usuários. Verifique se o servidor está ativo.</p>';
-  }
-}
-
-function renderAdminUsers(users) {
-  const list  = document.getElementById('adminUserList');
-  const count = document.getElementById('adminCount');
-  const badge = document.getElementById('adminUserBadge');
-
-  const total = users.length;
-  if (count) count.textContent = total + ' usuário' + (total !== 1 ? 's' : '') + ' cadastrado' + (total !== 1 ? 's' : '');
-  if (badge) { badge.textContent = total; badge.style.display = total > 0 ? '' : 'none'; }
-
-  list.innerHTML = '';
-
-  users.forEach(function (u) {
-    const initials   = OFAuth.getInitials(u.name || '');
-    const isAdminU   = !!u.admin;
-    const isFreelU   = !!u.freelancer;
-    const roleKey    = isAdminU ? 'admin' : (isFreelU ? 'freelancer' : 'cliente');
-    const roleLabel  = isAdminU ? 'Admin' : (isFreelU ? 'Freelancer' : 'Cliente');
-    const avatarMod  = isAdminU ? 'is-admin' : (isFreelU ? 'is-freelancer' : '');
-    const dateText   = u.registerDate || '—';
-
-    const row = document.createElement('div');
-    row.className = 'admin-user-row';
-    row.innerHTML =
-      '<div class="admin-user-avatar ' + avatarMod + '">' + initials + '</div>' +
-      '<div class="admin-user-info">' +
-        '<div class="admin-user-name">' + (u.name || 'Sem nome') + '</div>' +
-        '<div class="admin-user-email">' + (u.email || '—') + '</div>' +
-      '</div>' +
-      '<div class="admin-user-meta">' +
-        '<span class="admin-badge admin-badge-' + roleKey + '">' + roleLabel + '</span>' +
-        (u.verified ? '<span class="admin-badge admin-badge-verified">Verificado</span>' : '') +
-        '<span class="admin-user-date">' + dateText + '</span>' +
-      '</div>';
-    list.appendChild(row);
-  });
-}
 
 /* ── Init ─────────────────────────────────────────────────────────── */
 
