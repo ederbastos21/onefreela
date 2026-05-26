@@ -31,6 +31,14 @@ public class WorkService {
         this.workMapper = workMapper;
     }
 
+    public Work findById(Long id){
+        return repository.findById(id).orElseThrow();
+    }
+
+    public List<Work> findAll(){
+        return repository.findAll();
+    }
+
     @Transactional
     public WorkResponse registerWork(User authenticatedUser, WorkRegisterDTO workRegisterDTO) {
         List<ErrorDetail> errors = new ArrayList<>();
