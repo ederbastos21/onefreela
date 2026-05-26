@@ -36,6 +36,3 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
-
-docs: |-
-  Cria denúncia com anexos. Se Bruno não carregar os arquivos automaticamente, selecione os arquivos na aba Body mantendo o campo attachments.
