@@ -4,6 +4,7 @@ import br.unicesumar.onefreela.dto.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.WorkRegisterDTO;
 import br.unicesumar.onefreela.dto.WorkResponse;
+import br.unicesumar.onefreela.dto.WorkReviewDTO;
 import br.unicesumar.onefreela.dto.WorkUpdateDTO;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.entity.Work;
@@ -15,6 +16,7 @@ import br.unicesumar.onefreela.service.validator.WorkValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +34,7 @@ public class WorkService {
     }
 
     public Work findById(Long id){
-        return repository.findById(id).orElseThrow();
+        return repository.findById(id).orElse(null);
     }
 
     public List<Work> findAll(){
@@ -50,7 +52,10 @@ public class WorkService {
 
         Work work = workMapper.toWork(workRegisterDTO);
         work.setOwner(authenticatedUser);
-        work.setStatus(WorkStatus.ACTIVE);
+        work.setStatus(WorkStatus.PENDING_REVIEW);
+        work.setAdminNotes(null);
+        work.setReviewedBy(null);
+        work.setReviewedAt(null);
 
         Work savedWork = repository.save(work);
         return WorkResponse.fromEntity(savedWork);
@@ -77,6 +82,11 @@ public class WorkService {
         }
 
         workMapper.updateWork(work, workUpdateDTO);
+        work.setStatus(WorkStatus.PENDING_REVIEW);
+        work.setAdminNotes(null);
+        work.setReviewedBy(null);
+        work.setReviewedAt(null);
+
         Work savedWork = repository.save(work);
         return WorkResponse.fromEntity(savedWork);
     }
@@ -110,6 +120,53 @@ public class WorkService {
     }
 
     @Transactional(readOnly = true)
+    public List<WorkResponse> findByStatusForAdmin(String status) {
+        List<ErrorDetail> errors = new ArrayList<>();
+        WorkStatus workStatus = null;
+
+        if (status == null || status.isBlank()) {
+            errors.add(new ErrorDetail(ErrorCode.WORK_REVIEW_STATUS_REQUIRED, "status", "O status é obrigatório"));
+            throw new ValidationException(errors);
+        }
+
+        try {
+            workStatus = WorkStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            errors.add(new ErrorDetail(ErrorCode.WORK_REVIEW_STATUS_INVALID, "status", "Status de serviço inválido"));
+            throw new ValidationException(errors);
+        }
+
+        List<Work> works = repository.findByStatus(workStatus);
+        return works.stream().map(WorkResponse::fromEntity).toList();
+    }
+
+    @Transactional
+    public WorkResponse reviewWork(User admin, Long workId, WorkReviewDTO workReviewDTO) {
+        List<ErrorDetail> errors = new ArrayList<>();
+        errors.addAll(workValidator.validateReview(workReviewDTO));
+        Work work = repository.findById(workId).orElse(null);
+
+        if (work == null) {
+            errors.add(new ErrorDetail(ErrorCode.WORK_NOT_FOUND, "work", "Serviço não encontrado"));
+            throw new ValidationException(errors);
+        }
+
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
+        }
+
+        WorkStatus status = WorkStatus.valueOf(workReviewDTO.getStatus());
+
+        work.setStatus(status);
+        work.setAdminNotes(workReviewDTO.getAdminNotes());
+        work.setReviewedBy(admin);
+        work.setReviewedAt(LocalDateTime.now());
+
+        Work savedWork = repository.save(work);
+        return WorkResponse.fromEntity(savedWork);
+    }
+
+    @Transactional(readOnly = true)
     public List<WorkResponse> search(String q, String category, String minPrice, String maxPrice, String ownerId) {
         List<ErrorDetail> errors = workValidator.validateSearch(q, category, minPrice, maxPrice, ownerId);
 
@@ -118,9 +175,7 @@ public class WorkService {
         }
 
         BigDecimal parsedMinPrice = minPrice != null && !minPrice.isBlank() ? new BigDecimal(minPrice) : null;
-
         BigDecimal parsedMaxPrice = maxPrice != null && !maxPrice.isBlank() ? new BigDecimal(maxPrice) : null;
-
         Long parsedOwnerId = ownerId != null && !ownerId.isBlank() ? Long.parseLong(ownerId) : null;
 
         String normalizedQ;
