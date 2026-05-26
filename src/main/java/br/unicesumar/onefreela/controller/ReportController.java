@@ -41,14 +41,16 @@ public class ReportController {
 
     @GetMapping("/admin/all")
     public ResponseEntity<List<ReportResponse>> findAllReports(HttpServletRequest httpServletRequest) {
-        authService.checkAdmin(httpServletRequest);
+        User admin = authService.getAuthenticatedUser(httpServletRequest);
+        authService.checkAdmin(httpServletRequest, admin);
         List<ReportResponse> response = reportService.findAllReports();
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/admin/status")
     public ResponseEntity<List<ReportResponse>> findByStatus(HttpServletRequest httpServletRequest, @RequestParam String status) {
-        authService.checkAdmin(httpServletRequest);
+        User admin = authService.getAuthenticatedUser(httpServletRequest);
+        authService.checkAdmin(httpServletRequest, admin);
         List<ReportResponse> response = reportService.findByStatus(status);
         return ResponseEntity.ok(response);
     }
@@ -56,7 +58,7 @@ public class ReportController {
     @PutMapping("/admin/updateStatus/{id}")
     public ResponseEntity<ReportResponse> updateStatus(HttpServletRequest httpServletRequest, @PathVariable Long id, @Valid @RequestBody ReportReviewDTO reportReviewDTO) {
         User admin = authService.getAuthenticatedUser(httpServletRequest);
-        authService.checkAdmin(httpServletRequest);
+        authService.checkAdmin(httpServletRequest, admin);
         ReportResponse response = reportService.updateStatus(admin, id, reportReviewDTO);
         return ResponseEntity.ok(response);
     }
