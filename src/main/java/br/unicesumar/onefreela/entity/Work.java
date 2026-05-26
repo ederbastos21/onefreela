@@ -133,5 +133,38 @@ public class Work {
         this.updatedAt = updatedAt;
     }
 
+
+    public String getAdminNotes() {
+        return adminNotes;
+    }
+    
+    public void setAdminNotes(String adminNotes) {
+        this.adminNotes = adminNotes;
+    }
+    
+    public User getReviewedBy() {
+        return reviewedBy;
+    }
+    
+    public void setReviewedBy(User reviewedBy) {
+        this.reviewedBy = reviewedBy;
+    }
+    
+    public LocalDateTime getReviewedAt() {
+        return reviewedAt;
+    }
+    
+    public void setReviewedAt(LocalDateTime reviewedAt) {
+        this.reviewedAt = reviewedAt;
+    }
+    
+    public List<WorkAdditional> getAdditionals() {
+        return additionals;
+    }
+    
+    public void setAdditionals(List<WorkAdditional> additionals) {
+        this.additionals = additionals;
+    }
+    
     public Work() {}
 }
