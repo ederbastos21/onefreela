@@ -1,16 +1,12 @@
 package br.unicesumar.onefreela.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "work")
@@ -20,31 +16,23 @@ public class Work {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "titulo não pode ser vazio")
-    @Size(min = 5, max = 100, message = "titulo deve ter entre 5 e 100 caracteres")
     private String title;
 
-    @NotBlank(message = "descrição não pode ser vazia")
-    @Size(min = 20, max = 2000, message = "descrição deve ter entre 20 e 2000 caracteres")
     @Column(length = 2000)
     private String description;
 
-    @NotBlank(message = "categoria não pode ser vazia")
     private String category;
 
-    @NotNull(message = "preço não pode ser vazio")
-    @PositiveOrZero(message = "preço não pode ser negativo")
     @Column(precision = 12, scale = 2)
     private BigDecimal price;
 
-    @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private WorkStatus status = WorkStatus.ACTIVE;
+    private WorkStatus status = WorkStatus.PENDING_REVIEW;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -53,6 +41,26 @@ public class Work {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    private String adminNotes;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by_id")
+    private User reviewedBy;
+
+    private LocalDateTime reviewedAt;
+
+    @OneToMany(mappedBy = "work", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WorkAdditional> additionals = new ArrayList<>();
+    
+    public void addAdditional(WorkAdditional additional) {
+        additionals.add(additional);
+        additional.setWork(this);
+    }
+    
+    public void clearAdditionals() {
+        additionals.clear();
+    }
+    
     public Long getId() {
         return id;
     }
