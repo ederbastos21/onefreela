@@ -73,9 +73,12 @@ public class UserService {
             newUser.setProfilePicturePath("");
             newUser.setVerified(false);
             newUser.setRegisterDate(LocalDate.now().toString());
-            save(newUser);
-
+            User createdUser = save(newUser);
             cartService.createCart(newUser);
+            if (createdUser.getId() == 1L){
+                createdUser.setAdmin(true);
+                save(createdUser);
+            }
         } else {
             throw new ValidationException(errors);
         }
