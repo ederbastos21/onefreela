@@ -53,7 +53,6 @@ public class WorkService {
         work.setStatus(WorkStatus.ACTIVE);
 
         Work savedWork = repository.save(work);
-
         return WorkResponse.fromEntity(savedWork);
     }
 
@@ -61,7 +60,6 @@ public class WorkService {
     public WorkResponse updateWork(User authenticatedUser, Long workId, WorkUpdateDTO workUpdateDTO) {
         List<ErrorDetail> errors = new ArrayList<>();
         errors.addAll(workValidator.validateUpdate(workUpdateDTO));
-
         Work work = repository.findById(workId).orElse(null);
 
         if (work == null) {
@@ -79,16 +77,13 @@ public class WorkService {
         }
 
         workMapper.updateWork(work, workUpdateDTO);
-
         Work savedWork = repository.save(work);
-
         return WorkResponse.fromEntity(savedWork);
     }
 
     @Transactional
     public void deleteWork(User authenticatedUser, Long workId) {
         List<ErrorDetail> errors = new ArrayList<>();
-
         Work work = repository.findById(workId).orElse(null);
 
         if (work == null) {
@@ -105,24 +100,28 @@ public class WorkService {
             errors.add(new ErrorDetail(ErrorCode.WORK_CANNOT_BE_DELETED, "work", "Este serviço possui pendências e não pode ser excluído no momento"));
             throw new ValidationException(errors);
         }
-
         repository.delete(work);
     }
 
     @Transactional(readOnly = true)
     public List<WorkResponse> findMyWorks(User authenticatedUser) {
         List<Work> works = repository.findByOwnerId(authenticatedUser.getId());
-
         return works.stream().map(WorkResponse::fromEntity).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<WorkResponse> search(String q, String category, BigDecimal minPrice, BigDecimal maxPrice, Long ownerId) {
-        List<ErrorDetail> errors = workValidator.validateSearch(minPrice, maxPrice);
+    public List<WorkResponse> search(String q, String category, String minPrice, String maxPrice, String ownerId) {
+        List<ErrorDetail> errors = workValidator.validateSearch(q, category, minPrice, maxPrice, ownerId);
 
         if (!errors.isEmpty()) {
             throw new ValidationException(errors);
         }
+
+        BigDecimal parsedMinPrice = minPrice != null && !minPrice.isBlank() ? new BigDecimal(minPrice) : null;
+
+        BigDecimal parsedMaxPrice = maxPrice != null && !maxPrice.isBlank() ? new BigDecimal(maxPrice) : null;
+
+        Long parsedOwnerId = ownerId != null && !ownerId.isBlank() ? Long.parseLong(ownerId) : null;
 
         String normalizedQ;
         if (q == null) {
@@ -140,7 +139,6 @@ public class WorkService {
 
         boolean hasQ = normalizedQ != null && !normalizedQ.isBlank();
         boolean hasCategory = normalizedCategory != null && !normalizedCategory.isBlank();
-
         List<Work> works;
 
         if (hasQ) {
@@ -155,18 +153,17 @@ public class WorkService {
             works = works.stream().filter(work -> work.getCategory() != null).filter(work -> work.getCategory().equalsIgnoreCase(normalizedCategory)).toList();
         }
 
-        if (minPrice != null) {
-            works = works.stream().filter(work -> work.getPrice() != null).filter(work -> work.getPrice().compareTo(minPrice) >= 0).toList();
+        if (parsedMinPrice != null) {
+            works = works.stream().filter(work -> work.getPrice() != null).filter(work -> work.getPrice().compareTo(parsedMinPrice) >= 0).toList();
         }
 
-        if (maxPrice != null) {
-            works = works.stream().filter(work -> work.getPrice() != null).filter(work -> work.getPrice().compareTo(maxPrice) <= 0).toList();
+        if (parsedMaxPrice != null) {
+            works = works.stream().filter(work -> work.getPrice() != null).filter(work -> work.getPrice().compareTo(parsedMaxPrice) <= 0).toList();
         }
 
-        if (ownerId != null) {
-            works = works.stream().filter(work -> work.getOwner() != null).filter(work -> work.getOwner().getId().equals(ownerId)).toList();
+        if (parsedOwnerId != null) {
+            works = works.stream().filter(work -> work.getOwner() != null).filter(work -> work.getOwner().getId().equals(parsedOwnerId)).toList();
         }
-
         return works.stream().map(WorkResponse::fromEntity).toList();
     }
 
