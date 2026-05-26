@@ -1,20 +1,20 @@
 info:
-  name: Untitled
+  name: wrong token
   type: http
-  seq: 1
+  seq: 2
 
 http:
   method: POST
   url: http://localhost:8080/cart/addItem
   headers:
     - name: Authorization
-      value: fe6c269b-f429-4deb-9e40-c96151c985a7
+      value: a
   body:
     type: json
     data: |-
       {
         "WorkId" : "1",
-        "amount" : "1"
+        "amount" : "5"
       }
   auth: inherit
 

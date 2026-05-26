@@ -1,0 +1,18 @@
+info:
+  name: RemoveItem
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:8080/cart/removeItem/
+  headers:
+    - name: Authorization
+      value: 0a823240-e5a7-47c1-8485-e2a07df54246
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
