@@ -16,7 +16,19 @@ http:
         "title": "Desenvolvimento de API Spring Boot",
         "description": "Desenvolvo APIs REST com Java, Spring Boot, MySQL e organização em camadas.",
         "category": "programacao",
-        "price": 800.0
+        "price": 800.00,
+        "additionals": [
+          {
+            "title": "Documentação Swagger",
+            "description": "Configuração de documentação interativa da API.",
+            "price": 150.00
+          },
+          {
+            "title": "Deploy em VPS",
+            "description": "Publicação inicial da aplicação em servidor Linux.",
+            "price": 250.00
+          }
+        ]
       }
   auth: inherit
 
