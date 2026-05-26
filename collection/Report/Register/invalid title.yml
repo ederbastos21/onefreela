@@ -1,0 +1,30 @@
+info:
+  name: invalid title
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://localhost:8080/reports/register
+  headers:
+    - name: Authorization
+      value: 36b82c77-b530-46d4-bbf0-4148499a8d56
+  body:
+    type: multipart-form
+    data:
+      - name: report
+        value: |-
+          {
+            "nature": "OTHER",
+            "title": "abc",
+            "description": "Descrição completa da situação denunciada, com detalhes suficientes para análise administrativa."
+          }
+        type: text
+        contentType: application/json
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
