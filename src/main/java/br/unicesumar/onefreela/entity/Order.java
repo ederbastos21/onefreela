@@ -29,6 +29,9 @@ public class Order {
     @OneToMany (mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItemlist;
 
+    @OneToOne (mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Payment payment;
+
     public Long getId() {
         return id;
     }
@@ -83,5 +86,13 @@ public class Order {
 
     public void setOrderItemlist(List<OrderItem> orderItemlist) {
         this.orderItemlist = orderItemlist;
+    }
+
+    public Payment getPayment() {
+        return payment;
+    }
+
+    public void setPayment(Payment payment) {
+        this.payment = payment;
     }
 }
