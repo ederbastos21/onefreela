@@ -333,6 +333,26 @@ nav.nav-app {
 
 .nav-icon-btn:hover { border-color: var(--border2); color: var(--text); }
 
+.nav-admin-btn {
+  display: none;
+  align-items: center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+  white-space: nowrap;
+}
+.nav-admin-btn:hover { background: var(--green); color: #000; }
+
 /* ── Filter Bar ────────────────────────────────────────── */
 
 .filter-bar {

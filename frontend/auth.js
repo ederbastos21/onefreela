@@ -58,6 +58,9 @@
       }
       if (navUserName) navUserName.textContent = shortName;
       if (navUserRole) navUserRole.textContent = roleLabel;
+
+      var adminBtn = document.getElementById('adminAreaBtn');
+      if (adminBtn && this.isAdmin()) adminBtn.style.display = 'flex';
     },
 
     /* Populates profile hero + settings inputs on profile pages */
