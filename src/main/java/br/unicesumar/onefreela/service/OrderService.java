@@ -26,6 +26,10 @@ public class OrderService {
         this.orderItemRepository = orderItemRepository;
     }
 
+    public Order findById(Long id){
+        return orderRepository.findById(id).orElseThrow();
+    }
+
     public Order saveOrder (Order order){
         return orderRepository.save(order);
     }
