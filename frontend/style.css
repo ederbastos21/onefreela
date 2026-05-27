@@ -6265,3 +6265,71 @@ footer {
   .legal-sidebar { position: static; }
   .legal-block h2 { font-size: 22px; }
 }
+
+/* ── Quantity steppers ──────────────────────────────────────────── */
+
+/* Service screen stepper */
+.qty-stepper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.qty-btn {
+  width: 36px; height: 36px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-size: 18px; line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, color .2s;
+  flex-shrink: 0;
+}
+.qty-btn:first-child { border-radius: 8px 0 0 8px; }
+.qty-btn:last-child  { border-radius: 0 8px 8px 0; }
+.qty-btn:hover { background: var(--gdim); color: var(--green); border-color: rgba(127,255,0,.3); }
+.qty-input {
+  width: 52px; height: 36px;
+  text-align: center;
+  background: var(--input);
+  border: 1px solid var(--border2);
+  border-left: none; border-right: none;
+  color: var(--text);
+  font-size: 14px; font-weight: 700;
+  outline: none;
+  -moz-appearance: textfield;
+}
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Cart item stepper */
+.cart-item-stepper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.qty-btn-sm {
+  width: 26px; height: 26px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-size: 14px; line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, color .2s;
+  flex-shrink: 0;
+}
+.qty-btn-sm:first-child { border-radius: 6px 0 0 6px; }
+.qty-btn-sm:last-child  { border-radius: 0 6px 6px 0; }
+.qty-btn-sm:hover  { background: var(--gdim); color: var(--green); border-color: rgba(127,255,0,.3); }
+.qty-btn-sm:disabled { opacity: .4; cursor: not-allowed; }
+.qty-val {
+  width: 34px; height: 26px;
+  text-align: center;
+  background: var(--input);
+  border-top: 1px solid var(--border2);
+  border-bottom: 1px solid var(--border2);
+  color: var(--text);
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}

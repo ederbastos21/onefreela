@@ -117,6 +117,12 @@
               <textarea class="obs-input" id="obsInput" maxlength="400" placeholder="Descreva seu projeto, referências ou qualquer detalhe importante..." oninput="updateObs()"></textarea>
               <div class="obs-counter"><span id="obsCount">0</span>/400</div>
 
+              <div class="qty-stepper">
+                <button class="qty-btn" onclick="changeQty(-1)">−</button>
+                <input class="qty-input" id="qtyInput" type="number" value="1" min="1" max="20" oninput="clampQty(this)">
+                <button class="qty-btn" onclick="changeQty(1)">+</button>
+              </div>
+
               <button class="btn-buy" onclick="buyNow()">CONTRATAR AGORA</button>
               <button class="btn-cart" id="cartBtn" onclick="addToCart()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>

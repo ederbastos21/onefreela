@@ -81,6 +81,17 @@ function updateObs() {
   document.getElementById('obsCount').textContent = document.getElementById('obsInput').value.length;
 }
 
+function changeQty(delta) {
+  const input = document.getElementById('qtyInput');
+  input.value = Math.min(20, Math.max(1, (parseInt(input.value) || 1) + delta));
+}
+
+function clampQty(input) {
+  const v = parseInt(input.value);
+  if (isNaN(v) || v < 1) input.value = 1;
+  else if (v > 20)       input.value = 20;
+}
+
 /* ── Auth header ─────────────────────────────────────────────────── */
 function authHeader() {
   return { 'Authorization': OFAuth.getToken() };
@@ -128,7 +139,7 @@ async function addToCart() {
     const addRes = await fetch(`${API_BASE}/cart/addItem`, {
       method:  'POST',
       headers: { ...authHeader(), 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ WorkId: work.id, amount: 1 })
+      body:    JSON.stringify({ WorkId: work.id, amount: parseInt(document.getElementById('qtyInput').value) || 1 })
     });
 
     if (!addRes.ok) {

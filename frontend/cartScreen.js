@@ -143,10 +143,14 @@ function renderCart() {
           '<div class="cart-item-avatar" style="background:' + color + '">' + ini + '</div>' +
           '<span class="cart-item-fname">' + (work.ownerName || '—') + '</span>' +
         '</div>' : '') +
-        (item.amount > 1 ? '<span class="cart-item-package">✦ Qtd: ' + item.amount + '</span>' : '') +
       '</div>' +
       '<div class="cart-item-right">' +
         '<div><div class="cart-item-price">' + (work ? formatPrice(work.price) : '—') + '</div></div>' +
+        '<div class="cart-item-stepper">' +
+          '<button class="qty-btn-sm" onclick="changeAmount(' + item.id + ', -1, this)">−</button>' +
+          '<span class="qty-val">' + item.amount + '</span>' +
+          '<button class="qty-btn-sm" onclick="changeAmount(' + item.id + ', 1, this)">+</button>' +
+        '</div>' +
         '<div class="cart-item-actions">' +
           '<button class="btn-item-remove" onclick="removeItem(' + item.id + ', this)">Remover</button>' +
         '</div>' +
@@ -190,6 +194,81 @@ async function removeItem(itemId, btn) {
     console.error('removeItem:', e);
     showToast('Erro ao remover item.');
     if (btn) btn.disabled = false;
+  }
+}
+
+/* ── Change amount ───────────────────────────────────────────────── */
+
+async function changeAmount(itemId, delta, btn) {
+  const item = cartItems.find(function (i) { return i.id === itemId; });
+  if (!item) return;
+
+  const newAmount = item.amount + delta;
+
+  const row = document.querySelector('[data-item-id="' + itemId + '"]');
+  if (row) row.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+
+  if (newAmount <= 0) {
+    await removeItem(itemId, null);
+    return;
+  }
+
+  const work = getWorkForItem(itemId);
+  if (!work) {
+    showToast('Dados do serviço não encontrados.');
+    if (row) row.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+    return;
+  }
+
+  try {
+    if (delta > 0) {
+      const res = await fetch(API_BASE + '/cart/addItem', {
+        method:  'POST',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ WorkId: work.id, amount: 1 })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      item.amount = newAmount;
+      renderCart();
+    } else {
+      // Decrement: remove then re-add with newAmount
+      const removeRes = await fetch(API_BASE + '/cart/removeItem/' + itemId, {
+        method:  'POST',
+        headers: authHeader()
+      });
+      if (!removeRes.ok) throw new Error('HTTP ' + removeRes.status);
+
+      const cartMap = getCartMap();
+      delete cartMap[String(itemId)];
+      localStorage.setItem('of_cart_workmap', JSON.stringify(cartMap));
+
+      const prevRes  = await fetch(API_BASE + '/cart/show', { headers: authHeader() });
+      const prevData = prevRes.ok ? await prevRes.json() : null;
+      const prevItems = (prevData && prevData.cartItemList) ? prevData.cartItemList : [];
+      const prevAmounts = {};
+      prevItems.forEach(function (i) { prevAmounts[String(i.id)] = i.amount; });
+
+      const addRes = await fetch(API_BASE + '/cart/addItem', {
+        method:  'POST',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ WorkId: work.id, amount: newAmount })
+      });
+      if (!addRes.ok) throw new Error('HTTP ' + addRes.status);
+
+      const newItems   = await addRes.json();
+      const newCartItem = newItems.find(function (i) { return prevAmounts[String(i.id)] === undefined; });
+      const updatedMap  = getCartMap();
+      if (newCartItem) {
+        updatedMap[String(newCartItem.id)] = String(work.id);
+        localStorage.setItem('of_cart_workmap', JSON.stringify(updatedMap));
+      }
+
+      await loadCart();
+    }
+  } catch (e) {
+    console.error('changeAmount:', e);
+    showToast('Erro ao alterar quantidade.');
+    if (row) row.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
   }
 }
 
