@@ -5,6 +5,14 @@ let currentFilter = 'all';
 let editingUserId = null;
 let detailUserId  = null;
 
+let allWorks        = [];
+let currentWorksFilter = 'all';
+
+let allCarts = [];
+
+let allOrders         = [];
+let currentOrdersFilter = 'all';
+
 function authHeader() {
   return { 'Authorization': OFAuth.getToken() };
 }
@@ -18,6 +26,9 @@ function initAdmin() {
     return;
   }
   loadUsers();
+  loadWorks();
+  loadCarts();
+  loadOrders();
 }
 
 /* ── Load & render users ──────────────────────────────────────────── */
@@ -47,13 +58,19 @@ function updateStats() {
   const admins      = allUsers.filter(function (u) { return !!u.admin; }).length;
   const clients     = total - freelancers - admins;
 
-  document.getElementById('statTotal').textContent      = total;
+  document.getElementById('statTotal').textContent       = total;
   document.getElementById('statFreelancers').textContent = freelancers;
-  document.getElementById('statClients').textContent    = clients;
-  document.getElementById('statAdmins').textContent     = admins;
+  document.getElementById('statClients').textContent     = clients;
+  document.getElementById('statAdmins').textContent      = admins;
 
   var badge = document.getElementById('usersBadge');
   if (badge) { badge.textContent = total; badge.style.display = total > 0 ? '' : 'none'; }
+
+  var statWorks = document.getElementById('statWorks');
+  if (statWorks) statWorks.textContent = allWorks.length || '—';
+
+  var statOrders = document.getElementById('statOrders');
+  if (statOrders) statOrders.textContent = allOrders.length || '—';
 }
 
 function setFilter(filter) {
@@ -322,6 +339,248 @@ async function confirmDeleteUser(userId) {
   } catch (e) {
     alert('Erro de conexão ao excluir.');
   }
+}
+
+/* ── Works ───────────────────────────────────────────────────────── */
+
+async function loadWorks() {
+  var list = document.getElementById('adminWorkList');
+  list.innerHTML = '<p class="admin-list-loading">Carregando serviços...</p>';
+
+  try {
+    var res = await fetch(API_BASE + '/admin/works', { headers: authHeader() });
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    allWorks = await res.json();
+    var badge = document.getElementById('worksBadge');
+    if (badge) { badge.textContent = allWorks.length; badge.style.display = allWorks.length > 0 ? '' : 'none'; }
+    updateStats();
+    renderWorks();
+  } catch (e) {
+    console.error('loadWorks:', e);
+    list.innerHTML = '<p class="admin-list-error">Erro ao carregar serviços.</p>';
+  }
+}
+
+function setWorksFilter(filter) {
+  currentWorksFilter = filter;
+  document.querySelectorAll('#servicos .filter-btn').forEach(function (b) { b.classList.remove('active'); });
+  var map = { all: 'filterWorksAll', active: 'filterWorksActive', inactive: 'filterWorksInactive' };
+  var btn = document.getElementById(map[filter]);
+  if (btn) btn.classList.add('active');
+  renderWorks();
+}
+
+function filterWorks() { renderWorks(); }
+
+function getFilteredWorks() {
+  var query = (document.getElementById('searchWorksInput').value || '').toLowerCase().trim();
+  return allWorks.filter(function (w) {
+    var matchFilter =
+      currentWorksFilter === 'all'      ? true :
+      currentWorksFilter === 'active'   ? (w.status === 'ACTIVE') :
+      currentWorksFilter === 'inactive' ? (w.status === 'INACTIVE') : true;
+
+    var matchSearch = !query ||
+      (w.title    && w.title.toLowerCase().includes(query)) ||
+      (w.category && w.category.toLowerCase().includes(query));
+
+    return matchFilter && matchSearch;
+  });
+}
+
+function renderWorks() {
+  var list     = document.getElementById('adminWorkList');
+  var countEl  = document.getElementById('adminWorksCount');
+  var filtered = getFilteredWorks();
+
+  if (countEl) {
+    countEl.textContent = filtered.length + ' serviço' + (filtered.length !== 1 ? 's' : '') + ' encontrado' + (filtered.length !== 1 ? 's' : '');
+  }
+
+  list.innerHTML = '';
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<p class="admin-list-empty">Nenhum serviço encontrado.</p>';
+    return;
+  }
+
+  filtered.forEach(function (w) {
+    var isActive  = w.status === 'ACTIVE';
+    var statusKey = isActive ? 'active' : 'inactive';
+    var statusLabel = isActive ? 'Ativo' : 'Inativo';
+    var ownerName = (w.owner && w.owner.name) ? w.owner.name : '—';
+    var price     = w.price != null ? 'R$ ' + Number(w.price).toFixed(2).replace('.', ',') : '—';
+    var date      = w.createdAt ? w.createdAt.split('T')[0] : '—';
+
+    var row = document.createElement('div');
+    row.className = 'admin-work-row';
+    row.innerHTML =
+      '<div class="admin-work-icon status-' + statusKey + '">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>' +
+      '</div>' +
+      '<div class="admin-work-info">' +
+        '<div class="admin-work-title">' + (w.title || 'Sem título') + '</div>' +
+        '<div class="admin-work-meta">' + (w.category || '—') + ' · ' + ownerName + '</div>' +
+      '</div>' +
+      '<div class="admin-user-meta">' +
+        '<span class="admin-badge admin-badge-work-' + statusKey + '">' + statusLabel + '</span>' +
+        '<span class="admin-user-date">' + price + '</span>' +
+        '<span class="admin-user-date">' + date + '</span>' +
+      '</div>';
+
+    list.appendChild(row);
+  });
+}
+
+/* ── Carts ───────────────────────────────────────────────────────── */
+
+async function loadCarts() {
+  var list = document.getElementById('adminCartList');
+  list.innerHTML = '<p class="admin-list-loading">Carregando carrinhos...</p>';
+
+  try {
+    var res = await fetch(API_BASE + '/admin/carts', { headers: authHeader() });
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    allCarts = await res.json();
+    var badge = document.getElementById('cartsBadge');
+    if (badge) { badge.textContent = allCarts.length; badge.style.display = allCarts.length > 0 ? '' : 'none'; }
+    renderCarts();
+  } catch (e) {
+    console.error('loadCarts:', e);
+    list.innerHTML = '<p class="admin-list-error">Erro ao carregar carrinhos.</p>';
+  }
+}
+
+function renderCarts() {
+  var list    = document.getElementById('adminCartList');
+  var countEl = document.getElementById('adminCartsCount');
+
+  if (countEl) {
+    countEl.textContent = allCarts.length + ' carrinho' + (allCarts.length !== 1 ? 's' : '') + ' cadastrado' + (allCarts.length !== 1 ? 's' : '');
+  }
+
+  list.innerHTML = '';
+
+  if (allCarts.length === 0) {
+    list.innerHTML = '<p class="admin-list-empty">Nenhum carrinho encontrado.</p>';
+    return;
+  }
+
+  allCarts.forEach(function (c) {
+    var items     = (c.cartItemList && c.cartItemList.length) ? c.cartItemList.length : 0;
+    var totalAmt  = 0;
+    if (c.cartItemList) {
+      c.cartItemList.forEach(function (i) { totalAmt += (i.amount || 0); });
+    }
+
+    var row = document.createElement('div');
+    row.className = 'admin-cart-row';
+    row.innerHTML =
+      '<div class="admin-cart-icon">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' +
+      '</div>' +
+      '<div class="admin-cart-info">' +
+        '<div class="admin-cart-id">Carrinho #' + c.id + '</div>' +
+        '<div class="admin-cart-sub">' + items + ' item' + (items !== 1 ? 's' : '') + ' · ' + totalAmt + ' unidade' + (totalAmt !== 1 ? 's' : '') + '</div>' +
+      '</div>';
+
+    list.appendChild(row);
+  });
+}
+
+/* ── Orders ──────────────────────────────────────────────────────── */
+
+async function loadOrders() {
+  var list = document.getElementById('adminOrderList');
+  list.innerHTML = '<p class="admin-list-loading">Carregando pedidos...</p>';
+
+  try {
+    var res = await fetch(API_BASE + '/admin/orders', { headers: authHeader() });
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    allOrders = await res.json();
+    var badge = document.getElementById('ordersBadge');
+    if (badge) { badge.textContent = allOrders.length; badge.style.display = allOrders.length > 0 ? '' : 'none'; }
+    updateStats();
+    renderOrders();
+  } catch (e) {
+    console.error('loadOrders:', e);
+    list.innerHTML = '<p class="admin-list-error">Erro ao carregar pedidos.</p>';
+  }
+}
+
+function setOrdersFilter(filter) {
+  currentOrdersFilter = filter;
+  document.querySelectorAll('#pedidos .filter-btn').forEach(function (b) { b.classList.remove('active'); });
+  var map = { all: 'filterOrdersAll', NOT_PAID: 'filterOrdersNotPaid', PAID: 'filterOrdersPaid', REFUNDED: 'filterOrdersRefunded' };
+  var btn = document.getElementById(map[filter]);
+  if (btn) btn.classList.add('active');
+  renderOrders();
+}
+
+function filterOrders() { renderOrders(); }
+
+function getFilteredOrders() {
+  var query = (document.getElementById('searchOrdersInput').value || '').toLowerCase().trim();
+  return allOrders.filter(function (o) {
+    var matchFilter = currentOrdersFilter === 'all' ? true : o.status === currentOrdersFilter;
+    var userName    = (o.user && o.user.name)  ? o.user.name.toLowerCase()  : '';
+    var userEmail   = (o.user && o.user.email) ? o.user.email.toLowerCase() : '';
+    var matchSearch = !query || userName.includes(query) || userEmail.includes(query);
+    return matchFilter && matchSearch;
+  });
+}
+
+var ORDER_STATUS_LABEL = { NOT_PAID: 'Não pago', PAID: 'Pago', REFUNDED: 'Reembolsado' };
+
+function renderOrders() {
+  var list     = document.getElementById('adminOrderList');
+  var countEl  = document.getElementById('adminOrdersCount');
+  var filtered = getFilteredOrders();
+
+  if (countEl) {
+    countEl.textContent = filtered.length + ' pedido' + (filtered.length !== 1 ? 's' : '') + ' encontrado' + (filtered.length !== 1 ? 's' : '');
+  }
+
+  list.innerHTML = '';
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<p class="admin-list-empty">Nenhum pedido encontrado.</p>';
+    return;
+  }
+
+  filtered.forEach(function (o) {
+    var statusKey   = (o.status || 'NOT_PAID').toLowerCase();
+    var statusLabel = ORDER_STATUS_LABEL[o.status] || o.status || '—';
+    var userName    = (o.user && o.user.name)  ? o.user.name  : '—';
+    var userEmail   = (o.user && o.user.email) ? o.user.email : '';
+    var total       = o.totalPrice != null ? 'R$ ' + Number(o.totalPrice).toFixed(2).replace('.', ',') : '—';
+    var date        = o.createdAt || '—';
+    var items       = (o.orderItemlist && o.orderItemlist.length) ? o.orderItemlist.length : 0;
+
+    var row = document.createElement('div');
+    row.className = 'admin-order-row';
+    row.innerHTML =
+      '<div class="admin-user-avatar" style="cursor:default">' +
+        OFAuth.getInitials(userName) +
+      '</div>' +
+      '<div class="admin-order-info">' +
+        '<div class="admin-order-id">Pedido #' + o.id + ' · ' + userName + '</div>' +
+        '<div class="admin-order-meta">' + (userEmail || '') + (items ? ' · ' + items + ' item' + (items !== 1 ? 's' : '') : '') + '</div>' +
+      '</div>' +
+      '<div class="admin-user-meta">' +
+        '<span class="admin-badge admin-badge-order-' + statusKey + '">' + statusLabel + '</span>' +
+        '<span class="admin-user-date">' + total + '</span>' +
+        '<span class="admin-user-date">' + date + '</span>' +
+      '</div>';
+
+    list.appendChild(row);
+  });
 }
 
 /* ── Boot ────────────────────────────────────────────────────────── */

@@ -82,7 +82,7 @@ async function handleLogin() {
     localStorage.setItem('of_is_admin', userData.admin ? 'true' : 'false');
 
     if (userData.admin) {
-      window.location.href = 'adminScreen.html';
+      window.location.href = 'exploreFreelancers.html';
     } else if (userType === 'freelancer') {
       window.location.href = 'profile.html';
     } else {
