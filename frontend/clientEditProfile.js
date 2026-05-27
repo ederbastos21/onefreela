@@ -1,5 +1,5 @@
+OFAuth.loadNav();
 OFAuth.loadProfile();
-document.getElementById('navAvatar').textContent = OFAuth.getInitials(OFAuth.getName());
 
 function updateCount(inputId, countId, max) {
   const val = document.getElementById(inputId).value.length;
@@ -33,3 +33,4 @@ document.querySelectorAll('.field-input').forEach(input => {
 });
 
 updateCount('bioInput', 'bioCount', 300);
+initNotifPanel();

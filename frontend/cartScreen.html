@@ -29,16 +29,15 @@
       </a>
       <div class="nav-icon-btn" id="notifBtn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="notif-badge">3</span>
       </div>
-      <div class="nav-icon-btn">
+      <div class="nav-icon-btn" title="Mensagens" onclick="goToChat()" style="cursor:pointer">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </div>
       <div class="nav-user">
         <div class="nav-user-name" id="navUserName"></div>
         <div class="nav-user-role" id="navUserRole"></div>
       </div>
-      <a href="clientProfile.html" class="nav-avatar" id="navAvatar"></a>
+      <a href="profile.html" class="nav-avatar" id="navAvatar"></a>
       <a href="adminScreen.html" id="adminAreaBtn" class="nav-admin-btn">Área do admin</a>
     </div>
   </nav>
@@ -46,9 +45,6 @@
   <!-- NOTIF -->
   <div class="notif-panel" id="notifPanel">
     <div class="notif-title">Notificações</div>
-    <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text"><strong>Marina Rocha</strong> aceitou seu convite.</div><div class="notif-time">Há 5 min</div></div></div>
-    <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text"><strong>Lucas Ferreira</strong> enviou uma proposta.</div><div class="notif-time">Há 1 hora</div></div></div>
-    <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text">Seu projeto recebeu <strong>4 propostas</strong>.</div><div class="notif-time">Há 3 horas</div></div></div>
   </div>
 
   <div class="page">
@@ -57,99 +53,14 @@
       <div class="page-header">
         <div class="page-header-label">Minha conta</div>
         <h1 class="page-header-title">MEU CARRINHO</h1>
-        <p class="page-header-sub" id="cartSubtitle">3 serviços selecionados</p>
+        <p class="page-header-sub" id="cartSubtitle">Nenhum serviço selecionado</p>
       </div>
 
       <div class="cart-layout">
 
         <!-- ITENS -->
         <div>
-          <div class="cart-items" id="cartItems">
-
-            <div class="cart-item anim-d1">
-              <div class="cart-item-thumb" style="background:linear-gradient(135deg,#0d1f0d,#1a3a1a)">🎨</div>
-              <div class="cart-item-body">
-                <div class="cart-item-cat">Design & Arte</div>
-                <div class="cart-item-title">Vou criar seu Design System completo no Figma</div>
-                <div class="cart-item-freelancer">
-                  <div class="cart-item-avatar" style="background:#7fff00">MR</div>
-                  <span class="cart-item-fname">Marina Rocha</span>
-                  <span class="cart-item-rating">★ 4.98</span>
-                </div>
-                <span class="cart-item-package">✦ Pacote Padrão</span>
-                <div class="cart-item-obs">"Precisamos de um Design System para nosso app mobile de fintech. Cores principais: azul escuro e verde. Referências: Nubank e Inter."</div>
-              </div>
-              <div class="cart-item-right">
-                <div>
-                  <div class="cart-item-price">R$1.200</div>
-                  <div class="cart-item-deadline">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Entrega em 10 dias
-                  </div>
-                </div>
-                <div class="cart-item-actions">
-                  <button class="btn-item-edit">Editar</button>
-                  <button class="btn-item-remove" onclick="removeItem(this)">Remover</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="cart-item anim-d2">
-              <div class="cart-item-thumb" style="background:linear-gradient(135deg,#0d0d1f,#1a1a3a)">💻</div>
-              <div class="cart-item-body">
-                <div class="cart-item-cat">Desenvolvimento</div>
-                <div class="cart-item-title">Desenvolvo seu front-end com React e Next.js</div>
-                <div class="cart-item-freelancer">
-                  <div class="cart-item-avatar" style="background:#b0ff4e">LF</div>
-                  <span class="cart-item-fname">Lucas Ferreira</span>
-                  <span class="cart-item-rating">★ 4.95</span>
-                </div>
-                <span class="cart-item-package">✦ Pacote Básico</span>
-                <div class="cart-item-obs">"Landing page institucional com 5 seções. Precisa ser responsiva e integrar com nosso CMS."</div>
-              </div>
-              <div class="cart-item-right">
-                <div>
-                  <div class="cart-item-price">R$950</div>
-                  <div class="cart-item-deadline">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Entrega em 7 dias
-                  </div>
-                </div>
-                <div class="cart-item-actions">
-                  <button class="btn-item-edit">Editar</button>
-                  <button class="btn-item-remove" onclick="removeItem(this)">Remover</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="cart-item anim-d3">
-              <div class="cart-item-thumb" style="background:linear-gradient(135deg,#1f0d0d,#3a1a1a)">📱</div>
-              <div class="cart-item-body">
-                <div class="cart-item-cat">Marketing Digital</div>
-                <div class="cart-item-title">Gerencio suas redes sociais com estratégia e resultado</div>
-                <div class="cart-item-freelancer">
-                  <div class="cart-item-avatar" style="background:#84cc16">AB</div>
-                  <span class="cart-item-fname">Ana Beatriz</span>
-                  <span class="cart-item-rating">★ 4.91</span>
-                </div>
-                <span class="cart-item-package">✦ Pacote Mensal</span>
-              </div>
-              <div class="cart-item-right">
-                <div>
-                  <div class="cart-item-price">R$900 <small>/mês</small></div>
-                  <div class="cart-item-deadline">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Recorrente mensal
-                  </div>
-                </div>
-                <div class="cart-item-actions">
-                  <button class="btn-item-edit">Editar</button>
-                  <button class="btn-item-remove" onclick="removeItem(this)">Remover</button>
-                </div>
-              </div>
-            </div>
-
-          </div>
+          <div class="cart-items" id="cartItems"></div>
 
           <!-- EMPTY STATE -->
           <div class="cart-empty" id="cartEmpty">
@@ -178,21 +89,13 @@
             <div class="summary-title">Resumo do Pedido</div>
 
             <div class="summary-line">
-              <span>Subtotal (3 serviços)</span>
-              <strong id="subtotal">R$ 3.050</strong>
-            </div>
-            <div class="summary-line discount hidden" id="discountLine">
-              <span>Cupom ONEFREELA10</span>
-              <strong>− R$ 305</strong>
-            </div>
-            <div class="summary-line">
-              <span>Taxa de serviço (10%)</span>
-              <strong id="feeVal">R$ 305</strong>
+              <span id="subtotalLabel">0 serviços</span>
+              <strong id="subtotal">—</strong>
             </div>
             <div class="summary-divider"></div>
             <div class="summary-total">
-              <span class="summary-total-label">Total</span>
-              <span class="summary-total-val" id="totalVal">R$3.355</span>
+              <span class="summary-total-label">Itens</span>
+              <span class="summary-total-val" id="totalVal" style="font-size:22px">0</span>
             </div>
 
             <button class="btn-checkout" onclick="checkout()">FINALIZAR PEDIDO</button>
