@@ -49,6 +49,9 @@ public class OrderService {
         List <OrderItem> orderItemList = new ArrayList<>();
 
         for (CartItem ci : cartItemList){
+            if (ci.getWork().getStatus().equals(WorkStatus.INACTIVE)){
+                errors.add(new ErrorDetail(ErrorCode.WORK_INACTIVE, "order", "o serviço " + ci.getWork().getTitle() + " está indisponivel"));
+            }
             OrderItem orderItem = new OrderItem();
             orderItem.setAmount(ci.getAmount());
             orderItem.setWork(ci.getWork());
