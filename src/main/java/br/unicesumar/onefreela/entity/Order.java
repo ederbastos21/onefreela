@@ -2,6 +2,7 @@ package br.unicesumar.onefreela.entity;
 
 import br.unicesumar.onefreela.enums.OrderStatus;
 import jakarta.persistence.*;
+import org.hibernate.engine.internal.Cascade;
 
 import java.lang.reflect.Method;
 import java.time.LocalDate;
@@ -24,7 +25,7 @@ public class Order {
 
     LocalDate finishedAt;
 
-    @OneToMany (mappedBy = "order")
+    @OneToMany (mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItemlist;
 
     public Long getId() {
