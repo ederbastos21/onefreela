@@ -2,10 +2,66 @@ const API_BASE = 'http://localhost:8080';
 
 OFAuth.loadNav();
 
-let cartItems = [];
+let cartItems      = [];
+let discountApplied = false;
 
 function authHeader() {
   return { 'Authorization': OFAuth.getToken() };
+}
+
+/* ── Cache helpers ───────────────────────────────────────────────── */
+
+function getWorkCache() {
+  return JSON.parse(localStorage.getItem('of_work_cache') || '{}');
+}
+
+function getCartMap() {
+  return JSON.parse(localStorage.getItem('of_cart_workmap') || '{}');
+}
+
+function getWorkForItem(cartItemId) {
+  const map   = getCartMap();
+  const cache = getWorkCache();
+  const workId = map[String(cartItemId)];
+  return workId != null ? (cache[String(workId)] || null) : null;
+}
+
+/* ── Formatters ──────────────────────────────────────────────────── */
+
+function formatPrice(price) {
+  if (price == null) return '—';
+  const n = Number(price);
+  return 'R$ ' + (Number.isInteger(n) ? n : n.toFixed(2).replace('.', ','));
+}
+
+const GRADIENTS = [
+  'linear-gradient(135deg,#0d1f0d,#1a3a1a)',
+  'linear-gradient(135deg,#0d0d1f,#1a1a3a)',
+  'linear-gradient(135deg,#1f1a0d,#3a2e0d)',
+  'linear-gradient(135deg,#1f0d1f,#3a1a3a)',
+  'linear-gradient(135deg,#1f0d0d,#3a1a1a)',
+  'linear-gradient(135deg,#0d1a1f,#0d2a2a)',
+];
+const COLORS = ['#7fff00','#b0ff4e','#a3e635','#5bbd00','#84cc16','#65a30d','#4d7c0f'];
+function workGradient(id) { return GRADIENTS[Number(id) % GRADIENTS.length]; }
+function workColor(id)    { return COLORS[Number(id) % COLORS.length]; }
+
+function catEmoji(cat) {
+  if (!cat) return '🛠️';
+  const c = cat.toLowerCase();
+  if (c.includes('design') || c.includes('figma'))  return '🎨';
+  if (c.includes('dev')    || c.includes('web') || c.includes('react')) return '💻';
+  if (c.includes('market') || c.includes('redes'))  return '📱';
+  if (c.includes('redaç')  || c.includes('copy'))   return '✍️';
+  if (c.includes('vídeo')  || c.includes('video'))  return '🎬';
+  if (c.includes('dados')  || c.includes('data'))   return '📊';
+  return '🛠️';
+}
+
+function getInitials(name) {
+  if (!name || !name.trim()) return '?';
+  const p = name.trim().split(/\s+/);
+  return p.length === 1 ? p[0][0].toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
 }
 
 /* ── Load cart from API ──────────────────────────────────────────── */
@@ -19,7 +75,7 @@ async function loadCart() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
 
     const cart = await res.json();
-    cartItems = (cart && cart.cartItemList) ? cart.cartItemList : [];
+    cartItems  = (cart && cart.cartItemList) ? cart.cartItemList : [];
     renderCart();
   } catch (e) {
     console.error('loadCart:', e);
@@ -27,7 +83,7 @@ async function loadCart() {
   }
 }
 
-/* ── Render ──────────────────────────────────────────────────────── */
+/* ── Render cart ─────────────────────────────────────────────────── */
 
 function renderCart() {
   const container = document.getElementById('cartItems');
@@ -36,45 +92,72 @@ function renderCart() {
   const subtitle  = document.getElementById('cartSubtitle');
   const totalEl   = document.getElementById('totalVal');
   const subLabel  = document.getElementById('subtotalLabel');
+  const subtotalEl = document.getElementById('subtotal');
 
   const count = cartItems.length;
 
-  if (subtitle) {
-    subtitle.textContent = count === 0
-      ? 'Nenhum serviço selecionado'
-      : count + ' serviço' + (count !== 1 ? 's' : '') + ' selecionado' + (count !== 1 ? 's' : '');
-  }
-  if (totalEl)  totalEl.textContent  = count;
-  if (subLabel) subLabel.textContent = count + ' serviço' + (count !== 1 ? 's' : '');
-
-  container.innerHTML = '';
-
   if (count === 0) {
+    if (subtitle)   subtitle.textContent   = 'Nenhum serviço selecionado';
+    if (totalEl)    totalEl.textContent    = '0';
+    if (subLabel)   subLabel.textContent   = '0 serviços';
+    if (subtotalEl) subtotalEl.textContent = '—';
     empty.classList.add('show');
     if (coupon) coupon.classList.add('hidden');
+    container.innerHTML = '';
     return;
   }
 
   empty.classList.remove('show');
   if (coupon) coupon.classList.remove('hidden');
 
+  if (subtitle) subtitle.textContent = count + ' serviço' + (count !== 1 ? 's' : '') +
+    ' selecionado' + (count !== 1 ? 's' : '');
+
+  container.innerHTML = '';
+
+  let subtotal     = 0;
+  let hasAllPrices = true;
+
   cartItems.forEach(function (item) {
+    const work  = getWorkForItem(item.id);
+    const price = work ? Number(work.price) : null;
+
+    if (price != null) subtotal += price * item.amount;
+    else hasAllPrices = false;
+
+    const bg    = work ? workGradient(work.id) : 'linear-gradient(135deg,#1a1a1a,#2a2a2a)';
+    const emoji = work ? catEmoji(work.category) : '🛒';
+    const ini   = work ? getInitials(work.ownerName) : '?';
+    const color = work ? workColor(work.id) : '#7fff00';
+
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.dataset.itemId = item.id;
+
     div.innerHTML =
-      '<div class="cart-item-thumb" style="background:linear-gradient(135deg,#0d1f0d,#1a3a1a)">🛒</div>' +
+      '<div class="cart-item-thumb" style="background:' + bg + '">' + emoji + '</div>' +
       '<div class="cart-item-body">' +
-        '<div class="cart-item-title">Item #' + item.id + '</div>' +
-        '<div class="cart-item-cat">Qtd: ' + item.amount + '</div>' +
+        (work && work.category ? '<div class="cart-item-cat">' + work.category + '</div>' : '') +
+        '<div class="cart-item-title">' + (work ? (work.title || 'Serviço #' + item.id) : 'Serviço #' + item.id) + '</div>' +
+        (work ? '<div class="cart-item-freelancer">' +
+          '<div class="cart-item-avatar" style="background:' + color + '">' + ini + '</div>' +
+          '<span class="cart-item-fname">' + (work.ownerName || '—') + '</span>' +
+        '</div>' : '') +
+        (item.amount > 1 ? '<span class="cart-item-package">✦ Qtd: ' + item.amount + '</span>' : '') +
       '</div>' +
       '<div class="cart-item-right">' +
+        '<div><div class="cart-item-price">' + (work ? formatPrice(work.price) : '—') + '</div></div>' +
         '<div class="cart-item-actions">' +
           '<button class="btn-item-remove" onclick="removeItem(' + item.id + ', this)">Remover</button>' +
         '</div>' +
       '</div>';
+
     container.appendChild(div);
   });
+
+  if (subLabel)   subLabel.textContent   = count + ' serviço' + (count !== 1 ? 's' : '');
+  if (subtotalEl) subtotalEl.textContent = hasAllPrices ? formatPrice(subtotal) : formatPrice(subtotal) + '+';
+  if (totalEl)    totalEl.textContent    = count;
 }
 
 /* ── Remove item ─────────────────────────────────────────────────── */
@@ -84,10 +167,15 @@ async function removeItem(itemId, btn) {
 
   try {
     const res = await fetch(API_BASE + '/cart/removeItem/' + itemId, {
-      method: 'POST',
+      method:  'POST',
       headers: authHeader()
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    // Remove mapeamento do localStorage
+    const cartMap = getCartMap();
+    delete cartMap[String(itemId)];
+    localStorage.setItem('of_cart_workmap', JSON.stringify(cartMap));
 
     cartItems = cartItems.filter(function (i) { return i.id !== itemId; });
 
@@ -105,9 +193,7 @@ async function removeItem(itemId, btn) {
   }
 }
 
-/* ── Coupon (local UI only) ──────────────────────────────────────── */
-
-let discountApplied = false;
+/* ── Cupom ───────────────────────────────────────────────────────── */
 
 function applyCoupon() {
   const val = document.getElementById('couponInput').value.trim().toUpperCase();

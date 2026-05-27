@@ -1,3 +1,5 @@
+const API_BASE = 'http://localhost:8080';
+
 OFAuth.loadNav();
 
 const GRADIENTS = [
@@ -79,11 +81,94 @@ function updateObs() {
   document.getElementById('obsCount').textContent = document.getElementById('obsInput').value.length;
 }
 
-function addToCart() {
+/* ── Auth header ─────────────────────────────────────────────────── */
+function authHeader() {
+  return { 'Authorization': OFAuth.getToken() };
+}
+
+/* ── Add to cart ─────────────────────────────────────────────────── */
+async function addToCart() {
+  if (!OFAuth.isLoggedIn()) {
+    window.location.href = 'loginScreen.html';
+    return;
+  }
+
+  const raw = localStorage.getItem('of_selected_work');
+  if (!raw) { showToast('Erro: serviço não encontrado.'); return; }
+
+  let work;
+  try { work = JSON.parse(raw); } catch (e) { return; }
+
   const btn = document.getElementById('cartBtn');
-  btn.classList.add('added');
-  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Adicionado ao carrinho`;
-  showToast('🛒 Serviço adicionado ao carrinho!');
+  const origHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = 'Adicionando...';
+
+  try {
+    // 1. Salva informações do work no cache local
+    const workCache = JSON.parse(localStorage.getItem('of_work_cache') || '{}');
+    workCache[String(work.id)] = {
+      id:        work.id,
+      title:     work.title,
+      price:     work.price,
+      category:  work.category,
+      ownerName: work.ownerName,
+      ownerId:   work.ownerId
+    };
+    localStorage.setItem('of_work_cache', JSON.stringify(workCache));
+
+    // 2. Snapshot do carrinho atual para identificar item novo após adição
+    const prevRes = await fetch(`${API_BASE}/cart/show`, { headers: authHeader() });
+    const prevData  = prevRes.ok ? await prevRes.json() : null;
+    const prevItems = (prevData && prevData.cartItemList) ? prevData.cartItemList : [];
+    const prevAmounts = {};
+    prevItems.forEach(i => { prevAmounts[String(i.id)] = i.amount; });
+
+    // 3. Chama API para adicionar ao carrinho
+    const addRes = await fetch(`${API_BASE}/cart/addItem`, {
+      method:  'POST',
+      headers: { ...authHeader(), 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ WorkId: work.id, amount: 1 })
+    });
+
+    if (!addRes.ok) {
+      const data = await addRes.json().catch(() => ({}));
+      const msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(e => e.message).join(' • ')
+        : 'Erro ao adicionar ao carrinho.';
+      showToast(msg);
+      btn.disabled = false;
+      btn.innerHTML = origHTML;
+      return;
+    }
+
+    const newItems = await addRes.json();
+
+    // 4. Mapeia cartItemId → workId no localStorage
+    const cartMap = JSON.parse(localStorage.getItem('of_cart_workmap') || '{}');
+
+    const newItem = newItems.find(i => prevAmounts[String(i.id)] === undefined);
+    if (newItem) {
+      // work adicionado pela primeira vez — novo CartItem criado
+      cartMap[String(newItem.id)] = String(work.id);
+    } else {
+      // work já estava no carrinho — quantidade incrementada
+      const changed = newItems.find(i => i.amount !== prevAmounts[String(i.id)]);
+      if (changed) cartMap[String(changed.id)] = String(work.id);
+    }
+    localStorage.setItem('of_cart_workmap', JSON.stringify(cartMap));
+
+    // 5. Feedback visual
+    btn.classList.add('added');
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Adicionado ao carrinho`;
+    showToast('🛒 Serviço adicionado ao carrinho!');
+
+  } catch (e) {
+    console.error('addToCart:', e);
+    showToast('Erro de conexão.');
+    btn.disabled = false;
+    btn.innerHTML = origHTML;
+  }
 }
 
 function buyNow() { showToast('✓ Redirecionando para o pagamento...'); }
