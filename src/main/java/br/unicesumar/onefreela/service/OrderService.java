@@ -29,6 +29,10 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    public List<Order> findAllOrders (){
+        return orderRepository.findAll();
+    }
+
 
     public Order makeOrder (User user){
         Cart cart = user.getCart();
