@@ -2,6 +2,7 @@ package br.unicesumar.onefreela.service;
 
 import br.unicesumar.onefreela.dto.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
+import br.unicesumar.onefreela.dto.MakeOrderDTO;
 import br.unicesumar.onefreela.entity.*;
 import br.unicesumar.onefreela.enums.OrderStatus;
 import br.unicesumar.onefreela.exception.ValidationException;
@@ -34,7 +35,7 @@ public class OrderService {
     }
 
 
-    public Order makeOrder (User user){
+    public Order makeOrder (User user, MakeOrderDTO makeOrderDTO){
         Cart cart = user.getCart();
         List<ErrorDetail> errors = new ArrayList<>();
 
@@ -66,6 +67,7 @@ public class OrderService {
         order.setCreatedAt(LocalDate.now());
         order.setStatus(OrderStatus.NOT_PAID);
         order.setUser(user);
+        order.setPaymentMethod(makeOrderDTO.getPaymentMethod());
 
         double total = 0;
         for (OrderItem orderItem : orderItemList){
