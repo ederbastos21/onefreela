@@ -1,0 +1,25 @@
+info:
+  name: update status
+  type: http
+  seq: 3
+
+http:
+  method: PUT
+  url: http://localhost:8080/reports/admin/updateStatus/1
+  headers:
+    - name: Authorization
+      value: 1d0c089d-9d1c-490a-ae68-0e8944f26f2f
+  body:
+    type: json
+    data: |-
+      {
+        "status": "UNDER_REVIEW",
+        "adminNotes": "Denúncia recebida e em análise."
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

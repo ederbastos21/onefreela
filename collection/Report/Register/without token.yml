@@ -1,0 +1,27 @@
+info:
+  name: without token
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: http://localhost:8080/reports/register
+  body:
+    type: multipart-form
+    data:
+      - name: report
+        value: |-
+          {
+            "nature": "OTHER",
+            "title": "Comportamento suspeito",
+            "description": "Descrição completa da situação denunciada, com detalhes suficientes para análise administrativa."
+          }
+        type: text
+        contentType: application/json
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

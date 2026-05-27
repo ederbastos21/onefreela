@@ -1,16 +1,20 @@
 info:
-  name: valid (credentials)
+  name: wrong token
   type: http
   seq: 2
 
 http:
   method: POST
-  url: http://localhost:8080/users/login
+  url: http://localhost:8080/cart/addItem
+  headers:
+    - name: Authorization
+      value: a
   body:
     type: json
     data: |-
       {
-        "email" : "ederbastos21@gmail.com", "password" : "Abc12345+"
+        "WorkId" : "1",
+        "amount" : "5"
       }
   auth: inherit
 

@@ -1,0 +1,18 @@
+info:
+  name: without admin
+  type: http
+  seq: 7
+
+http:
+  method: GET
+  url: http://localhost:8080/reports/admin/all
+  headers:
+    - name: Authorization
+      value: 36b82c77-b530-46d4-bbf0-4148499a8d56
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
