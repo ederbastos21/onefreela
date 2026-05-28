@@ -31,8 +31,8 @@ public class OrderController {
     @PostMapping("/createOrder")
     public ResponseEntity<?> createOrder (HttpServletRequest httpServletRequest, @RequestBody MakeOrderDTO makeOrderDTO){
         User user = authService.getAuthenticatedUser(httpServletRequest);
-        orderService.makeOrder(user, makeOrderDTO);
-        return ResponseEntity.ok().body("deu boa criar order");
+        Order order = orderService.makeOrder(user, makeOrderDTO);
+        return ResponseEntity.ok().body(order);
     }
 
 }
