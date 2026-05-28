@@ -1,5 +1,6 @@
 package br.unicesumar.onefreela.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -10,9 +11,11 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne
     private Order order;
 
+    @JsonIgnore
     @ManyToOne
     private Work work;
 

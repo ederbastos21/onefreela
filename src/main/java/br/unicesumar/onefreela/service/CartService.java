@@ -59,6 +59,11 @@ public class CartService {
             errors.add (new ErrorDetail(ErrorCode.WORK_NOT_FOUND, "cart", "o serviço enviado nao existe"));
         }
 
+        if (work.getOwner().getId().equals(user.getId())){
+            errors.add (new ErrorDetail(ErrorCode.CART_EQUALS_USER, "cart", "voce não pode adicionar seu proprio item"));
+            throw new ValidationException(errors);
+        }
+
         CartItem cartItem = new CartItem();
         cartItem.setCart(cart);
 
