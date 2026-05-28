@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Administração</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Stats cards ─────────────────────────────── */
+    .admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 8px; }
+    .stat-card { background: var(--card2); border: 1px solid var(--border); border-radius: var(--rc); padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .stat-card-top { display: flex; align-items: center; justify-content: space-between; }
+    .stat-card-label { font-size: 11px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: .5px; }
+    .stat-card-value { font-size: 30px; font-weight: 800; font-family: 'Bebas Neue', sans-serif; color: var(--text); letter-spacing: 1px; line-height: 1; }
+    .stat-card-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .stat-icon-total      { background: rgba(255,255,255,.06); color: var(--muted2); }
+    .stat-icon-freelancer { background: var(--gdim); color: var(--green); }
+    .stat-icon-client     { background: rgba(255,255,255,.06); color: var(--muted2); }
+    .stat-icon-admin      { background: rgba(168,85,247,.12); color: #a855f7; }
+
+    /* ── Toolbar ─────────────────────────────────── */
+    .admin-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .admin-search { flex: 1; min-width: 200px; background: var(--input); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 14px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color .15s; }
+    .admin-search::placeholder { color: var(--muted); }
+    .admin-search:focus { border-color: var(--border2); }
+    .admin-filter-wrap { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-btn { background: var(--card2); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 12px; color: var(--muted2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; cursor: pointer; transition: all .15s; font-family: inherit; }
+    .filter-btn:hover { border-color: rgba(168,85,247,.3); color: var(--muted2); }
+    .filter-btn.active { border-color: rgba(168,85,247,.4); color: #a855f7; background: rgba(168,85,247,.08); }
+    .btn-add-user { background: rgba(168,85,247,.1); border: 1px solid rgba(168,85,247,.3); border-radius: var(--radius); padding: 8px 16px; color: #a855f7; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; cursor: pointer; transition: all .15s; font-family: inherit; white-space: nowrap; }
+    .btn-add-user:hover { background: rgba(168,85,247,.18); border-color: #a855f7; }
+
+    /* ── User rows ───────────────────────────────── */
+    .admin-user-row { background: var(--card2); border: 1px solid var(--border); border-radius: var(--rc); padding: 14px 18px; display: flex; align-items: center; gap: 14px; margin-bottom: 8px; transition: border-color .15s; }
+    .admin-user-row:last-child { margin-bottom: 0; }
+    .admin-user-row:hover { border-color: var(--border2); }
+    .admin-user-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.06); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--muted2); flex-shrink: 0; cursor: pointer; transition: border-color .15s; }
+    .admin-user-avatar:hover { border-color: var(--muted); }
+    .admin-user-avatar.is-admin      { background: rgba(168,85,247,.12); color: #a855f7; border-color: rgba(168,85,247,.25); }
+    .admin-user-avatar.is-freelancer { background: var(--gdim);          color: var(--green); border-color: rgba(127,255,0,.2); }
+    .admin-user-info { flex: 1; min-width: 0; cursor: pointer; }
+    .admin-user-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .admin-user-email { font-size: 12px; color: var(--muted2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .admin-user-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+    .admin-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: var(--radius); text-transform: uppercase; letter-spacing: .5px; }
+    .admin-badge-admin      { background: rgba(168,85,247,.15); color: #a855f7;  border: 1px solid rgba(168,85,247,.3); }
+    .admin-badge-freelancer { background: var(--gdim);          color: var(--green); border: 1px solid rgba(127,255,0,.2); }
+    .admin-badge-cliente    { background: rgba(255,255,255,.06); color: var(--muted2); border: 1px solid var(--border); }
+    .admin-badge-verified   { background: rgba(34,197,94,.1);   color: #22c55e; border: 1px solid rgba(34,197,94,.25); }
+    .admin-user-date { font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .admin-user-actions { display: flex; gap: 6px; flex-shrink: 0; margin-left: 4px; }
+    .btn-row { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 5px 10px; color: var(--muted2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; cursor: pointer; transition: all .15s; font-family: inherit; }
+    .btn-row:hover { border-color: var(--border2); color: var(--text); }
+    .btn-row-danger { border-color: rgba(239,68,68,.3) !important; color: #ef4444 !important; }
+    .btn-row-danger:hover { border-color: #ef4444 !important; background: rgba(239,68,68,.1) !important; }
+
+    .admin-count       { font-size: 12px; color: var(--muted2); margin-bottom: 14px; }
+    .admin-list-loading { color: var(--muted2); font-size: 13px; padding: 12px 0; }
+    .admin-list-error   { color: #ef4444;       font-size: 13px; padding: 12px 0; }
+    .admin-list-empty   { color: var(--muted);  font-size: 13px; padding: 20px 0; text-align: center; }
+
+    /* ── Modais ──────────────────────────────────── */
+    .admin-modal { width: 100%; max-width: 500px; }
+
+    .detail-modal-header { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+    .detail-modal-avatar { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.06); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: var(--muted2); flex-shrink: 0; }
+    .detail-modal-avatar.is-admin      { background: rgba(168,85,247,.12); color: #a855f7; border-color: rgba(168,85,247,.25); }
+    .detail-modal-avatar.is-freelancer { background: var(--gdim);          color: var(--green); border-color: rgba(127,255,0,.2); }
+    .detail-modal-name  { font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: .3px; }
+    .detail-modal-email { font-size: 12px; color: var(--muted2); margin-top: 3px; }
+
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
+    .detail-full { grid-column: 1 / -1; }
+    .detail-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+    .detail-value { font-size: 13px; color: var(--text); word-break: break-all; }
+    .detail-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+    .admin-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0; }
+    .admin-form-full { grid-column: 1 / -1; }
+    .admin-form-msg { font-size: 12px; min-height: 16px; margin-bottom: 4px; }
+    .admin-form-msg-error   { color: #ef4444; }
+    .admin-form-msg-success { color: var(--green); }
+    .toggle-row-inline { display: flex; align-items: center; gap: 10px; padding-top: 24px; }
+    .toggle-row-inline .setting-label { margin: 0; cursor: pointer; }
+
+    .detail-action-row { display: flex; gap: 8px; margin-top: 4px; }
+    .btn-detail-edit   { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; color: var(--muted2); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; cursor: pointer; transition: all .15s; font-family: inherit; }
+    .btn-detail-edit:hover { border-color: var(--border2); color: var(--text); }
+    .btn-detail-delete { flex: 1; background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.25); border-radius: var(--radius); padding: 10px; color: #ef4444; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; cursor: pointer; transition: all .15s; font-family: inherit; }
+    .btn-detail-delete:hover { background: rgba(239,68,68,.12); border-color: #ef4444; }
+
+    /* ── Works / Carts / Orders rows ────────────────── */
+    .admin-work-row, .admin-cart-row, .admin-order-row {
+      background: var(--card2); border: 1px solid var(--border); border-radius: var(--rc);
+      padding: 14px 18px; display: flex; align-items: center; gap: 14px; margin-bottom: 8px; transition: border-color .15s;
+    }
+    .admin-work-row:last-child, .admin-cart-row:last-child, .admin-order-row:last-child { margin-bottom: 0; }
+    .admin-work-row:hover, .admin-cart-row:hover, .admin-order-row:hover { border-color: var(--border2); }
+
+    .admin-work-icon { width: 38px; height: 38px; border-radius: 8px; background: rgba(255,255,255,.06); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--muted2); }
+    .admin-work-icon.status-active { background: var(--gdim); color: var(--green); border-color: rgba(127,255,0,.2); }
+    .admin-work-icon.status-inactive { background: rgba(239,68,68,.08); color: #ef4444; border-color: rgba(239,68,68,.2); }
+
+    .admin-work-info, .admin-order-info { flex: 1; min-width: 0; }
+    .admin-work-title, .admin-order-id { font-size: 14px; font-weight: 700; color: var(--text); }
+    .admin-work-meta, .admin-order-meta { font-size: 12px; color: var(--muted2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .admin-badge-work-active   { background: var(--gdim); color: var(--green); border: 1px solid rgba(127,255,0,.2); }
+    .admin-badge-work-inactive { background: rgba(239,68,68,.08); color: #ef4444; border: 1px solid rgba(239,68,68,.2); }
+    .admin-badge-order-not_paid { background: rgba(234,179,8,.1); color: #eab308; border: 1px solid rgba(234,179,8,.25); }
+    .admin-badge-order-paid     { background: var(--gdim); color: var(--green); border: 1px solid rgba(127,255,0,.2); }
+    .admin-badge-order-refunded { background: rgba(239,68,68,.08); color: #ef4444; border: 1px solid rgba(239,68,68,.2); }
+
+    .admin-cart-icon { width: 38px; height: 38px; border-radius: 8px; background: rgba(255,255,255,.06); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--muted2); }
+    .admin-cart-info { flex: 1; min-width: 0; }
+    .admin-cart-id   { font-size: 14px; font-weight: 700; color: var(--text); }
+    .admin-cart-sub  { font-size: 12px; color: var(--muted2); margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <nav class="nav-app">
+    <div class="nav-left">
+      <a href="exploreFreelancers.html" class="nav-logo">
+        <div class="nav-logo-icon">OF</div>
+        <div class="nav-logo-text">One<span>Freela</span></div>
+      </a>
+    </div>
+    <div class="nav-right">
+      <div class="nav-user">
+        <div class="nav-user-name" id="navUserName"></div>
+        <div class="nav-user-role" id="navUserRole"></div>
+      </div>
+      <a href="profile.html" class="nav-avatar" id="navAvatar"></a>
+      <a href="adminScreen.html" id="adminAreaBtn" class="nav-admin-btn">Área do admin</a>
+    </div>
+  </nav>
+
+  <div class="app-page">
+
+    <aside class="sidebar">
+      <span class="sidebar-label">Administração</span>
+      <a href="#dashboard" class="nav-item active">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a href="#usuarios" class="nav-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Usuários
+        <span class="nav-item-badge" id="usersBadge" style="display:none">0</span>
+      </a>
+      <a href="#servicos" class="nav-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Serviços
+        <span class="nav-item-badge" id="worksBadge" style="display:none">0</span>
+      </a>
+      <a href="#carrinhos" class="nav-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        Carrinhos
+        <span class="nav-item-badge" id="cartsBadge" style="display:none">0</span>
+      </a>
+      <a href="#pedidos" class="nav-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Pedidos
+        <span class="nav-item-badge" id="ordersBadge" style="display:none">0</span>
+      </a>
+
+      <span class="sidebar-label">Conta</span>
+      <a href="profile.html" class="nav-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Meu Perfil
+      </a>
+      <a href="#" onclick="OFAuth.logout();return false;" class="nav-item nav-item-danger">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </a>
+    </aside>
+
+    <main class="main">
+
+      <!-- Dashboard stats -->
+      <div id="dashboard" class="section-block reveal">
+        <div class="block-title">Visão Geral</div>
+        <div class="admin-stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-label">Total de Usuários</span>
+              <div class="stat-card-icon stat-icon-total">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statTotal">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-label">Freelancers</span>
+              <div class="stat-card-icon stat-icon-freelancer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statFreelancers">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-label">Clientes</span>
+              <div class="stat-card-icon stat-icon-client">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statClients">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-label">Administradores</span>
+              <div class="stat-card-icon stat-icon-admin">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statAdmins">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-label">Serviços</span>
+              <div class="stat-card-icon stat-icon-freelancer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statWorks">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-label">Pedidos</span>
+              <div class="stat-card-icon stat-icon-client">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statOrders">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User management -->
+      <div id="usuarios" class="section-block reveal">
+        <div class="block-title">Gerenciamento de Usuários</div>
+        <div class="card-box">
+          <div class="admin-toolbar">
+            <input type="text" class="admin-search" id="searchInput"
+              placeholder="Buscar por nome ou e-mail..."
+              oninput="filterUsers()" />
+            <div class="admin-filter-wrap">
+              <button class="filter-btn active" id="filterAll"         onclick="setFilter('all')">Todos</button>
+              <button class="filter-btn"         id="filterFreelancer" onclick="setFilter('freelancer')">Freelancers</button>
+              <button class="filter-btn"         id="filterCliente"    onclick="setFilter('cliente')">Clientes</button>
+              <button class="filter-btn"         id="filterAdmin"      onclick="setFilter('admin')">Admins</button>
+            </div>
+            <button class="btn-add-user" onclick="openAddModal()">+ Adicionar Usuário</button>
+          </div>
+          <div class="admin-count" id="adminCount"></div>
+          <div id="adminUserList"></div>
+        </div>
+      </div>
+
+      <!-- Works management -->
+      <div id="servicos" class="section-block reveal">
+        <div class="block-title">Gerenciamento de Serviços</div>
+        <div class="card-box">
+          <div class="admin-toolbar">
+            <input type="text" class="admin-search" id="searchWorksInput"
+              placeholder="Buscar por título ou categoria..."
+              oninput="filterWorks()" />
+            <div class="admin-filter-wrap">
+              <button class="filter-btn active" id="filterWorksAll"      onclick="setWorksFilter('all')">Todos</button>
+              <button class="filter-btn"         id="filterWorksActive"  onclick="setWorksFilter('active')">Ativos</button>
+              <button class="filter-btn"         id="filterWorksInactive" onclick="setWorksFilter('inactive')">Inativos</button>
+            </div>
+          </div>
+          <div class="admin-count" id="adminWorksCount"></div>
+          <div id="adminWorkList"></div>
+        </div>
+      </div>
+
+      <!-- Carts management -->
+      <div id="carrinhos" class="section-block reveal">
+        <div class="block-title">Gerenciamento de Carrinhos</div>
+        <div class="card-box">
+          <div class="admin-count" id="adminCartsCount"></div>
+          <div id="adminCartList"></div>
+        </div>
+      </div>
+
+      <!-- Orders management -->
+      <div id="pedidos" class="section-block reveal">
+        <div class="block-title">Gerenciamento de Pedidos</div>
+        <div class="card-box">
+          <div class="admin-toolbar">
+            <input type="text" class="admin-search" id="searchOrdersInput"
+              placeholder="Buscar por usuário..."
+              oninput="filterOrders()" />
+            <div class="admin-filter-wrap">
+              <button class="filter-btn active" id="filterOrdersAll"      onclick="setOrdersFilter('all')">Todos</button>
+              <button class="filter-btn"         id="filterOrdersNotPaid" onclick="setOrdersFilter('NOT_PAID')">Não pago</button>
+              <button class="filter-btn"         id="filterOrdersPaid"    onclick="setOrdersFilter('PAID')">Pago</button>
+              <button class="filter-btn"         id="filterOrdersRefunded" onclick="setOrdersFilter('REFUNDED')">Reembolsado</button>
+            </div>
+          </div>
+          <div class="admin-count" id="adminOrdersCount"></div>
+          <div id="adminOrderList"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Inspect / Detail modal -->
+  <div class="auth-overlay" id="detailModal">
+    <div class="auth-modal admin-modal">
+      <button class="btn-auth-close" onclick="closeDetailModal()">×</button>
+      <div class="detail-modal-header">
+        <div class="detail-modal-avatar" id="detailAvatar"></div>
+        <div>
+          <div class="detail-modal-name"  id="detailName"></div>
+          <div class="detail-modal-email" id="detailEmail"></div>
+        </div>
+      </div>
+      <hr class="divider" />
+      <div class="detail-grid">
+        <div>
+          <div class="detail-label">Tipo de conta</div>
+          <div class="detail-value" id="detailType"></div>
+        </div>
+        <div>
+          <div class="detail-label">Data de cadastro</div>
+          <div class="detail-value" id="detailDate"></div>
+        </div>
+        <div class="detail-full">
+          <div class="detail-label">Permissões</div>
+          <div class="detail-badges" id="detailBadges"></div>
+        </div>
+        <div class="detail-full">
+          <div class="detail-label">ID do usuário</div>
+          <div class="detail-value" id="detailId"></div>
+        </div>
+      </div>
+      <div class="detail-action-row">
+        <button class="btn-detail-edit"   onclick="openEditFromDetail()">Editar</button>
+        <button class="btn-detail-delete" onclick="deleteFromDetail()">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / Edit user modal -->
+  <div class="auth-overlay" id="userFormModal">
+    <div class="auth-modal admin-modal">
+      <button class="btn-auth-close" onclick="closeUserFormModal()">×</button>
+      <h2 class="auth-modal-title" id="userFormTitle">NOVO USUÁRIO</h2>
+      <div class="admin-form-grid">
+        <div class="setting-item admin-form-full">
+          <label class="setting-label">Nome completo</label>
+          <input id="ufName" class="setting-input" type="text"
+            placeholder="Ex: João Silva" maxlength="100" />
+        </div>
+        <div class="setting-item">
+          <label class="setting-label">E-mail</label>
+          <input id="ufEmail" class="setting-input" type="email"
+            placeholder="joao@email.com" />
+        </div>
+        <div class="setting-item" id="ufPasswordField">
+          <label class="setting-label">Senha</label>
+          <input id="ufPassword" class="setting-input" type="password"
+            placeholder="••••••••" />
+        </div>
+        <div class="setting-item">
+          <label class="setting-label">Tipo de conta</label>
+          <select id="ufType" class="setting-input" style="cursor:pointer">
+            <option value="cliente">Cliente</option>
+            <option value="freelancer">Freelancer</option>
+          </select>
+        </div>
+        <div class="setting-item toggle-row-inline">
+          <div class="toggle-switch" id="ufAdminToggle"
+            onclick="this.classList.toggle('on')"></div>
+          <label class="setting-label"
+            onclick="document.getElementById('ufAdminToggle').classList.toggle('on')">
+            Administrador
+          </label>
+        </div>
+      </div>
+      <div class="admin-form-msg" id="ufMsg"></div>
+      <button class="btn-save" id="ufSubmitBtn" onclick="submitUserForm()">CADASTRAR</button>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+  <script src="main.js"></script>
+  <script src="adminScreen.js"></script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package br.unicesumar.onefreela.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -18,12 +19,16 @@ public class User {
     private LocalDate birthday;
     private String phoneNumber;
 
-    //automatic data
+    //automatic data,
     private String registerDate;
     private String profilePicturePath;
     private boolean isAdmin;
     private boolean isFreelancer;
     private boolean verified;
+
+    @OneToOne (mappedBy = "user")
+    @JsonIgnore
+    private Cart cart;
 
     public Long getId() {
         return id;
@@ -119,6 +124,26 @@ public class User {
 
     public void setFreelancer(boolean freelancer) {
         isFreelancer = freelancer;
+    }
+
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    public boolean isFreelancer() {
+        return isFreelancer;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public Cart getCart() {
+        return cart;
+    }
+
+    public void setCart(Cart cart) {
+        this.cart = cart;
     }
 
     public User() {}

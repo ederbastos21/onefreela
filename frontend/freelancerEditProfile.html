@@ -7,163 +7,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --black:  #080808;
-      --surface:#0f0f0f;
-      --card:   #141414;
-      --card2:  #1a1a1a;
-      --input:  #1e1e1e;
-      --border: #242424;
-      --border2:#2e2e2e;
-      --green:  #7fff00;
-      --gdim:   rgba(127,255,0,.1);
-      --text:   #f0f0f0;
-      --muted:  #666;
-      --muted2: #999;
-      --radius: 999px;
-      --rc:     14px;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body { font-family: 'Syne', sans-serif; background: var(--black); color: var(--text); min-height: 100vh; }
-    body::before {
-      content: ''; position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 9998; opacity: .25;
-    }
-
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
-      height: 64px; display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px; background: rgba(8,8,8,.95); border-bottom: 1px solid var(--border);
-    }
-    .nav-left { display: flex; align-items: center; gap: 20px; }
-    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); }
-    .nav-logo-icon { width: 28px; height: 28px; background: var(--green); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #000; }
-    .nav-logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; }
-    .nav-logo-text span { color: var(--green); }
-    .nav-sep { width: 1px; height: 20px; background: var(--border2); }
-    .nav-back { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--muted2); text-decoration: none; transition: color .2s; }
-    .nav-back:hover { color: var(--green); }
-    .nav-back:hover svg { transform: translateX(-3px); }
-    .nav-back svg { transition: transform .2s; }
-    .nav-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px; color: var(--muted); }
-    .nav-right { display: flex; align-items: center; gap: 12px; }
-    .nav-avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--green); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #000; }
-
-    .page { padding-top: 64px; display: block; min-height: 100vh; }
-
-    .sidebar {
-      position: fixed; top: 64px; left: 0; bottom: 0; width: 260px;
-      background: var(--surface); border-right: 1px solid var(--border);
-      padding: 28px 16px; display: flex; flex-direction: column; gap: 4px;
-    }
-    .sidebar-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 0 12px; margin: 14px 0 6px; }
-    .sidebar-label:first-child { margin-top: 0; }
-    .side-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--muted2); cursor: pointer; transition: background .2s, color .2s; text-decoration: none; }
-    .side-item:hover { background: var(--card2); color: var(--text); }
-    .side-item.active { background: var(--gdim); color: var(--green); }
-    .side-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); flex-shrink: 0; margin-left: auto; transition: background .2s; }
-    .side-item.done .side-dot { background: var(--green); }
-
-    .main { margin-left: 260px; padding: 40px 48px 80px; max-width: 860px; }
-
-    .page-header { margin-bottom: 36px; }
-    .page-header-label { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--green); margin-bottom: 8px; }
-    .page-header-title { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 1px; line-height: 1; }
-    .page-header-sub { font-size: 13px; color: var(--muted2); margin-top: 8px; }
-
-    .form-section { margin-bottom: 32px; animation: fadeUp .5s ease both; }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-
-    .section-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--rc); padding: 28px; }
-    .section-card-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-    .section-card-title span { font-size: 18px; }
-
-    .fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .field-full { grid-column: 1 / -1; }
-    .field { display: flex; flex-direction: column; gap: 7px; }
-    .field-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
-    .field-hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-    .field-input { background: var(--input); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-family: 'Syne', sans-serif; font-size: 13px; color: var(--text); outline: none; transition: border-color .25s, box-shadow .25s; width: 100%; }
-    .field-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(127,255,0,.08); }
-    .field-input::placeholder { color: #333; }
-    textarea.field-input { resize: vertical; min-height: 100px; }
-
-    .field-select { background: var(--input); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-family: 'Syne', sans-serif; font-size: 13px; color: var(--text); outline: none; appearance: none; cursor: pointer; width: 100%; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; transition: border-color .2s; }
-    .field-select:focus { border-color: var(--green); }
-
-    .avatar-upload { display: flex; align-items: center; gap: 24px; }
-    .avatar-preview { width: 88px; height: 88px; border-radius: 20px; background: var(--green); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: #000; flex-shrink: 0; border: 3px solid rgba(127,255,0,.25); position: relative; overflow: hidden; cursor: pointer; }
-    .avatar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.6); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; opacity: 0; transition: opacity .2s; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #fff; }
-    .avatar-preview:hover .avatar-overlay { opacity: 1; }
-    .avatar-actions { display: flex; flex-direction: column; gap: 8px; }
-    .btn-upload { padding: 9px 18px; background: var(--gdim); border: 1px solid rgba(127,255,0,.25); border-radius: 10px; color: var(--green); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .2s; }
-    .btn-upload:hover { background: rgba(127,255,0,.18); }
-    .btn-remove-avatar { padding: 9px 18px; background: none; border: 1px solid var(--border2); border-radius: 10px; color: var(--muted2); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: border-color .2s, color .2s; }
-    .btn-remove-avatar:hover { border-color: #ef4444; color: #ef4444; }
-    .avatar-hint { font-size: 11px; color: var(--muted); }
-
-    .field-counter { display: flex; justify-content: space-between; }
-    .char-count { font-size: 11px; color: var(--muted); }
-    .char-count.warn { color: #f97316; }
-
-    /* TAGS INPUT */
-    .tags-wrap { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; background: var(--input); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; min-height: 46px; cursor: text; transition: border-color .25s, box-shadow .25s; }
-    .tags-wrap:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(127,255,0,.08); }
-    .tag-chip { display: flex; align-items: center; gap: 5px; background: var(--gdim); border: 1px solid rgba(127,255,0,.2); border-radius: var(--radius); padding: 3px 10px; font-size: 12px; font-weight: 700; color: var(--green); }
-    .tag-remove { cursor: pointer; opacity: .6; font-size: 14px; line-height: 1; transition: opacity .2s; }
-    .tag-remove:hover { opacity: 1; }
-    .tag-input { flex: 1; min-width: 120px; background: none; border: none; outline: none; font-family: 'Syne', sans-serif; font-size: 13px; color: var(--text); }
-    .tag-input::placeholder { color: #333; }
-
-    /* PRICE FIELD */
-    .price-wrap { display: flex; align-items: center; background: var(--input); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
-    .price-wrap:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(127,255,0,.08); }
-    .price-prefix { padding: 12px 14px; font-size: 13px; font-weight: 700; color: var(--muted); border-right: 1px solid var(--border); background: var(--card2); }
-    .price-input { flex: 1; background: none; border: none; outline: none; padding: 12px 14px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; color: var(--green); width: 100%; }
-    .price-suffix { padding: 12px 14px; font-size: 12px; color: var(--muted); border-left: 1px solid var(--border); background: var(--card2); }
-
-    /* AVAIL TOGGLE */
-    .avail-opts { display: flex; gap: 10px; }
-    .avail-opt { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; text-align: center; font-size: 12px; font-weight: 600; color: var(--muted2); transition: border-color .2s, background .2s, color .2s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .avail-opt:hover { border-color: rgba(255,255,255,.2); color: var(--text); }
-    .avail-opt.active { border-color: rgba(127,255,0,.35); background: var(--gdim); color: var(--green); }
-    .avail-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-    .social-field { display: flex; align-items: center; background: var(--input); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
-    .social-field:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(127,255,0,.08); }
-    .social-prefix { padding: 12px 14px; font-size: 12px; color: var(--muted); border-right: 1px solid var(--border); white-space: nowrap; background: var(--card2); }
-    .social-input { flex: 1; background: none; border: none; outline: none; padding: 12px 14px; font-family: 'Syne', sans-serif; font-size: 13px; color: var(--text); }
-    .social-input::placeholder { color: #333; }
-
-    .actions-bar { position: fixed; bottom: 0; left: 260px; right: 0; background: rgba(8,8,8,.95); border-top: 1px solid var(--border); padding: 16px 48px; display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-    .actions-left { font-size: 12px; color: var(--muted2); }
-    .actions-left span { color: var(--green); font-weight: 700; }
-    .actions-right { display: flex; gap: 12px; }
-    .btn-cancel { padding: 11px 24px; background: none; border: 1px solid var(--border2); border-radius: var(--radius); color: var(--muted2); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: border-color .2s, color .2s; }
-    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
-    .btn-save { padding: 11px 32px; background: var(--green); border: none; border-radius: var(--radius); color: #000; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px; cursor: pointer; transition: transform .18s, box-shadow .18s; position: relative; overflow: hidden; }
-    .btn-save::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); transform: translateX(-100%); transition: transform .5s; }
-    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(127,255,0,.3); }
-    .btn-save:hover::before { transform: translateX(100%); }
-
-    .toast { position: fixed; bottom: 80px; right: 32px; background: var(--card2); border: 1px solid rgba(127,255,0,.3); border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--green); z-index: 9999; box-shadow: 0 12px 40px rgba(0,0,0,.5); transform: translateY(20px); opacity: 0; transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .3s; }
-    .toast.show { transform: translateY(0); opacity: 1; }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <nav>
+  <nav class="nav-app">
     <div class="nav-left">
       <a href="index.html" class="nav-logo">
         <div class="nav-logo-icon">OF</div>
         <div class="nav-logo-text">One<span>Freela</span></div>
       </a>
       <div class="nav-sep"></div>
-      <a href="freelancerProfile.html" class="nav-back">
+      <a href="profile.html" class="nav-back">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
         Voltar ao perfil
       </a>
@@ -171,12 +26,26 @@
       <span class="nav-title">Editar Perfil</span>
     </div>
     <div class="nav-right">
-      <div class="nav-avatar">MR</div>
+      <a href="cartScreen.html" class="nav-icon-btn" title="Carrinho">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </a>
+      <div class="nav-icon-btn" id="notifBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div class="nav-icon-btn" title="Mensagens" onclick="goToChat()" style="cursor:pointer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <a href="profile.html" class="nav-avatar" id="navAvatar"></a>
+      <a href="adminScreen.html" id="adminAreaBtn" class="nav-admin-btn">Área do admin</a>
     </div>
   </nav>
 
-  <div class="page">
-    <aside class="sidebar">
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-title">Notificações</div>
+  </div>
+
+  <div class="app-page">
+    <aside class="sidebar sidebar-edit">
       <span class="sidebar-label">Seções</span>
       <a href="#foto" class="side-item active done">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
@@ -205,7 +74,7 @@
       </a>
     </aside>
 
-    <main class="main">
+    <main class="main main-edit">
 
       <div class="page-header">
         <div class="page-header-label">Freelancer · Edição</div>
@@ -213,7 +82,7 @@
         <p class="page-header-sub">Seu perfil é sua vitrine — mantenha-o sempre atualizado para atrair mais clientes.</p>
       </div>
 
-      <div id="foto" class="form-section" style="animation-delay:.05s">
+      <div id="foto" class="form-section anim-d1">
         <div class="section-card">
           <div class="section-card-title"><span>🖼️</span> Foto & Identidade</div>
           <div class="avatar-upload">
@@ -233,17 +102,17 @@
         </div>
       </div>
 
-      <div id="info" class="form-section" style="animation-delay:.1s">
+      <div id="info" class="form-section anim-d2">
         <div class="section-card">
           <div class="section-card-title"><span>💼</span> Informações Profissionais</div>
           <div class="fields-grid">
             <div class="field">
               <label class="field-label">Nome</label>
-              <input class="field-input" type="text" value="Marina" />
+              <input class="field-input" type="text" id="settingNome" />
             </div>
             <div class="field">
               <label class="field-label">Sobrenome</label>
-              <input class="field-input" type="text" value="Rocha" />
+              <input class="field-input" type="text" id="settingSobrenome" />
             </div>
             <div class="field field-full">
               <label class="field-label">Título Profissional</label>
@@ -285,7 +154,7 @@
         </div>
       </div>
 
-      <div id="habilidades" class="form-section" style="animation-delay:.15s">
+      <div id="habilidades" class="form-section anim-d3">
         <div class="section-card">
           <div class="section-card-title"><span>⚡</span> Habilidades & Preço</div>
           <div class="fields-grid">
@@ -313,7 +182,7 @@
         </div>
       </div>
 
-      <div id="disponibilidade" class="form-section" style="animation-delay:.2s">
+      <div id="disponibilidade" class="form-section anim-d4">
         <div class="section-card">
           <div class="section-card-title"><span>🕐</span> Disponibilidade</div>
           <div class="fields-grid">
@@ -321,15 +190,15 @@
               <label class="field-label">Status atual</label>
               <div class="avail-opts">
                 <div class="avail-opt active" onclick="setAvail(this)">
-                  <span class="avail-dot" style="background:#22c55e"></span>
+                  <span class="avail-dot avail-green"></span>
                   Disponível agora
                 </div>
                 <div class="avail-opt" onclick="setAvail(this)">
-                  <span class="avail-dot" style="background:#eab308"></span>
+                  <span class="avail-dot avail-yellow"></span>
                   Disponível esta semana
                 </div>
                 <div class="avail-opt" onclick="setAvail(this)">
-                  <span class="avail-dot" style="background:#ef4444"></span>
+                  <span class="avail-dot avail-red"></span>
                   Indisponível no momento
                 </div>
               </div>
@@ -356,7 +225,7 @@
         </div>
       </div>
 
-      <div id="contato" class="form-section" style="animation-delay:.25s">
+      <div id="contato" class="form-section anim-d5">
         <div class="section-card">
           <div class="section-card-title"><span>🔗</span> Contato & Redes Sociais</div>
           <div class="fields-grid">
@@ -393,66 +262,22 @@
         </div>
       </div>
 
-      <div style="height:72px"></div>
+      <div class="spacer-72"></div>
     </main>
   </div>
 
   <div class="actions-bar">
     <div class="actions-left">Alterações <span id="saveStatus">não salvas</span></div>
     <div class="actions-right">
-      <a href="freelancerProfile.html" class="btn-cancel">Cancelar</a>
+      <a href="profile.html" class="btn-cancel">Cancelar</a>
       <button class="btn-save" onclick="saveProfile()">SALVAR ALTERAÇÕES</button>
     </div>
   </div>
 
   <div class="toast" id="toast">✓ Perfil atualizado com sucesso!</div>
 
-  <script>
-    function updateCount(inputId, countId, max) {
-      const val = document.getElementById(inputId).value.length;
-      const el  = document.getElementById(countId);
-      el.textContent = val + '/' + max;
-      el.classList.toggle('warn', val > max * 0.85);
-    }
-
-    function addTag(e) {
-      if (e.key !== 'Enter') return;
-      const input = document.getElementById('tagInput');
-      const val   = input.value.trim();
-      const chips = document.querySelectorAll('.tag-chip');
-      if (!val || chips.length >= 10) return;
-      const chip = document.createElement('span');
-      chip.className = 'tag-chip';
-      chip.innerHTML = `${val} <span class="tag-remove" onclick="removeTag(this)">×</span>`;
-      document.getElementById('tagsWrap').insertBefore(chip, input);
-      input.value = '';
-      e.preventDefault();
-    }
-
-    function removeTag(el) { el.closest('.tag-chip').remove(); }
-
-    function setAvail(el) {
-      document.querySelectorAll('.avail-opt').forEach(o => o.classList.remove('active'));
-      el.classList.add('active');
-    }
-
-    function saveProfile() {
-      const status = document.getElementById('saveStatus');
-      status.textContent = 'salvo ✓';
-      status.style.color = 'var(--green)';
-      const toast = document.getElementById('toast');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    document.querySelectorAll('.side-item').forEach(item => {
-      item.addEventListener('click', function() {
-        document.querySelectorAll('.side-item').forEach(i => i.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-
-    updateCount('bioInput', 'bioCount', 400);
-  </script>
+  <script src="auth.js"></script>
+  <script src="main.js"></script>
+  <script src="freelancerEditProfile.js"></script>
 </body>
 </html>

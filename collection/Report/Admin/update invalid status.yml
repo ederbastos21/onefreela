@@ -1,0 +1,25 @@
+info:
+  name: update invalid status
+  type: http
+  seq: 6
+
+http:
+  method: PUT
+  url: http://localhost:8080/reports/admin/updateStatus/1
+  headers:
+    - name: Authorization
+      value: 1d0c089d-9d1c-490a-ae68-0e8944f26f2f
+  body:
+    type: json
+    data: |-
+      {
+        "status": "INVALID_STATUS",
+        "adminNotes": "Teste de status inválido."
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

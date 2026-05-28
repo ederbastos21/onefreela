@@ -8,346 +8,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <style>
-    :root {
-      --black:  #080808;
-      --card:   #161616;
-      --input:  #1e1e1e;
-      --border: #272727;
-      --green:  #7fff00;
-      --purple: #a855f7;
-      --text:   #f0f0f0;
-      --muted:  #777;
-      --radius: 999px;
-      --r-card: 20px;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; font-family: 'Syne', sans-serif; background: var(--black); color: var(--text); overflow-x: hidden; }
-
-    body::before {
-      content: ''; position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 999; opacity: .3;
-    }
-
-    .cursor-glow {
-      position: fixed; width: 360px; height: 360px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(127,255,0,.05) 0%, transparent 70%);
-      pointer-events: none; transform: translate(-50%,-50%);
-      transition: left .1s, top .1s, background .6s; z-index: 998;
-    }
-    .cursor-glow.freelancer {
-      background: radial-gradient(circle, rgba(168,85,247,.07) 0%, transparent 70%);
-    }
-
-    .bg {
-      position: fixed; inset: 0; z-index: 0;
-      background: radial-gradient(ellipse 70% 80% at 10% 20%, #1e1e1e 0%, transparent 55%),
-                  radial-gradient(ellipse 60% 60% at 90% 80%, #141414 0%, transparent 55%),
-                  linear-gradient(170deg, #1a1a1a 0%, #080808 60%);
-      transition: background 0.6s ease;
-    }
-
-    .page {
-      position: relative; z-index: 10;
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .left-panel {
-      display: flex; flex-direction: column; justify-content: center;
-      padding: 60px 6%;
-      position: relative; overflow: hidden;
-    }
-    .left-panel::before {
-      content: ''; position: absolute; inset: 0;
-      background: radial-gradient(ellipse 80% 60% at 0% 50%, rgba(127,255,0,.05) 0%, transparent 60%);
-      transition: background .6s; pointer-events: none;
-    }
-    .left-panel.freelancer::before {
-      background: radial-gradient(ellipse 80% 60% at 0% 50%, rgba(168,85,247,.06) 0%, transparent 60%);
-    }
-
-    .left-grid {
-      position: absolute; inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
-      background-size: 50px 50px;
-      mask-image: radial-gradient(ellipse 80% 80% at 20% 50%, black 10%, transparent 75%);
-    }
-
-    .left-content { position: relative; z-index: 1; max-width: 420px; }
-
-    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; color: var(--text); margin-bottom: 64px; }
-    .nav-logo-icon {
-      width: 32px; height: 32px; background: var(--green);
-      border-radius: 9px; display: flex; align-items: center; justify-content: center;
-      font-family: 'Bebas Neue', sans-serif; font-size: 17px; color: #000;
-      transition: background .6s;
-    }
-    .nav-logo-icon.freelancer { background: var(--purple); }
-    .nav-logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 21px; letter-spacing: 2px; }
-    .nav-logo-text span { color: var(--green); transition: color .6s; }
-    .nav-logo-text span.freelancer { color: var(--purple); }
-
-    .left-label {
-      font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--green); margin-bottom: 16px;
-      transition: color .6s;
-    }
-    .left-label.freelancer { color: var(--purple); }
-
-    .left-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(44px, 5vw, 68px);
-      line-height: .92; letter-spacing: 1px;
-      color: var(--text); margin-bottom: 20px;
-    }
-    .left-title .accent { color: var(--green); transition: color .6s; }
-    .left-title .accent.freelancer { color: var(--purple); }
-
-    .left-desc {
-      font-size: 14px; line-height: 1.75; color: var(--muted);
-      margin-bottom: 40px;
-    }
-
-    .perks { display: flex; flex-direction: column; gap: 14px; }
-    .perk {
-      display: flex; align-items: flex-start; gap: 12px;
-      opacity: 0; transform: translateX(-16px);
-      transition: opacity .4s ease, transform .4s ease, color .3s;
-    }
-    .perk.visible { opacity: 1; transform: translateX(0); }
-    .perk-icon {
-      width: 28px; height: 28px; border-radius: 8px;
-      background: rgba(127,255,0,.12); border: 1px solid rgba(127,255,0,.2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; flex-shrink: 0;
-      transition: background .6s, border-color .6s;
-    }
-    .perk-icon.freelancer { background: rgba(168,85,247,.12); border-color: rgba(168,85,247,.2); }
-    .perk-text { font-size: 13px; color: var(--muted); line-height: 1.5; padding-top: 4px; }
-    .perk-text strong { color: var(--text); }
-
-    .testimonial {
-      margin-top: 48px;
-      background: rgba(22,22,22,.9);
-      border: 1px solid var(--border);
-      border-radius: 16px; padding: 20px;
-      backdrop-filter: blur(8px);
-      opacity: 0; transform: translateY(16px);
-      transition: opacity .5s .4s ease, transform .5s .4s ease;
-    }
-    .testimonial.visible { opacity: 1; transform: translateY(0); }
-    .test-stars { color: var(--green); font-size: 12px; margin-bottom: 8px; transition: color .6s; }
-    .test-stars.freelancer { color: var(--purple); }
-    .test-quote { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; font-style: italic; }
-    .test-author { display: flex; align-items: center; gap: 10px; }
-    .test-avatar {
-      width: 30px; height: 30px; border-radius: 8px;
-      background: var(--green); display: flex; align-items: center; justify-content: center;
-      font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: #000;
-      transition: background .6s;
-    }
-    .test-avatar.freelancer { background: var(--purple); }
-    .test-name { font-size: 12px; font-weight: 700; }
-    .test-role { font-size: 11px; color: var(--muted); }
-
-    .right-panel {
-      display: flex; align-items: center; justify-content: center;
-      padding: 60px 6%;
-      border-left: 1px solid var(--border);
-      background: rgba(12,12,12,.6);
-    }
-
-    .form-card {
-      width: 100%; max-width: 440px;
-      animation: cardIn .6s cubic-bezier(.22,.68,0,1.2) both;
-    }
-    @keyframes cardIn { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
-
-    .type-toggle {
-      display: grid; grid-template-columns: 1fr 1fr;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 4px; margin-bottom: 32px;
-      position: relative;
-    }
-    .toggle-pill {
-      position: absolute;
-      top: 4px; left: 4px;
-      width: calc(50% - 4px); height: calc(100% - 8px);
-      background: var(--green);
-      border-radius: var(--radius);
-      transition: transform .35s cubic-bezier(.34,1.2,.64,1), background .6s;
-      z-index: 0;
-    }
-    .toggle-pill.freelancer { transform: translateX(100%); background: var(--purple); }
-
-    .toggle-btn {
-      position: relative; z-index: 1;
-      padding: 11px;
-      border: none; background: none;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 15px; letter-spacing: 2px;
-      color: var(--muted);
-      cursor: pointer;
-      border-radius: var(--radius);
-      transition: color .3s;
-    }
-    .toggle-btn.active { color: #000; }
-
-    .form-heading {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 38px; letter-spacing: 1px;
-      line-height: 1; margin-bottom: 6px;
-    }
-    .form-sub {
-      font-size: 13px; color: var(--muted); margin-bottom: 28px;
-    }
-    .form-sub a { color: var(--green); text-decoration: none; font-weight: 600; transition: color .6s; }
-    .form-sub a.freelancer { color: var(--purple); }
-
-    .fields-wrap { display: flex; flex-direction: column; gap: 16px; }
-
-    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-    .field { display: flex; flex-direction: column; gap: 7px; }
-    label {
-      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
-      text-transform: uppercase; color: var(--muted);
-    }
-
-    .input-wrap { position: relative; }
-    input[type="text"],
-    input[type="email"],
-    input[type="password"],
-    select {
-      width: 100%;
-      background: var(--input);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-family: 'Syne', sans-serif; font-size: 14px; color: var(--text);
-      outline: none;
-      transition: border-color .25s, box-shadow .25s;
-      appearance: none;
-    }
-    input::placeholder, select option:first-child { color: #3a3a3a; }
-    input:focus, select:focus {
-      border-color: var(--green);
-      box-shadow: 0 0 0 3px rgba(127,255,0,.1);
-    }
-    .freelancer-mode input:focus,
-    .freelancer-mode select:focus {
-      border-color: var(--purple);
-      box-shadow: 0 0 0 3px rgba(168,85,247,.12);
-    }
-
-    .select-arrow {
-      position: absolute; right: 14px; top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none; color: var(--muted); font-size: 12px;
-    }
-
-    .eye-btn {
-      position: absolute; right: 14px; top: 50%;
-      transform: translateY(-50%);
-      background: none; border: none; cursor: pointer;
-      color: var(--muted); display: flex; transition: color .2s;
-    }
-    .eye-btn:hover { color: var(--green); }
-    .freelancer-mode .eye-btn:hover { color: var(--purple); }
-
-    .strength-bar {
-      height: 3px; border-radius: 3px;
-      background: var(--border); margin-top: 6px; overflow: hidden;
-    }
-    .strength-fill {
-      height: 100%; width: 0%; border-radius: 3px;
-      transition: width .4s ease, background .4s ease;
-    }
-    .strength-label { font-size: 10px; color: var(--muted); margin-top: 4px; }
-
-    .freelancer-only {
-      max-height: 0; overflow: hidden;
-      transition: max-height .45s cubic-bezier(.22,.68,0,1.1), opacity .35s;
-      opacity: 0;
-    }
-    .freelancer-only.show { max-height: 200px; opacity: 1; }
-
-    .terms-row {
-      display: flex; align-items: flex-start; gap: 10px;
-      margin-top: 4px;
-    }
-    .checkbox {
-      width: 18px; height: 18px; flex-shrink: 0;
-      background: var(--input); border: 1px solid var(--border);
-      border-radius: 5px; cursor: pointer; margin-top: 1px;
-      display: flex; align-items: center; justify-content: center;
-      transition: background .2s, border-color .2s;
-    }
-    .checkbox.checked { background: var(--green); border-color: var(--green); }
-    .checkbox.checked.freelancer { background: var(--purple); border-color: var(--purple); }
-    .checkbox svg { display: none; }
-    .checkbox.checked svg { display: block; }
-    .terms-text { font-size: 12px; color: var(--muted); line-height: 1.6; }
-    .terms-text a { color: var(--green); text-decoration: none; transition: color .6s; }
-    .terms-text a.freelancer { color: var(--purple); }
-
-    .btn-submit {
-      width: 100%; padding: 17px;
-      background: var(--green); color: #000;
-      border: none; border-radius: var(--radius);
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 18px; letter-spacing: 3px;
-      cursor: pointer; position: relative; overflow: hidden;
-      transition: transform .18s, box-shadow .18s, background .6s;
-      margin-top: 8px;
-    }
-    .btn-submit.freelancer { background: var(--purple); color: #fff; }
-    .btn-submit::before {
-      content: ''; position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
-      transform: translateX(-100%); transition: transform .5s;
-    }
-    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(127,255,0,.32); }
-    .btn-submit.freelancer:hover { box-shadow: 0 10px 32px rgba(168,85,247,.32); }
-    .btn-submit:hover::before { transform: translateX(100%); }
-
-    .form-msg {
-      display: none; font-size: 13px; font-weight: 600;
-      padding: 12px 16px; border-radius: 12px; text-align: center;
-    }
-    .form-msg.error   { display: block; color: #f87171; background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.25); }
-    .form-msg.success { display: block; color: var(--green); background: rgba(127,255,0,.08); border: 1px solid rgba(127,255,0,.2); }
-
-    .ripple {
-      position: absolute; border-radius: 50%;
-      background: rgba(0,0,0,.2);
-      transform: scale(0);
-      animation: rippleAnim .55s ease-out forwards;
-      pointer-events: none;
-    }
-    @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
-
-    @media (max-width: 860px) {
-      .page { grid-template-columns: 1fr; }
-      .left-panel { display: none; }
-      .right-panel { border-left: none; padding: 100px 5% 60px; }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <div class="bg" id="bg"></div>
   <div class="cursor-glow" id="cursorGlow"></div>
 
-  <div class="page" id="page">
+  <div class="signup-page" id="page">
 
     <div class="left-panel" id="leftPanel">
       <div class="left-grid"></div>
@@ -404,23 +72,57 @@
           <div class="field-row">
             <div class="field">
               <label for="nome">Nome</label>
-              <input type="text" id="nome" placeholder="João" />
+              <div class="input-wrap has-icon">
+                <span class="field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                <input type="text" id="nome" placeholder="João" />
+              </div>
             </div>
             <div class="field">
               <label for="sobrenome">Sobrenome</label>
-              <input type="text" id="sobrenome" placeholder="Silva" />
+              <div class="input-wrap has-icon">
+                <span class="field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                <input type="text" id="sobrenome" placeholder="Silva" />
+              </div>
             </div>
           </div>
 
           <div class="field">
             <label for="email">E-mail</label>
-            <input type="email" id="email" placeholder="seu@email.com" />
+            <div class="input-wrap has-icon">
+              <span class="field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+              <input type="email" id="email" placeholder="seu@email.com" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="cpf">CPF</label>
+              <div class="input-wrap has-icon">
+                <span class="field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>
+                <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14" oninput="maskCpf(this)" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="telefone">Telefone</label>
+              <div class="input-wrap has-icon">
+                <span class="field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.67 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.23h3a2 2 0 0 1 2 1.72c.12.82.37 1.62.7 2.38a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.76.33 1.56.58 2.38.7A2 2 0 0 1 21.73 16l.19.92z"/></svg></span>
+                <input type="text" id="telefone" placeholder="(00) 00000-0000" maxlength="15" oninput="maskPhone(this)" />
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="nascimento">Data de nascimento</label>
+            <div class="input-wrap">
+              <input type="date" id="nascimento" />
+            </div>
           </div>
 
           <div class="freelancer-only" id="areaField">
             <div class="field">
               <label for="area">Área de atuação</label>
-              <div class="input-wrap">
+              <div class="input-wrap has-icon">
+                <span class="field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
                 <select id="area">
                   <option value="" disabled selected>Selecione sua área</option>
                   <option>Design & Arte</option>
@@ -440,7 +142,8 @@
 
           <div class="field">
             <label for="senha">Senha</label>
-            <div class="input-wrap">
+            <div class="input-wrap has-icon">
+              <span class="field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
               <input type="password" id="senha" placeholder="Mínimo 8 caracteres" oninput="checkStrength(this.value)" />
               <button class="eye-btn" onclick="toggleEye()" type="button">
                 <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -452,14 +155,17 @@
 
           <div class="field">
             <label for="confirma">Confirmar senha</label>
-            <input type="password" id="confirma" placeholder="Repita a senha" />
+            <div class="input-wrap has-icon">
+              <span class="field-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><polyline points="9,16 11,18 15,14"/></svg></span>
+              <input type="password" id="confirma" placeholder="Repita a senha" />
+            </div>
           </div>
 
           <div class="terms-row">
             <div class="checkbox" id="checkbox" onclick="toggleCheck()"></div>
             <p class="terms-text">
-              Concordo com os <a href="#" id="termsLink">Termos de Uso</a> e a
-              <a href="#" id="privacyLink">Política de Privacidade</a> da OneFreela.
+              Concordo com os <a href="termos.html" id="termsLink">Termos de Uso</a> e a
+              <a href="privacidade.html" id="privacyLink">Política de Privacidade</a> da OneFreela.
             </p>
           </div>
 
@@ -474,223 +180,7 @@
     </div>
   </div>
 
-  <script>
-    let currentType = 'cliente';
-    let checked = false;
-
-    const content = {
-      cliente: {
-        label:     'Para clientes',
-        title:     'CONTRATE\nOS MELHORES\nTALENTOS',
-        accentWord:'TALENTOS',
-        desc:      'Publique projetos, encontre profissionais verificados e pague com segurança — tudo em um só lugar.',
-        perks: [
-          { icon: '🎯', title: 'Freelancers verificados', desc: 'Todos os perfis passam por curadoria da nossa equipe.' },
-          { icon: '🔒', title: 'Pagamento seguro',        desc: 'O valor só é liberado quando você aprova a entrega.' },
-          { icon: '⚡', title: 'Rápido de verdade',       desc: 'Encontre o profissional ideal em minutos, não dias.' },
-        ],
-        quote:   '"Contratei um designer em menos de 2 horas. A qualidade superou todas as expectativas."',
-        author:  'CA', authorName: 'Carlos Andrade', authorRole: 'CEO, Startup de Tecnologia',
-        heading: 'CRIAR CONTA',
-      },
-      freelancer: {
-        label:     'Para freelancers',
-        title:     'MOSTRE SEU\nTALENTO PARA\nO BRASIL',
-        accentWord:'BRASIL',
-        desc:      'Crie seu perfil, publique seus serviços e comece a receber projetos de clientes em todo o país.',
-        perks: [
-          { icon: '💰', title: 'Receba com segurança',    desc: 'Garantia de pagamento para cada projeto concluído.' },
-          { icon: '📈', title: 'Construa sua reputação',  desc: 'Avaliações verificadas que valorizam seu portfólio.' },
-          { icon: '🌍', title: 'Clientes em todo Brasil', desc: 'Trabalhe de onde quiser para quem precisar.' },
-        ],
-        quote:   '"Em 3 meses na OneFreela já superei meu salário CLT. A plataforma mudou minha vida."',
-        author:  'JS', authorName: 'Julia Santos', authorRole: 'Designer Freelancer, SP',
-        heading: 'CRIAR PERFIL',
-      },
-    };
-
-    function setType(type) {
-      currentType = type;
-      const isFreela = type === 'freelancer';
-
-      document.getElementById('togglePill').classList.toggle('freelancer', isFreela);
-      document.getElementById('btnCliente').classList.toggle('active', !isFreela);
-      document.getElementById('btnFreelancer').classList.toggle('active', isFreela);
-
-      document.getElementById('cursorGlow').classList.toggle('freelancer', isFreela);
-      document.getElementById('leftPanel').classList.toggle('freelancer', isFreela);
-      document.getElementById('logoIcon').classList.toggle('freelancer', isFreela);
-      document.getElementById('logoSpan').classList.toggle('freelancer', isFreela);
-      document.getElementById('leftLabel').classList.toggle('freelancer', isFreela);
-      document.getElementById('leftAccent').classList.toggle('freelancer', isFreela);
-      document.getElementById('testStars').classList.toggle('freelancer', isFreela);
-      document.getElementById('testAvatar').classList.toggle('freelancer', isFreela);
-
-      document.getElementById('fieldsWrap').classList.toggle('freelancer-mode', isFreela);
-      document.getElementById('btnSubmit').classList.toggle('freelancer', isFreela);
-      document.getElementById('loginLink').classList.toggle('freelancer', isFreela);
-      document.getElementById('termsLink').classList.toggle('freelancer', isFreela);
-      document.getElementById('privacyLink').classList.toggle('freelancer', isFreela);
-
-      document.getElementById('areaField').classList.toggle('show', isFreela);
-
-      const c = content[type];
-      document.getElementById('leftLabel').textContent = c.label;
-      document.getElementById('formHeading').textContent = c.heading;
-
-      const titleLines = c.title.split('\n');
-      document.getElementById('leftTitle').innerHTML =
-        titleLines.map((l, i) =>
-          i === titleLines.length - 1
-            ? `<span class="accent${isFreela ? ' freelancer' : ''}" id="leftAccent">${l}</span>`
-            : l + '<br>'
-        ).join('');
-
-      document.getElementById('leftDesc').textContent = c.desc;
-
-      document.getElementById('testQuote').textContent = c.quote;
-      document.getElementById('testAvatar').textContent = c.author;
-      document.getElementById('testName').textContent = c.authorName;
-      document.getElementById('testRole').textContent = c.authorRole;
-
-      const perksWrap = document.getElementById('perksWrap');
-      perksWrap.innerHTML = '';
-      c.perks.forEach((p, i) => {
-        const el = document.createElement('div');
-        el.className = 'perk';
-        el.innerHTML = `
-          <div class="perk-icon${isFreela ? ' freelancer' : ''}">${p.icon}</div>
-          <div class="perk-text"><strong>${p.title}</strong> — ${p.desc}</div>`;
-        perksWrap.appendChild(el);
-        setTimeout(() => el.classList.add('visible'), 80 + i * 100);
-      });
-
-      if (checked) {
-        document.getElementById('checkbox').classList.toggle('freelancer', isFreela);
-      }
-    }
-
-    function toggleEye() {
-      const input = document.getElementById('senha');
-      const icon  = document.getElementById('eyeIcon');
-      const show  = input.type === 'text';
-      input.type  = show ? 'password' : 'text';
-      icon.innerHTML = show
-        ? `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`
-        : `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
-    }
-
-    function checkStrength(val) {
-      const fill  = document.getElementById('strengthFill');
-      const label = document.getElementById('strengthLabel');
-      let score = 0;
-      if (val.length >= 8)                     score++;
-      if (/[A-Z]/.test(val))                   score++;
-      if (/[0-9]/.test(val))                   score++;
-      if (/[^A-Za-z0-9]/.test(val))            score++;
-
-      const levels = [
-        { w: '0%',   c: 'transparent', t: '' },
-        { w: '25%',  c: '#ef4444',     t: 'Fraca' },
-        { w: '50%',  c: '#f97316',     t: 'Razoável' },
-        { w: '75%',  c: '#eab308',     t: 'Boa' },
-        { w: '100%', c: '#7fff00',     t: 'Forte ✓' },
-      ];
-      fill.style.width      = levels[score].w;
-      fill.style.background = levels[score].c;
-      label.textContent     = levels[score].t;
-    }
-
-    function toggleCheck() {
-      checked = !checked;
-      const cb = document.getElementById('checkbox');
-      cb.classList.toggle('checked', checked);
-      cb.classList.toggle('freelancer', checked && currentType === 'freelancer');
-      cb.innerHTML = checked
-        ? `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>`
-        : '';
-    }
-
-    const API = 'http://localhost:8080';
-
-    function showMsg(text, type) {
-      const el = document.getElementById('formMsg');
-      el.textContent = text;
-      el.className = 'form-msg ' + type;
-    }
-
-    async function handleSubmit(e) {
-      const btn  = document.getElementById('btnSubmit');
-      const rect = btn.getBoundingClientRect();
-      const r    = document.createElement('span');
-      r.className = 'ripple';
-      const size  = Math.max(rect.width, rect.height);
-      r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
-      btn.appendChild(r);
-      r.addEventListener('animationend', () => r.remove());
-
-      const nome      = document.getElementById('nome').value.trim();
-      const sobrenome = document.getElementById('sobrenome').value.trim();
-      const email     = document.getElementById('email').value.trim();
-      const senha     = document.getElementById('senha').value;
-      const confirma  = document.getElementById('confirma').value;
-
-      if (!nome || !sobrenome || !email || !senha || !confirma) {
-        showMsg('Preencha todos os campos obrigatórios.', 'error'); return;
-      }
-      if (senha.length < 8) {
-        showMsg('A senha deve ter pelo menos 8 caracteres.', 'error'); return;
-      }
-      if (senha !== confirma) {
-        showMsg('As senhas não coincidem.', 'error'); return;
-      }
-      if (!checked) {
-        showMsg('Você precisa aceitar os Termos de Uso.', 'error'); return;
-      }
-      if (currentType === 'freelancer' && !document.getElementById('area').value) {
-        showMsg('Selecione sua área de atuação.', 'error'); return;
-      }
-
-      const originalText = btn.textContent;
-      btn.textContent = 'CRIANDO CONTA...';
-      btn.disabled = true;
-
-      try {
-        const body = { name: nome + ' ' + sobrenome, email, password: senha, userType: currentType };
-        if (currentType === 'freelancer') body.area = document.getElementById('area').value;
-
-        const res  = await fetch(API + '/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        const data = await res.json();
-
-        if (!res.ok) { showMsg(data.message || 'Erro ao criar conta. Tente novamente.', 'error'); return; }
-
-        localStorage.setItem('of_token',     data.token);
-        localStorage.setItem('of_user_type', data.userType || currentType);
-        showMsg('Conta criada com sucesso!', 'success');
-        setTimeout(() => { window.location.href = 'exploreFreelancers.html'; }, 800);
-
-      } catch {
-        showMsg('Erro de conexão. Verifique sua internet.', 'error');
-      } finally {
-        btn.textContent = originalText;
-        btn.disabled = false;
-      }
-    }
-
-    document.addEventListener('mousemove', e => {
-      const g = document.getElementById('cursorGlow');
-      g.style.left = e.clientX + 'px';
-      g.style.top  = e.clientY + 'px';
-    });
-
-    setType('cliente');
-    setTimeout(() => {
-      document.getElementById('testimonial').classList.add('visible');
-    }, 500);
-  </script>
+  <script src="main.js"></script>
+  <script src="signupScreen.js"></script>
 </body>
 </html>

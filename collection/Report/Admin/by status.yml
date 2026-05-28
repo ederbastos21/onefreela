@@ -1,0 +1,18 @@
+info:
+  name: by status
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: http://localhost:8080/reports/admin/status?status=PENDING
+  headers:
+    - name: Authorization
+      value: 1d0c089d-9d1c-490a-ae68-0e8944f26f2f
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

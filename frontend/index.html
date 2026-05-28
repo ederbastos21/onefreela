@@ -8,563 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <style>
-    :root {
-      --black:   #080808;
-      --surface: #111;
-      --card:    #161616;
-      --input:   #1e1e1e;
-      --border:  #272727;
-      --green:   #7fff00;
-      --green-dim: #5bbd00;
-      --text:    #f0f0f0;
-      --muted:   #777;
-      --radius:  999px;
-      --r-card:  18px;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'Syne', sans-serif;
-      background: var(--black);
-      color: var(--text);
-      overflow-x: hidden;
-    }
-
-    /* ── GRAIN ── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 999;
-      opacity: .3;
-    }
-
-    /* ── CURSOR GLOW ── */
-    .cursor-glow {
-      position: fixed;
-      width: 380px; height: 380px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(127,255,0,.055) 0%, transparent 70%);
-      pointer-events: none;
-      transform: translate(-50%,-50%);
-      transition: left .1s, top .1s;
-      z-index: 998;
-    }
-
-    /* ── SCROLL REVEAL ── */
-    .reveal {
-      opacity: 0;
-      transform: translateY(36px);
-      transition: opacity .7s ease, transform .7s cubic-bezier(.22,.68,0,1.15);
-    }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-
-    /* ════════════════════════════
-       NAV
-    ════════════════════════════ */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 6%;
-      height: 72px;
-      background: rgba(8,8,8,.75);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(255,255,255,.04);
-      animation: navIn .6s ease both;
-    }
-    @keyframes navIn { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
-
-    .nav-logo {
-      display: flex; align-items: center; gap: 9px;
-      text-decoration: none;
-    }
-    .nav-logo-icon {
-      width: 30px; height: 30px;
-      background: var(--green);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 16px; color: #000;
-    }
-    .nav-logo-text {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 20px; letter-spacing: 2px;
-      color: var(--text);
-    }
-    .nav-logo-text span { color: var(--green); }
-
-    .nav-links {
-      display: flex; align-items: center; gap: 32px;
-      list-style: none;
-    }
-    .nav-links a {
-      font-size: 13px; font-weight: 600;
-      letter-spacing: .5px;
-      color: var(--muted);
-      text-decoration: none;
-      transition: color .2s;
-    }
-    .nav-links a:hover { color: var(--text); }
-
-    .nav-cta {
-      display: flex; gap: 12px; align-items: center;
-    }
-    .nav-right { display: flex; align-items: center; gap: 12px; }
-    .nav-icon-btn {
-      position: relative; width: 36px; height: 36px;
-      border: 1px solid var(--border); border-radius: 10px;
-      background: rgba(22,22,22,.8); display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: var(--muted2); transition: border-color .2s, color .2s;
-      text-decoration: none;
-    }
-    .nav-icon-btn:hover { border-color: var(--green); color: var(--green); }
-    .nav-user { display: flex; flex-direction: column; }
-    .nav-user-name { font-size: 12px; font-weight: 700; line-height: 1; color: var(--text); }
-    .nav-user-role { font-size: 10px; color: var(--muted); margin-top: 2px; }
-    .nav-avatar {
-      width: 36px; height: 36px; border-radius: 10px;
-      background: var(--green); display: flex; align-items: center; justify-content: center;
-      font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #000;
-      border: 2px solid var(--green); text-decoration: none; cursor: pointer;
-    }
-    .btn-outline {
-      padding: 9px 22px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: none;
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      font-size: 13px; font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      transition: border-color .2s, color .2s;
-    }
-    .btn-outline:hover { border-color: var(--green); color: var(--green); }
-
-    .btn-green {
-      padding: 9px 22px;
-      border: none;
-      border-radius: var(--radius);
-      background: var(--green);
-      color: #000;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 15px; letter-spacing: 2px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: transform .18s, box-shadow .18s;
-    }
-    .btn-green:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(127,255,0,.3); }
-
-    /* ════════════════════════════
-       HERO
-    ════════════════════════════ */
-    .hero {
-      min-height: 100vh;
-      display: flex; align-items: center;
-      padding: 120px 6% 80px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Background mesh */
-    .hero::before {
-      content: '';
-      position: absolute; inset: 0;
-      background:
-        radial-gradient(ellipse 70% 80% at 5%  50%,  rgba(127,255,0,.06) 0%, transparent 55%),
-        radial-gradient(ellipse 60% 60% at 95% 20%,  rgba(30,30,30,.8)   0%, transparent 60%),
-        linear-gradient(170deg, #1a1a1a 0%, #080808 60%, #000 100%);
-      z-index: 0;
-    }
-
-    /* Grid lines */
-    .hero::after {
-      content: '';
-      position: absolute; inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-      background-size: 60px 60px;
-      mask-image: radial-gradient(ellipse 70% 90% at 50% 50%, black 30%, transparent 80%);
-      z-index: 0;
-    }
-
-    .hero-inner {
-      position: relative; z-index: 1;
-      max-width: 760px;
-    }
-
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(127,255,0,.08);
-      border: 1px solid rgba(127,255,0,.2);
-      border-radius: var(--radius);
-      padding: 6px 16px;
-      font-size: 11px; font-weight: 700;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--green);
-      margin-bottom: 28px;
-      animation: fadeUp .6s .2s both;
-    }
-    .hero-badge-dot {
-      width: 6px; height: 6px;
-      background: var(--green);
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
-
-    .hero-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(58px, 9vw, 110px);
-      line-height: .92;
-      letter-spacing: 1px;
-      color: var(--text);
-      margin-bottom: 28px;
-      animation: fadeUp .65s .3s both;
-    }
-    .hero-title .green { color: var(--green); }
-    .hero-title .stroke {
-      -webkit-text-stroke: 1.5px rgba(255,255,255,.3);
-      color: transparent;
-    }
-
-    .hero-sub {
-      font-size: 16px; font-weight: 400; line-height: 1.7;
-      color: var(--muted);
-      max-width: 480px;
-      margin-bottom: 44px;
-      animation: fadeUp .65s .4s both;
-    }
-
-    .hero-actions {
-      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-      animation: fadeUp .65s .5s both;
-    }
-    .btn-hero {
-      padding: 16px 36px;
-      background: var(--green);
-      color: #000;
-      border: none; border-radius: var(--radius);
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 18px; letter-spacing: 3px;
-      cursor: pointer;
-      position: relative; overflow: hidden;
-      transition: transform .18s, box-shadow .18s;
-    }
-    .btn-hero::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
-      transform: translateX(-100%);
-      transition: transform .5s;
-    }
-    .btn-hero:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(127,255,0,.35); }
-    .btn-hero:hover::before { transform: translateX(100%); }
-
-    .btn-hero-ghost {
-      padding: 16px 36px;
-      background: none;
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-family: 'Syne', sans-serif;
-      font-size: 14px; font-weight: 600;
-      cursor: pointer;
-      transition: border-color .2s, color .2s;
-    }
-    .btn-hero-ghost:hover { border-color: var(--green); color: var(--green); }
-
-    /* Floating hero decoration */
-    .hero-deco {
-      position: absolute;
-      right: 6%; top: 50%;
-      transform: translateY(-50%);
-      z-index: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      animation: fadeUp .8s .6s both;
-    }
-    .deco-card {
-      background: rgba(22,22,22,.9);
-      border: 1px solid var(--border);
-      border-radius: var(--r-card);
-      padding: 20px;
-      width: 160px;
-      backdrop-filter: blur(8px);
-      animation: floatCard 6s ease-in-out infinite;
-    }
-    .deco-card:nth-child(2) { animation-delay: -2s; margin-top: 30px; }
-    .deco-card:nth-child(3) { animation-delay: -4s; margin-top: -20px; }
-    .deco-card:nth-child(4) { animation-delay: -1s; margin-top: 10px; }
-    @keyframes floatCard { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-
-    .deco-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      margin-bottom: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 16px; color: #000;
-    }
-    .deco-name { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
-    .deco-role { font-size: 10px; color: var(--muted); margin-bottom: 10px; }
-    .deco-stars { color: var(--green); font-size: 11px; letter-spacing: 1px; }
-    .deco-price { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--green); margin-top: 6px; }
-
-    @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-
-    /* ════════════════════════════
-       CATEGORIES
-    ════════════════════════════ */
-    .section {
-      padding: 100px 6%;
-    }
-    .section-label {
-      font-size: 11px; font-weight: 700;
-      letter-spacing: 3px; text-transform: uppercase;
-      color: var(--green);
-      margin-bottom: 12px;
-    }
-    .section-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(36px, 5vw, 58px);
-      letter-spacing: 1px;
-      line-height: 1;
-      color: var(--text);
-      margin-bottom: 48px;
-    }
-
-    .categories-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 14px;
-    }
-    .cat-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--r-card);
-      padding: 28px 22px;
-      cursor: pointer;
-      transition: border-color .25s, transform .25s, box-shadow .25s;
-      position: relative;
-      overflow: hidden;
-    }
-    .cat-card::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(circle at 20% 80%, rgba(127,255,0,.06) 0%, transparent 60%);
-      opacity: 0;
-      transition: opacity .3s;
-    }
-    .cat-card:hover { border-color: rgba(127,255,0,.35); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
-    .cat-card:hover::before { opacity: 1; }
-
-    .cat-icon {
-      font-size: 28px; margin-bottom: 14px;
-      display: block;
-      filter: grayscale(0);
-    }
-    .cat-name {
-      font-size: 14px; font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .cat-count {
-      font-size: 11px; color: var(--muted);
-    }
-    .cat-arrow {
-      position: absolute; right: 16px; bottom: 16px;
-      font-size: 18px; color: var(--border);
-      transition: color .2s, transform .2s;
-    }
-    .cat-card:hover .cat-arrow { color: var(--green); transform: translate(3px,-3px); }
-
-    /* ════════════════════════════
-       FREELANCERS
-    ════════════════════════════ */
-    .freelancers-section { background: linear-gradient(180deg, var(--black) 0%, #0d0d0d 100%); }
-
-    .freelancers-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 18px;
-    }
-    .fl-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--r-card);
-      padding: 28px;
-      transition: border-color .25s, transform .25s, box-shadow .25s;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-    .fl-card::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--green), transparent);
-      transform: scaleX(0); transform-origin: left;
-      transition: transform .35s ease;
-    }
-    .fl-card:hover { border-color: rgba(127,255,0,.25); transform: translateY(-5px); box-shadow: 0 20px 50px rgba(0,0,0,.5); }
-    .fl-card:hover::after { transform: scaleX(1); }
-
-    .fl-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-    .fl-avatar {
-      width: 50px; height: 50px; border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 22px; color: #000; flex-shrink: 0;
-    }
-    .fl-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
-    .fl-title-role { font-size: 11px; color: var(--muted); }
-
-    .fl-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
-    .fl-tag {
-      font-size: 10px; font-weight: 700; letter-spacing: .5px;
-      background: rgba(255,255,255,.05);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 4px 10px;
-      color: var(--muted);
-    }
-
-    .fl-footer { display: flex; align-items: center; justify-content: space-between; }
-    .fl-rating { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--green); font-weight: 700; }
-    .fl-price { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--text); }
-    .fl-price span { font-family: 'Syne', sans-serif; font-size: 10px; color: var(--muted); font-weight: 400; }
-
-    .fl-badge {
-      position: absolute; top: 16px; right: 16px;
-      background: rgba(127,255,0,.15);
-      border: 1px solid rgba(127,255,0,.3);
-      border-radius: var(--radius);
-      padding: 3px 10px;
-      font-size: 10px; font-weight: 700; letter-spacing: 1px;
-      color: var(--green);
-    }
-
-    /* ════════════════════════════
-       FAQ
-    ════════════════════════════ */
-    .faq-section { border-top: 1px solid var(--border); }
-
-    .faq-wrap { max-width: 720px; }
-
-    .faq-item {
-      border-bottom: 1px solid var(--border);
-      padding: 24px 0;
-      cursor: pointer;
-    }
-    .faq-question {
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 15px; font-weight: 600;
-      color: var(--text);
-      gap: 20px;
-    }
-    .faq-icon {
-      width: 28px; height: 28px; flex-shrink: 0;
-      border: 1px solid var(--border);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; color: var(--muted);
-      transition: background .25s, border-color .25s, color .25s, transform .35s;
-    }
-    .faq-item.open .faq-icon {
-      background: var(--green); border-color: var(--green);
-      color: #000; transform: rotate(45deg);
-    }
-    .faq-answer {
-      font-size: 14px; color: var(--muted); line-height: 1.75;
-      max-height: 0; overflow: hidden;
-      transition: max-height .4s cubic-bezier(.22,.68,0,1.1), padding .3s;
-      padding-top: 0;
-    }
-    .faq-item.open .faq-answer { max-height: 200px; padding-top: 14px; }
-
-    /* ════════════════════════════
-       FOOTER
-    ════════════════════════════ */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 60px 6% 36px;
-    }
-    .footer-top {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      flex-wrap: wrap; gap: 40px;
-      margin-bottom: 48px;
-    }
-    .footer-brand { max-width: 280px; }
-    .footer-logo {
-      display: flex; align-items: center; gap: 9px;
-      margin-bottom: 14px;
-    }
-    .footer-logo-icon {
-      width: 30px; height: 30px; background: var(--green);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #000;
-    }
-    .footer-logo-text {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 20px; letter-spacing: 2px;
-    }
-    .footer-logo-text span { color: var(--green); }
-    .footer-desc { font-size: 13px; color: var(--muted); line-height: 1.7; }
-
-    .footer-links h4 {
-      font-size: 11px; font-weight: 700;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--text); margin-bottom: 16px;
-    }
-    .footer-links ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .footer-links a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color .2s; }
-    .footer-links a:hover { color: var(--green); }
-
-    .footer-bottom {
-      border-top: 1px solid var(--border);
-      padding-top: 28px;
-      display: flex; justify-content: space-between; align-items: center;
-      flex-wrap: wrap; gap: 12px;
-    }
-    .footer-copy { font-size: 12px; color: #444; }
-    .footer-copy span { color: var(--green); }
-    .footer-socials { display: flex; gap: 14px; }
-    .social-btn {
-      width: 34px; height: 34px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--muted);
-      cursor: pointer;
-      transition: border-color .2s, color .2s;
-      text-decoration: none;
-    }
-    .social-btn:hover { border-color: var(--green); color: var(--green); }
-  
-    .notif-badge { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--green); color: #000; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--black); }
-    .notif-panel { position: fixed; top: 72px; right: 20px; width: 300px; background: var(--card2); border: 1px solid var(--border2); border-radius: 16px; padding: 16px; z-index: 9999; box-shadow: 0 20px 60px rgba(0,0,0,.75); display: none; }
-    .notif-panel.open { display: block; animation: dropIn .2s ease both; }
-    .notif-title { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-    .notif-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .notif-item:last-child { border-bottom: none; }
-    .notif-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-top: 4px; flex-shrink: 0; }
-    .notif-text { font-size: 12px; color: var(--muted2); line-height: 1.5; }
-    .notif-text strong { color: var(--text); }
-    .notif-time { font-size: 10px; color: var(--muted); margin-top: 3px; }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
@@ -582,28 +26,25 @@
       <li><a href="#faq">FAQ</a></li>
     </ul>
     <div class="nav-right">
-      <a href="onefreela-carrinho.html" class="nav-icon-btn" title="Carrinho">
+      <a href="cartScreen.html" class="nav-icon-btn" title="Carrinho">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
       </a>
       <div class="nav-icon-btn" id="notifBtn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="notif-badge">3</span>
       </div>
       <div class="nav-icon-btn" title="Mensagens" onclick="goToChat()" style="cursor:pointer">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </div>
       <div class="nav-user">
-        <div class="nav-user-name">Carlos A.</div>
-        <div class="nav-user-role">Cliente</div>
+        <div class="nav-user-name" id="navUserName"></div>
+        <div class="nav-user-role" id="navUserRole"></div>
       </div>
-      <a href="onefreela-perfil-cliente.html" class="nav-avatar">CA</a>
+      <a href="profile.html" class="nav-avatar" id="navAvatar"></a>
+      <a href="adminScreen.html" id="adminAreaBtn" class="nav-admin-btn">Área do admin</a>
     </div>
   </nav>
   <div class="notif-panel" id="notifPanel">
     <div class="notif-title">Notificações</div>
-    <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text"><strong>Marina Rocha</strong> aceitou seu convite.</div><div class="notif-time">Há 5 min</div></div></div>
-    <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text"><strong>Lucas Ferreira</strong> enviou uma proposta.</div><div class="notif-time">Há 1 hora</div></div></div>
-    <div class="notif-item"><div class="notif-dot"></div><div><div class="notif-text">Seu projeto recebeu <strong>4 propostas</strong>.</div><div class="notif-time">Há 3 horas</div></div></div>
   </div>
 
   <!-- ══ HERO ══ -->
@@ -622,8 +63,8 @@
         Conecte-se com os melhores freelancers do Brasil. Design, desenvolvimento, marketing e muito mais — tudo em um só lugar.
       </p>
       <div class="hero-actions">
-        <a href="onefreela-explorar.html" style="text-decoration:none"><button class="btn-hero">Explorar Serviços</button></a>
-        <button class="btn-hero-ghost">Sou Freelancer →</button>
+        <a href="exploreFreelancers.html" class="link-clean"><button class="btn-hero">Explorar Serviços</button></a>
+        <a href="beAFreelancer.html" class="link-clean"><button class="btn-hero-ghost">Sou Freelancer →</button></a>
       </div>
     </div>
 
@@ -634,28 +75,28 @@
         <div class="deco-name">Marina R.</div>
         <div class="deco-role">UI/UX Designer</div>
         <div class="deco-stars">★★★★★</div>
-        <div class="deco-price">R$120<small style="font-family:Syne;font-size:10px;color:var(--muted)">/hr</small></div>
+        <div class="deco-price">R$120<small class="price-unit">/hr</small></div>
       </div>
       <div class="deco-card">
         <div class="deco-avatar" style="background:#b0ff4e">LF</div>
         <div class="deco-name">Lucas F.</div>
         <div class="deco-role">Dev Front-end</div>
         <div class="deco-stars">★★★★★</div>
-        <div class="deco-price">R$95<small style="font-family:Syne;font-size:10px;color:var(--muted)">/hr</small></div>
+        <div class="deco-price">R$95<small class="price-unit">/hr</small></div>
       </div>
       <div class="deco-card">
         <div class="deco-avatar" style="background:#5bbd00">PC</div>
         <div class="deco-name">Pedro C.</div>
         <div class="deco-role">Motion Designer</div>
         <div class="deco-stars">★★★★☆</div>
-        <div class="deco-price">R$80<small style="font-family:Syne;font-size:10px;color:var(--muted)">/hr</small></div>
+        <div class="deco-price">R$80<small class="price-unit">/hr</small></div>
       </div>
       <div class="deco-card">
         <div class="deco-avatar" style="background:#a3e635">JS</div>
         <div class="deco-name">Julia S.</div>
         <div class="deco-role">Copywriter</div>
         <div class="deco-stars">★★★★★</div>
-        <div class="deco-price">R$65<small style="font-family:Syne;font-size:10px;color:var(--muted)">/hr</small></div>
+        <div class="deco-price">R$65<small class="price-unit">/hr</small></div>
       </div>
     </div>
   </section>
@@ -741,7 +182,7 @@
           <span class="fl-tag">Design System</span>
         </div>
         <div class="fl-footer">
-          <div class="fl-rating">★ 4.98 <span style="color:var(--muted);font-weight:400">(214 avaliações)</span></div>
+          <div class="fl-rating">★ 4.98 <span class="rating-count">(214 avaliações)</span></div>
           <div class="fl-price">R$120 <span>/hr</span></div>
         </div>
       </div>
@@ -760,7 +201,7 @@
           <span class="fl-tag">Next.js</span>
         </div>
         <div class="fl-footer">
-          <div class="fl-rating">★ 4.95 <span style="color:var(--muted);font-weight:400">(183 avaliações)</span></div>
+          <div class="fl-rating">★ 4.95 <span class="rating-count">(183 avaliações)</span></div>
           <div class="fl-price">R$95 <span>/hr</span></div>
         </div>
       </div>
@@ -780,7 +221,7 @@
           <span class="fl-tag">Branding</span>
         </div>
         <div class="fl-footer">
-          <div class="fl-rating">★ 4.99 <span style="color:var(--muted);font-weight:400">(301 avaliações)</span></div>
+          <div class="fl-rating">★ 4.99 <span class="rating-count">(301 avaliações)</span></div>
           <div class="fl-price">R$65 <span>/hr</span></div>
         </div>
       </div>
@@ -798,7 +239,7 @@
           <span class="fl-tag">Cinema 4D</span>
         </div>
         <div class="fl-footer">
-          <div class="fl-rating">★ 4.87 <span style="color:var(--muted);font-weight:400">(97 avaliações)</span></div>
+          <div class="fl-rating">★ 4.87 <span class="rating-count">(97 avaliações)</span></div>
           <div class="fl-price">R$80 <span>/hr</span></div>
         </div>
       </div>
@@ -882,27 +323,27 @@
       <div class="footer-links">
         <h4>Plataforma</h4>
         <ul>
-          <li><a href="#">Como funciona</a></li>
-          <li><a href="#">Categorias</a></li>
-          <li><a href="#">Seja um freelancer</a></li>
-          <li><a href="#">Planos</a></li>
+          <li><a href="howItWorks.html">Como funciona</a></li>
+          <li><a href="categories.html">Categorias</a></li>
+          <li><a href="beAFreelancer.html">Seja um freelancer</a></li>
+          <li><a href="plans.html">Planos</a></li>
         </ul>
       </div>
       <div class="footer-links">
         <h4>Empresa</h4>
         <ul>
-          <li><a href="#">Sobre nós</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#">Carreiras</a></li>
-          <li><a href="#">Contato</a></li>
+          <li><a href="aboutUs.html">Sobre nós</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="careers.html">Carreiras</a></li>
+          <li><a href="contact.html">Contato</a></li>
         </ul>
       </div>
       <div class="footer-links">
         <h4>Legal</h4>
         <ul>
-          <li><a href="#">Termos de uso</a></li>
-          <li><a href="#">Privacidade</a></li>
-          <li><a href="#">Cookies</a></li>
+          <li><a href="termos.html">Termos de uso</a></li>
+          <li><a href="privacidade.html">Privacidade</a></li>
+          <li><a href="cookies.html">Cookies</a></li>
         </ul>
       </div>
     </div>
@@ -922,95 +363,8 @@
     </div>
   </footer>
 
-  <script>
-    /* ── Cursor glow ── */
-    const glow = document.getElementById('cursorGlow');
-    document.addEventListener('mousemove', e => {
-      glow.style.left = e.clientX + 'px';
-      glow.style.top  = e.clientY + 'px';
-    });
-
-    /* ── Scroll reveal ── */
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach((entry, i) => {
-        if (entry.isIntersecting) {
-          // Stagger children of grids
-          const el = entry.target;
-          const delay = el.dataset.delay || 0;
-          setTimeout(() => el.classList.add('visible'), delay);
-          observer.unobserve(el);
-        }
-      });
-    }, { threshold: 0.12 });
-
-    document.querySelectorAll('.reveal').forEach((el, i) => {
-      observer.observe(el);
-    });
-
-    // Stagger grid children
-    document.querySelectorAll('.categories-grid .cat-card, .freelancers-grid .fl-card').forEach((el, i) => {
-      el.style.transitionDelay = (i * 80) + 'ms';
-    });
-
-    /* ── FAQ accordion ── */
-    document.querySelectorAll('.faq-item').forEach(item => {
-      item.querySelector('.faq-question').addEventListener('click', () => {
-        const isOpen = item.classList.contains('open');
-        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
-        if (!isOpen) item.classList.add('open');
-      });
-    });
-
-    /* ── Navbar active link on scroll ── */
-    const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.nav-links a');
-    window.addEventListener('scroll', () => {
-      let current = '';
-      sections.forEach(s => {
-        if (window.scrollY >= s.offsetTop - 120) current = s.id;
-      });
-      navLinks.forEach(a => {
-        a.style.color = a.getAttribute('href') === '#' + current ? 'var(--green)' : '';
-      });
-    });
-  
-    document.getElementById('notifBtn').addEventListener('click', e => {
-      e.stopPropagation();
-      document.getElementById('notifPanel').classList.toggle('open');
-    });
-    document.addEventListener('click', e => {
-      if (!e.target.closest('#notifBtn') && !e.target.closest('#notifPanel'))
-        document.getElementById('notifPanel').classList.remove('open');
-    });
-    /* ── Chat redirect ── */
-    function goToChat() {
-      const type = localStorage.getItem('of_user_type');
-      if (type === 'freelancer') {
-        window.location.href = 'chatScreenFreelancer.html';
-      } else if (type === 'cliente') {
-        window.location.href = 'chatScreenClient.html';
-      } else {
-        window.location.href = 'loginScreen.html';
-      }
-    }
-
-    /* ── Update nav based on session ── */
-    (function() {
-      const type = localStorage.getItem('of_user_type');
-      const avatarEl = document.querySelector('.nav-avatar');
-      const nameEl   = document.querySelector('.nav-user-name');
-      const roleEl   = document.querySelector('.nav-user-role');
-      if (!type) return;
-      if (type === 'freelancer') {
-        if (avatarEl) { avatarEl.textContent = 'MR'; avatarEl.href = 'freelancerProfile.html'; }
-        if (nameEl)   nameEl.textContent = 'Marina R.';
-        if (roleEl)   roleEl.textContent = 'Freelancer';
-      } else {
-        if (avatarEl) { avatarEl.textContent = 'CA'; avatarEl.href = 'clientProfile.html'; }
-        if (nameEl)   nameEl.textContent = 'Carlos A.';
-        if (roleEl)   roleEl.textContent = 'Cliente';
-      }
-    })();
-  </script>
+  <script src="auth.js"></script>
+  <script src="main.js"></script>
+  <script src="index.js"></script>
 </body>
 </html>

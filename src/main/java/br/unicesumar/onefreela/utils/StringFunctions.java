@@ -32,7 +32,7 @@ public class StringFunctions {
             return false;
         }
 
-        if (value.matches(".*[^a-zA-Z0-9].*")) {
+        if (value.matches(".*[^a-zA-Z0-9 ].*")) {
             return true;
         }
 

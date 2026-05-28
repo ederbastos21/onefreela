@@ -137,8 +137,7 @@ public class AuthService {
         return user;
     }
 
-    public boolean checkAdmin(HttpServletRequest httpServletRequest){
-        User user = getAuthenticatedUser(httpServletRequest);
+    public boolean checkAdmin(HttpServletRequest httpServletRequest, User user){
         List<ErrorDetail> errors = new ArrayList<>();
 
         if (user.getAdmin() == true){

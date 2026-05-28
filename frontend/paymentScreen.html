@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Confirmar Pedido</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Loading / empty ──────────────────────────────── */
+    .pay-loading-txt { color: var(--muted2); font-size: 13px; padding: 12px 0; }
+    .pay-empty-msg   { color: var(--muted2); font-size: 13px; padding: 12px 0; }
+    .pay-empty-msg a { color: var(--green); text-decoration: none; }
+
+    /* ── Method selector ──────────────────────────────── */
+    .method-list { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+    .method-opt {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      user-select: none;
+    }
+    .method-opt:hover { border-color: rgba(127,255,0,.35); }
+    .method-opt.selected { border-color: var(--green); background: rgba(127,255,0,.04); }
+    .method-opt-icon { font-size: 22px; flex-shrink: 0; line-height: 1; }
+    .method-opt-info { flex: 1; min-width: 0; }
+    .method-opt-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .method-opt-desc { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+    .method-opt-radio {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border2);
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+      transition: border-color .2s;
+    }
+    .method-opt.selected .method-opt-radio { border-color: var(--green); }
+    .method-opt.selected .method-opt-radio::after {
+      content: '';
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px; height: 8px;
+      background: var(--green); border-radius: 50%;
+    }
+
+    /* ── Payment details form ────────────────────────── */
+    .ps-pay-details { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .ps-pay-details-title { font-size: 11px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+    .ps-form { display: flex; flex-direction: column; gap: 10px; }
+    .ps-form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ps-field { display: flex; flex-direction: column; gap: 4px; }
+    .ps-label { font-size: 11px; color: var(--muted2); font-weight: 600; }
+    .ps-input { background: var(--card2); border: 1px solid var(--border2); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; width: 100%; box-sizing: border-box; transition: border-color .2s; font-family: inherit; }
+    .ps-input:focus { outline: none; border-color: rgba(127,255,0,.4); }
+    .ps-input::placeholder { color: var(--muted); }
+
+    /* ── Success state ────────────────────────────────── */
+    .order-success-wrap {
+      max-width: 500px;
+      margin: 48px auto;
+      text-align: center;
+      padding: 44px 36px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+    .order-success-icon {
+      width: 72px; height: 72px;
+      background: rgba(127,255,0,.1);
+      border: 2px solid rgba(127,255,0,.3);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .order-success-title {
+      font-family: var(--font-display);
+      font-size: 38px; letter-spacing: 2px;
+      color: var(--text); margin-bottom: 12px; line-height: 1;
+    }
+    .order-success-sub {
+      font-size: 13px; color: var(--muted2);
+      line-height: 1.75; margin-bottom: 28px;
+    }
+    .order-success-details {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px 20px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+    .order-success-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0; font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    .order-success-row:last-child { border-bottom: none; }
+    .order-success-row .row-label { color: var(--muted2); }
+    .order-success-row .row-val   { color: var(--text); font-weight: 600; }
+    .order-success-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo" style="display:flex;align-items:center;gap:10px">
+        <div class="nav-logo-icon">OF</div>
+        <div class="nav-logo-text">One<span>Freela</span></div>
+      </a>
+      <div class="nav-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar freelancers, habilidades..." />
+      </div>
+    </div>
+    <div class="nav-right">
+      <a href="cartScreen.html" class="nav-icon-btn" title="Carrinho">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </a>
+      <div class="nav-icon-btn" id="notifBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div class="nav-icon-btn" title="Mensagens" onclick="goToChat()" style="cursor:pointer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="nav-user">
+        <div class="nav-user-name" id="navUserName"></div>
+        <div class="nav-user-role" id="navUserRole"></div>
+      </div>
+      <a href="profile.html" class="nav-avatar" id="navAvatar"></a>
+      <a href="adminScreen.html" id="adminAreaBtn" class="nav-admin-btn">Área do admin</a>
+    </div>
+  </nav>
+
+  <!-- NOTIF PANEL -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-title">Notificações</div>
+  </div>
+
+  <!-- PAGE -->
+  <div class="page">
+    <div class="container">
+
+      <!-- BREADCRUMB -->
+      <div class="breadcrumb">
+        <a href="exploreFreelancers.html">Explorar</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="cartScreen.html">Carrinho</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Confirmar Pedido</span>
+      </div>
+
+      <!-- PROGRESS STEPS -->
+      <div class="pay-steps">
+        <div class="pay-step done">
+          <div class="pay-step-circle">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span>Carrinho</span>
+        </div>
+        <div class="pay-step-line done"></div>
+        <div class="pay-step active">
+          <div class="pay-step-circle">2</div>
+          <span>Confirmar Pedido</span>
+        </div>
+      </div>
+
+      <!-- PRE-ORDER STATE -->
+      <div id="preOrderState">
+        <div class="payment-layout">
+
+          <!-- LEFT — ITENS DO PEDIDO -->
+          <div>
+            <div class="section-card">
+              <div class="section-card-header">
+                <h3 class="font-display" style="font-size:18px;letter-spacing:1px">ITENS DO PEDIDO</h3>
+                <a href="cartScreen.html" class="text-sm text-muted2" style="transition:color .2s"
+                   onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color=''">Editar carrinho</a>
+              </div>
+              <div id="payOrderItems">
+                <p class="pay-loading-txt">Carregando itens...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT — MÉTODO + RESUMO -->
+          <div>
+
+            <!-- Método de pagamento (apenas seleção) -->
+            <div class="section-card mb-16">
+              <h3 class="font-display" style="font-size:18px;letter-spacing:1px">MÉTODO DE PAGAMENTO</h3>
+              <div class="method-list">
+
+                <div class="method-opt selected" onclick="setMethod('pix', this)">
+                  <span class="method-opt-icon">⚡</span>
+                  <div class="method-opt-info">
+                    <div class="method-opt-name">PIX</div>
+                    <div class="method-opt-desc">Aprovação imediata</div>
+                  </div>
+                  <div class="method-opt-radio"></div>
+                </div>
+
+                <div class="method-opt" onclick="setMethod('card', this)">
+                  <span class="method-opt-icon">💳</span>
+                  <div class="method-opt-info">
+                    <div class="method-opt-name">Cartão de Crédito</div>
+                    <div class="method-opt-desc">Crédito / Débito</div>
+                  </div>
+                  <div class="method-opt-radio"></div>
+                </div>
+
+                <div class="method-opt" onclick="setMethod('boleto', this)">
+                  <span class="method-opt-icon">📄</span>
+                  <div class="method-opt-info">
+                    <div class="method-opt-name">Boleto Bancário</div>
+                    <div class="method-opt-desc">Compensação em até 3 dias úteis</div>
+                  </div>
+                  <div class="method-opt-radio"></div>
+                </div>
+
+              </div>
+
+              <!-- PIX: dados para pagamento -->
+              <div id="psPixForm" class="ps-pay-details">
+                <div class="ps-pay-details-title">Dados para pagamento</div>
+                <div class="ps-form">
+                  <div class="ps-field">
+                    <label class="ps-label">CPF do Pagador</label>
+                    <input id="psPixCpf" class="ps-input" type="text" placeholder="000.000.000-00" maxlength="14" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card: dados do cartão -->
+              <div id="psCardForm" class="ps-pay-details" style="display:none">
+                <div class="ps-pay-details-title">Dados do cartão</div>
+                <div class="ps-form">
+                  <div class="ps-field">
+                    <label class="ps-label">Número do Cartão</label>
+                    <input id="psCardNumber" class="ps-input" type="text" placeholder="0000 0000 0000 0000" maxlength="19" />
+                  </div>
+                  <div class="ps-field">
+                    <label class="ps-label">Nome no Cartão</label>
+                    <input id="psCardName" class="ps-input" type="text" placeholder="Como aparece no cartão" />
+                  </div>
+                  <div class="ps-form-row2">
+                    <div class="ps-field">
+                      <label class="ps-label">Validade</label>
+                      <input id="psCardExpiry" class="ps-input" type="text" placeholder="MM/AAAA" maxlength="7" />
+                    </div>
+                    <div class="ps-field">
+                      <label class="ps-label">CVV</label>
+                      <input id="psCvv" class="ps-input" type="text" placeholder="000" maxlength="4" />
+                    </div>
+                  </div>
+                  <div class="ps-field">
+                    <label class="ps-label">CPF do Titular</label>
+                    <input id="psCardCpf" class="ps-input" type="text" placeholder="000.000.000-00" maxlength="14" />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Resumo + botão -->
+            <div class="summary-card">
+              <div class="summary-body">
+                <div class="summary-title">RESUMO DO PEDIDO</div>
+
+                <div class="summary-line">
+                  <span id="paySubtotalLabel">Subtotal</span>
+                  <strong id="paySubtotalVal">—</strong>
+                </div>
+                <div class="summary-line">
+                  <span>Taxa de serviço (10%)</span>
+                  <strong id="payFeeVal">—</strong>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-total">
+                  <span class="summary-total-label">Total</span>
+                  <span class="summary-total-val" id="payTotalVal">—</span>
+                </div>
+
+                <button class="btn-checkout" id="confirmBtn" onclick="confirmPayment()">
+                  FAZER PEDIDO
+                </button>
+
+                <div class="pay-secure-note">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  Seus dados e pedido estão protegidos
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- SUCCESS STATE (hidden until order is placed) -->
+      <div id="orderSuccessState" style="display:none">
+        <div class="order-success-wrap">
+
+          <div class="order-success-icon">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+
+          <div class="order-success-title">PEDIDO REALIZADO!</div>
+          <p class="order-success-sub">
+            Seu pedido foi registrado com sucesso.<br>
+            O freelancer será notificado e entrará em contato em breve.
+          </p>
+
+          <div class="order-success-details">
+            <div class="order-success-row">
+              <span class="row-label">Número do pedido</span>
+              <span class="row-val" id="successOrderId">—</span>
+            </div>
+            <div class="order-success-row">
+              <span class="row-label">Data</span>
+              <span class="row-val" id="successDate">—</span>
+            </div>
+            <div class="order-success-row">
+              <span class="row-label">Método de pagamento</span>
+              <span class="row-val" id="successMethod">—</span>
+            </div>
+            <div class="order-success-row">
+              <span class="row-label">Total</span>
+              <span class="row-val" id="successTotal">—</span>
+            </div>
+          </div>
+
+          <div class="order-success-actions">
+            <a href="profile.html" class="btn-primary">VER MEUS PEDIDOS</a>
+            <a href="exploreFreelancers.html" class="btn-secondary">CONTINUAR EXPLORANDO</a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="auth.js"></script>
+  <script src="main.js"></script>
+  <script src="paymentScreen.js"></script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Planos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">OF</div>
+      <div class="nav-logo-text">One<span>Freela</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="howItWorks.html">Como funciona</a></li>
+      <li><a href="categories.html">Categorias</a></li>
+      <li><a href="beAFreelancer.html">Seja um freelancer</a></li>
+      <li><a href="plans.html" class="active">Planos</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="loginScreen.html" class="btn-outline">Entrar</a>
+      <a href="signupScreen.html" class="btn-green">Começar</a>
+    </div>
+  </nav>
+
+  <!-- ══ HERO ══ -->
+  <section class="page-hero">
+    <div class="page-hero-inner">
+      <p class="page-label">Escolha o seu</p>
+      <h1 class="page-title">
+        <span class="green">PLANOS</span><br>
+        <span class="stroke">E PREÇOS</span>
+      </h1>
+      <p class="page-hero-sub">
+        Comece gratuitamente e evolua conforme sua carreira cresce. Sem surpresas, sem letras miúdas.
+      </p>
+    </div>
+    <div class="deco-line"></div>
+  </section>
+
+  <!-- ══ TOGGLE MENSAL/ANUAL ══ -->
+  <section class="plans-toggle-section">
+    <div class="plans-toggle-wrap">
+      <div class="plans-toggle" id="billingToggle">
+        <button class="plans-toggle-btn active" id="btnMensal" onclick="setBilling('mensal')">Mensal</button>
+        <button class="plans-toggle-btn" id="btnAnual" onclick="setBilling('anual')">
+          Anual
+          <span class="plans-toggle-discount">-20%</span>
+        </button>
+      </div>
+      <p class="plans-toggle-hint" id="billingHint">Economize 20% com plano anual</p>
+    </div>
+  </section>
+
+  <!-- ══ PLANOS PARA CLIENTES ══ -->
+  <section class="section plans-section" id="plansSection">
+    <div class="reveal">
+      <p class="section-label">Para quem contrata</p>
+      <h2 class="section-title">PLANOS<br>PARA CLIENTES</h2>
+    </div>
+
+    <div class="plans-grid">
+
+      <!-- Grátis -->
+      <div class="plan-card reveal">
+        <div class="plan-header">
+          <div class="plan-icon">🆓</div>
+          <div class="plan-name">Grátis</div>
+          <div class="plan-desc">Ideal para projetos pontuais</div>
+        </div>
+        <div class="plan-price-wrap">
+          <div class="plan-price">R$<span class="plan-price-num">0</span></div>
+          <div class="plan-price-period">para sempre</div>
+        </div>
+        <ul class="plan-features">
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Até 3 projetos simultâneos</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Chat com freelancers</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Pagamento em custódia</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Avaliação de freelancers</li>
+          <li class="plan-feat plan-feat--off"><span class="plan-feat-x">✕</span> Prioridade no suporte</li>
+          <li class="plan-feat plan-feat--off"><span class="plan-feat-x">✕</span> Gerenciador de equipe</li>
+          <li class="plan-feat plan-feat--off"><span class="plan-feat-x">✕</span> Relatórios avançados</li>
+        </ul>
+        <a href="signupScreen.html" class="plan-btn plan-btn--secondary">Começar grátis</a>
+      </div>
+
+      <!-- Pro (destacado) -->
+      <div class="plan-card plan-card--featured reveal">
+        <div class="plan-badge-popular">MAIS POPULAR</div>
+        <div class="plan-header">
+          <div class="plan-icon">⚡</div>
+          <div class="plan-name">Pro</div>
+          <div class="plan-desc">Para times e projetos contínuos</div>
+        </div>
+        <div class="plan-price-wrap">
+          <div class="plan-price">R$<span class="plan-price-num" data-mensal="149" data-anual="119">149</span></div>
+          <div class="plan-price-period" id="pricePeriodPro">/mês</div>
+        </div>
+        <ul class="plan-features">
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Projetos ilimitados</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Chat com freelancers</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Pagamento em custódia</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Avaliação de freelancers</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Suporte prioritário 24/7</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Gerenciador de equipe</li>
+          <li class="plan-feat plan-feat--off"><span class="plan-feat-x">✕</span> Relatórios avançados</li>
+        </ul>
+        <a href="signupScreen.html" class="plan-btn plan-btn--primary">Assinar Pro</a>
+      </div>
+
+      <!-- Business -->
+      <div class="plan-card reveal">
+        <div class="plan-header">
+          <div class="plan-icon">🏢</div>
+          <div class="plan-name">Business</div>
+          <div class="plan-desc">Para empresas e agências</div>
+        </div>
+        <div class="plan-price-wrap">
+          <div class="plan-price">R$<span class="plan-price-num" data-mensal="399" data-anual="319">399</span></div>
+          <div class="plan-price-period" id="pricePeriodBusiness">/mês</div>
+        </div>
+        <ul class="plan-features">
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Projetos ilimitados</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Chat com freelancers</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Pagamento em custódia</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Avaliação de freelancers</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Suporte prioritário 24/7</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Gerenciador de equipe</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Relatórios avançados</li>
+        </ul>
+        <a href="contact.html" class="plan-btn plan-btn--secondary">Falar com vendas</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ PLANOS PARA FREELANCERS ══ -->
+  <section class="section plans-section">
+    <div class="reveal">
+      <p class="section-label">Para quem entrega</p>
+      <h2 class="section-title">PLANOS<br>PARA FREELANCERS</h2>
+    </div>
+
+    <div class="plans-grid">
+
+      <!-- Starter -->
+      <div class="plan-card reveal">
+        <div class="plan-header">
+          <div class="plan-icon">🌱</div>
+          <div class="plan-name">Starter</div>
+          <div class="plan-desc">Para quem está começando</div>
+        </div>
+        <div class="plan-price-wrap">
+          <div class="plan-price">R$<span class="plan-price-num">0</span></div>
+          <div class="plan-price-period">para sempre + 10% por projeto</div>
+        </div>
+        <ul class="plan-features">
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Perfil público</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Até 3 serviços publicados</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Chat com clientes</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Pagamento via PIX</li>
+          <li class="plan-feat plan-feat--off"><span class="plan-feat-x">✕</span> Selo de verificado</li>
+          <li class="plan-feat plan-feat--off"><span class="plan-feat-x">✕</span> Destaque nos resultados</li>
+          <li class="plan-feat plan-feat--off"><span class="plan-feat-x">✕</span> Taxa reduzida</li>
+        </ul>
+        <a href="signupScreen.html" class="plan-btn plan-btn--secondary">Criar perfil grátis</a>
+      </div>
+
+      <!-- Pro Freelancer -->
+      <div class="plan-card plan-card--featured reveal">
+        <div class="plan-badge-popular">RECOMENDADO</div>
+        <div class="plan-header">
+          <div class="plan-icon">🚀</div>
+          <div class="plan-name">Pro</div>
+          <div class="plan-desc">Para freelancers sérios</div>
+        </div>
+        <div class="plan-price-wrap">
+          <div class="plan-price">R$<span class="plan-price-num" data-mensal="79" data-anual="63">79</span></div>
+          <div class="plan-price-period">/mês + 7% por projeto</div>
+        </div>
+        <ul class="plan-features">
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Perfil público</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Serviços ilimitados</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Chat com clientes</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Pagamento via PIX</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Selo verificado</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Destaque nos resultados</li>
+          <li class="plan-feat plan-feat--off"><span class="plan-feat-x">✕</span> Taxa reduzida</li>
+        </ul>
+        <a href="signupScreen.html" class="plan-btn plan-btn--primary">Assinar Pro</a>
+      </div>
+
+      <!-- Elite -->
+      <div class="plan-card reveal">
+        <div class="plan-header">
+          <div class="plan-icon">👑</div>
+          <div class="plan-name">Elite</div>
+          <div class="plan-desc">Para os top da plataforma</div>
+        </div>
+        <div class="plan-price-wrap">
+          <div class="plan-price">R$<span class="plan-price-num" data-mensal="199" data-anual="159">199</span></div>
+          <div class="plan-price-period">/mês + 5% por projeto</div>
+        </div>
+        <ul class="plan-features">
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Perfil público</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Serviços ilimitados</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Chat com clientes</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Pagamento via PIX</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Selo verificado</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Destaque máximo</li>
+          <li class="plan-feat"><span class="plan-feat-check">✓</span> Menor taxa da plataforma</li>
+        </ul>
+        <a href="signupScreen.html" class="plan-btn plan-btn--secondary">Assinar Elite</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ COMPARAÇÃO ══ -->
+  <section class="section plans-compare-section">
+    <div class="reveal">
+      <p class="section-label">Tudo no mesmo lugar</p>
+      <h2 class="section-title">COMPARE<br>OS PLANOS</h2>
+    </div>
+    <div class="plans-compare-wrap reveal">
+      <table class="plans-compare-table">
+        <thead>
+          <tr>
+            <th class="compare-feat-col">Recurso</th>
+            <th>Grátis</th>
+            <th class="compare-featured">Pro</th>
+            <th>Business</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="compare-feat">Projetos simultâneos</td>
+            <td>3</td>
+            <td class="compare-featured">Ilimitado</td>
+            <td>Ilimitado</td>
+          </tr>
+          <tr>
+            <td class="compare-feat">Pagamento em custódia</td>
+            <td><span class="compare-yes">✓</span></td>
+            <td class="compare-featured"><span class="compare-yes">✓</span></td>
+            <td><span class="compare-yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="compare-feat">Suporte</td>
+            <td>E-mail</td>
+            <td class="compare-featured">Prioritário 24/7</td>
+            <td>Dedicado</td>
+          </tr>
+          <tr>
+            <td class="compare-feat">Gerenciador de equipe</td>
+            <td><span class="compare-no">✕</span></td>
+            <td class="compare-featured"><span class="compare-yes">✓</span></td>
+            <td><span class="compare-yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="compare-feat">Relatórios avançados</td>
+            <td><span class="compare-no">✕</span></td>
+            <td class="compare-featured"><span class="compare-no">✕</span></td>
+            <td><span class="compare-yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="compare-feat">API de integração</td>
+            <td><span class="compare-no">✕</span></td>
+            <td class="compare-featured"><span class="compare-no">✕</span></td>
+            <td><span class="compare-yes">✓</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ FAQ ══ -->
+  <section class="section">
+    <div class="reveal">
+      <p class="section-label">Dúvidas sobre cobrança</p>
+      <h2 class="section-title">PERGUNTAS<br>FREQUENTES</h2>
+    </div>
+    <div class="faq-wrap hiw-faq">
+      <div class="faq-item reveal">
+        <div class="faq-question">
+          Posso cancelar meu plano a qualquer momento?
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">Sim. Planos mensais podem ser cancelados a qualquer momento sem multa. Planos anuais permitem cancelamento com devolução proporcional dos meses restantes.</div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-question">
+          Quais formas de pagamento são aceitas?
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">Aceitamos cartão de crédito (Visa, Mastercard, Elo), PIX e boleto bancário. Para planos Business, também trabalhamos com nota fiscal e faturamento mensal.</div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-question">
+          A taxa de serviço está incluída no plano?
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">Não. A taxa de serviço (cobrada sobre o valor do projeto) é separada do plano de assinatura. No plano Grátis é 10%; no Pro, 7%; no Elite, apenas 5%.</div>
+      </div>
+      <div class="faq-item reveal">
+        <div class="faq-question">
+          Existe período de teste gratuito?
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">Todos os planos pagos oferecem 14 dias de teste gratuito. Basta criar sua conta e escolher o plano — cobrança só começa após o período de trial.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CTA ══ -->
+  <section class="cta-section">
+    <div class="cta-orbit">
+      <div class="orbit-dot" style="--r:220px;--dur:18s;top:50%;left:50%;margin:-2px"></div>
+      <div class="orbit-dot" style="--r:300px;--dur:26s;top:50%;left:50%;margin:-2px;animation-delay:-8s"></div>
+    </div>
+    <div class="cta-inner">
+      <p class="cta-label reveal">14 dias de trial grátis</p>
+      <h2 class="cta-title reveal">COMECE SEM<br><span class="green">COMPROMISSO</span></h2>
+      <p class="cta-sub reveal">Teste qualquer plano gratuitamente por 14 dias. Cancele quando quiser, sem burocracia.</p>
+      <div class="cta-buttons reveal">
+        <a href="signupScreen.html" class="btn-cta-main">Começar trial grátis</a>
+        <a href="contact.html" class="btn-cta-ghost">Falar com vendas →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-icon">OF</div>
+          <div class="footer-logo-text">One<span>Freela</span></div>
+        </div>
+        <p class="footer-desc">A plataforma brasileira que conecta empresas e pessoas a freelancers talentosos, com segurança e agilidade.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Plataforma</h4>
+        <ul>
+          <li><a href="howItWorks.html">Como funciona</a></li>
+          <li><a href="categories.html">Categorias</a></li>
+          <li><a href="beAFreelancer.html">Seja um freelancer</a></li>
+          <li><a href="plans.html">Planos</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Empresa</h4>
+        <ul>
+          <li><a href="aboutUs.html">Sobre nós</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="careers.html">Carreiras</a></li>
+          <li><a href="contact.html">Contato</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="termos.html">Termos de uso</a></li>
+          <li><a href="privacidade.html">Privacidade</a></li>
+          <li><a href="cookies.html">Cookies</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">© 2026 <span>OneFreela</span>. Feito com ♥ no Brasil.</p>
+      <div class="footer-socials">
+        <a href="#" class="social-btn" title="Instagram">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <a href="#" class="social-btn" title="LinkedIn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a href="#" class="social-btn" title="GitHub">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+  <script src="plans.js"></script>
+</body>
+</html>
