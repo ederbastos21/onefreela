@@ -48,6 +48,21 @@
     .orders-empty { color: var(--muted2); font-size: 13px; padding: 32px 24px; text-align: center; background: var(--card); border: 1px dashed var(--border); border-radius: 10px; }
     .orders-empty a { color: var(--green); text-decoration: none; }
     .orders-empty a:hover { text-decoration: underline; }
+
+    /* ── Payment button & modal ──────────────────────── */
+    .order-pay-action { padding-top: 10px; }
+    .btn-pay-order { padding: 7px 18px; font-size: 11px; font-weight: 700; letter-spacing: .8px; border: 1px solid rgba(127,255,0,.35); color: var(--green); background: rgba(127,255,0,.05); border-radius: 6px; cursor: pointer; transition: all .2s; font-family: inherit; }
+    .btn-pay-order:hover { background: rgba(127,255,0,.12); border-color: var(--green); }
+    .order-status-failed { background: rgba(239,68,68,.1); color: #ef4444; border: 1px solid rgba(239,68,68,.2); }
+    .payment-modal { width: 100%; max-width: 460px; }
+    .pm-method-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
+    .pm-method-pill.pix  { background: rgba(127,255,0,.1); color: var(--green); border: 1px solid rgba(127,255,0,.2); }
+    .pm-method-pill.card { background: rgba(99,102,241,.1); color: #818cf8; border: 1px solid rgba(99,102,241,.2); }
+    .pm-form { display: flex; flex-direction: column; gap: 12px; margin: 14px 0; }
+    .pm-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .pix-info-box { background: rgba(127,255,0,.05); border: 1px solid rgba(127,255,0,.12); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--muted2); line-height: 1.65; margin-bottom: 4px; }
+    .pm-total-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0 0; font-size: 13px; border-top: 1px solid var(--border); margin-top: 6px; }
+    .pm-total-val { font-weight: 700; color: var(--green); font-size: 16px; }
   </style>
 </head>
 <body>
@@ -264,6 +279,67 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- Payment modal (client only) -->
+  <div class="auth-overlay" id="paymentModal">
+    <div class="auth-modal payment-modal">
+      <button class="btn-auth-close" onclick="closePaymentModal()">×</button>
+      <h2 class="auth-modal-title">REALIZAR PAGAMENTO</h2>
+
+      <div id="pmMethodPill" class="pm-method-pill"></div>
+
+      <!-- PIX -->
+      <div id="pmPixForm" style="display:none">
+        <div class="pix-info-box">
+          Após confirmar, você receberá as instruções de pagamento via PIX.
+          O serviço é liberado automaticamente após a confirmação do pagamento.
+        </div>
+        <div class="pm-form">
+          <div class="setting-item">
+            <label class="setting-label">CPF do Pagador</label>
+            <input id="pmPixCpf" class="setting-input" type="text" placeholder="000.000.000-00" maxlength="14" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Card -->
+      <div id="pmCardForm" style="display:none">
+        <div class="pm-form">
+          <div class="setting-item">
+            <label class="setting-label">Número do Cartão</label>
+            <input id="pmCardNumber" class="setting-input" type="text" placeholder="0000 0000 0000 0000" maxlength="19" />
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">Nome no Cartão</label>
+            <input id="pmCardName" class="setting-input" type="text" placeholder="Como aparece no cartão" />
+          </div>
+          <div class="pm-row-2">
+            <div class="setting-item">
+              <label class="setting-label">Validade</label>
+              <input id="pmCardExpiry" class="setting-input" type="text" placeholder="MM/AAAA" maxlength="7" />
+            </div>
+            <div class="setting-item">
+              <label class="setting-label">CVV</label>
+              <input id="pmCardCvv" class="setting-input" type="text" placeholder="000" maxlength="4" />
+            </div>
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">CPF do Titular</label>
+            <input id="pmCardCpf" class="setting-input" type="text" placeholder="000.000.000-00" maxlength="14" />
+          </div>
+        </div>
+      </div>
+
+      <div id="pmTotalRow" class="pm-total-row" style="display:none">
+        <span style="color:var(--muted2)">Total a pagar</span>
+        <span class="pm-total-val" id="pmTotalVal">—</span>
+      </div>
+
+      <div class="wf-msg" id="pmMsg"></div>
+
+      <button class="btn-save" id="pmSubmitBtn" onclick="submitPayment()" style="margin-top:16px">CONFIRMAR PAGAMENTO</button>
+    </div>
   </div>
 
   <!-- Work modal (freelancer only) -->

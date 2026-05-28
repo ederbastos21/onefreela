@@ -48,6 +48,17 @@
       background: var(--green); border-radius: 50%;
     }
 
+    /* ── Payment details form ────────────────────────── */
+    .ps-pay-details { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .ps-pay-details-title { font-size: 11px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+    .ps-form { display: flex; flex-direction: column; gap: 10px; }
+    .ps-form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ps-field { display: flex; flex-direction: column; gap: 4px; }
+    .ps-label { font-size: 11px; color: var(--muted2); font-weight: 600; }
+    .ps-input { background: var(--card2); border: 1px solid var(--border2); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; width: 100%; box-sizing: border-box; transition: border-color .2s; font-family: inherit; }
+    .ps-input:focus { outline: none; border-color: rgba(127,255,0,.4); }
+    .ps-input::placeholder { color: var(--muted); }
+
     /* ── Success state ────────────────────────────────── */
     .order-success-wrap {
       max-width: 500px;
@@ -214,6 +225,47 @@
                 </div>
 
               </div>
+
+              <!-- PIX: dados para pagamento -->
+              <div id="psPixForm" class="ps-pay-details">
+                <div class="ps-pay-details-title">Dados para pagamento</div>
+                <div class="ps-form">
+                  <div class="ps-field">
+                    <label class="ps-label">CPF do Pagador</label>
+                    <input id="psPixCpf" class="ps-input" type="text" placeholder="000.000.000-00" maxlength="14" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card: dados do cartão -->
+              <div id="psCardForm" class="ps-pay-details" style="display:none">
+                <div class="ps-pay-details-title">Dados do cartão</div>
+                <div class="ps-form">
+                  <div class="ps-field">
+                    <label class="ps-label">Número do Cartão</label>
+                    <input id="psCardNumber" class="ps-input" type="text" placeholder="0000 0000 0000 0000" maxlength="19" />
+                  </div>
+                  <div class="ps-field">
+                    <label class="ps-label">Nome no Cartão</label>
+                    <input id="psCardName" class="ps-input" type="text" placeholder="Como aparece no cartão" />
+                  </div>
+                  <div class="ps-form-row2">
+                    <div class="ps-field">
+                      <label class="ps-label">Validade</label>
+                      <input id="psCardExpiry" class="ps-input" type="text" placeholder="MM/AAAA" maxlength="7" />
+                    </div>
+                    <div class="ps-field">
+                      <label class="ps-label">CVV</label>
+                      <input id="psCvv" class="ps-input" type="text" placeholder="000" maxlength="4" />
+                    </div>
+                  </div>
+                  <div class="ps-field">
+                    <label class="ps-label">CPF do Titular</label>
+                    <input id="psCardCpf" class="ps-input" type="text" placeholder="000.000.000-00" maxlength="14" />
+                  </div>
+                </div>
+              </div>
+
             </div>
 
             <!-- Resumo + botão -->

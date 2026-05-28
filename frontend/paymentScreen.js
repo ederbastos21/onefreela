@@ -46,6 +46,11 @@ function setMethod(method, el) {
   currentMethod = method;
   document.querySelectorAll('.method-opt').forEach(o => o.classList.remove('selected'));
   el.classList.add('selected');
+
+  const psPixForm  = document.getElementById('psPixForm');
+  const psCardForm = document.getElementById('psCardForm');
+  if (psPixForm)  psPixForm.style.display  = (method === 'pix')  ? '' : 'none';
+  if (psCardForm) psCardForm.style.display = (method === 'card') ? '' : 'none';
 }
 
 /* ── Order items render ───────────────────────────────────── */
@@ -194,6 +199,16 @@ async function confirmPayment() {
       return;
     }
 
+    // Try to capture the backend-assigned order ID for payment processing
+    let backendOrderId = null;
+    try {
+      const text   = await res.text();
+      const parsed = JSON.parse(text);
+      if (parsed && typeof parsed === 'object' && (parsed.id || parsed.orderId)) {
+        backendOrderId = Number(parsed.id || parsed.orderId) || null;
+      }
+    } catch (_) {}
+
     /* build order record */
     const rand      = Math.floor(Math.random() * 90000) + 10000;
     const orderId   = '#OF-' + new Date().getFullYear() + '-' + rand;
@@ -217,6 +232,7 @@ async function confirmPayment() {
 
     const orderRecord = {
       orderId,
+      backendOrderId,
       method:        currentMethod,
       paymentMethod,
       date:          orderDate,

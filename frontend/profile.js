@@ -1,7 +1,9 @@
 const API_BASE = 'http://localhost:8080';
 
-let works        = [];
-let editingWorkId = null;
+let works         = [];
+let editingWorkId  = null;
+let ordersData     = [];
+let payingOrderIdx = -1;
 
 function authHeader() {
   return { 'Authorization': OFAuth.getToken() };
@@ -297,13 +299,15 @@ var METHOD_LABELS = {
 var STATUS_LABELS = {
   NOT_PAID:  'Aguardando',
   PAID:      'Pago',
-  REFUNDED:  'Reembolsado'
+  REFUNDED:  'Reembolsado',
+  FAILED:    'Pagamento falhou'
 };
 
 var STATUS_CLASSES = {
   NOT_PAID:  'order-status-not-paid',
   PAID:      'order-status-paid',
-  REFUNDED:  'order-status-refunded'
+  REFUNDED:  'order-status-refunded',
+  FAILED:    'order-status-failed'
 };
 
 function loadOrders() {
@@ -317,6 +321,8 @@ function loadOrders() {
 }
 
 function renderOrders(orders) {
+  ordersData = orders;
+
   var list  = document.getElementById('ordersList');
   var badge = document.getElementById('ordersBadge');
 
@@ -332,7 +338,7 @@ function renderOrders(orders) {
 
   list.innerHTML = '';
 
-  orders.forEach(function (order) {
+  orders.forEach(function (order, idx) {
     var statusClass = STATUS_CLASSES[order.status] || 'order-status-not-paid';
     var statusLabel = STATUS_LABELS[order.status]  || order.status;
     var methodLabel = METHOD_LABELS[order.method]  || order.method;
@@ -353,6 +359,11 @@ function renderOrders(orders) {
 
     var totalHtml = order.total != null ? formatPrice(order.total) : '—';
 
+    var canPay     = order.status === 'NOT_PAID' || order.status === 'FAILED';
+    var payBtnHtml = canPay
+      ? '<div class="order-pay-action"><button class="btn-pay-order" onclick="openPaymentModal(' + idx + ')">Realizar Pagamento</button></div>'
+      : '';
+
     var card = document.createElement('div');
     card.className = 'order-card';
     card.innerHTML =
@@ -367,11 +378,170 @@ function renderOrders(orders) {
       '<div class="order-footer">' +
         '<span class="order-method-tag">' + methodLabel + '</span>' +
         '<span class="order-total-val">Total: ' + totalHtml + '</span>' +
-      '</div>';
+      '</div>' +
+      payBtnHtml;
 
     list.appendChild(card);
   });
 }
+
+/* ── Client: payment modal ───────────────────────────────────────────── */
+
+function openPaymentModal(orderIdx) {
+  const order = ordersData[orderIdx];
+  if (!order) return;
+  payingOrderIdx = orderIdx;
+
+  const isPix = (order.paymentMethod || '').toUpperCase() !== 'CARTAO';
+
+  const pill = document.getElementById('pmMethodPill');
+  if (pill) {
+    pill.className   = 'pm-method-pill ' + (isPix ? 'pix' : 'card');
+    pill.textContent = isPix ? '⚡ PIX' : '💳 Cartão de Crédito';
+  }
+
+  const pixForm  = document.getElementById('pmPixForm');
+  const cardForm = document.getElementById('pmCardForm');
+  if (pixForm)  pixForm.style.display  = isPix ? '' : 'none';
+  if (cardForm) cardForm.style.display = isPix ? 'none' : '';
+
+  const totalRow = document.getElementById('pmTotalRow');
+  const totalVal = document.getElementById('pmTotalVal');
+  if (totalRow) totalRow.style.display = '';
+  if (totalVal && order.total != null) totalVal.textContent = formatPrice(order.total);
+
+  ['pmPixCpf', 'pmCardNumber', 'pmCardName', 'pmCardExpiry', 'pmCardCvv', 'pmCardCpf'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  clearPmMsg();
+
+  const btn = document.getElementById('pmSubmitBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'CONFIRMAR PAGAMENTO'; }
+
+  document.getElementById('paymentModal').classList.add('show');
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentModal').classList.remove('show');
+  payingOrderIdx = -1;
+}
+
+function showPmMsg(msg, type) {
+  const el = document.getElementById('pmMsg');
+  if (!el) return;
+  el.textContent = msg;
+  el.className   = 'wf-msg wf-msg-' + type;
+}
+
+function clearPmMsg() {
+  const el = document.getElementById('pmMsg');
+  if (!el) return;
+  el.textContent = '';
+  el.className   = 'wf-msg';
+}
+
+async function submitPayment() {
+  const order = ordersData[payingOrderIdx];
+  if (!order) return;
+
+  const btn = document.getElementById('pmSubmitBtn');
+  btn.disabled    = true;
+  btn.textContent = 'PROCESSANDO...';
+  clearPmMsg();
+
+  const isPix = (order.paymentMethod || '').toUpperCase() !== 'CARTAO';
+  let endpoint, body;
+
+  if (isPix) {
+    const cpf = document.getElementById('pmPixCpf').value.trim();
+    if (!cpf) {
+      showPmMsg('Informe o CPF do pagador.', 'error');
+      btn.disabled    = false;
+      btn.textContent = 'CONFIRMAR PAGAMENTO';
+      return;
+    }
+    endpoint = '/payment/makePaymentPix';
+    body = { orderId: order.backendOrderId ?? null, cpf };
+  } else {
+    const cardNumber = document.getElementById('pmCardNumber').value.trim().replace(/\s/g, '');
+    const cardName   = document.getElementById('pmCardName').value.trim();
+    const expiryStr  = document.getElementById('pmCardExpiry').value.trim();
+    const cvv        = document.getElementById('pmCardCvv').value.trim();
+    const cpf        = document.getElementById('pmCardCpf').value.trim();
+
+    if (!cardNumber || !cardName || !expiryStr || !cvv || !cpf) {
+      showPmMsg('Preencha todos os campos do cartão.', 'error');
+      btn.disabled    = false;
+      btn.textContent = 'CONFIRMAR PAGAMENTO';
+      return;
+    }
+
+    const parts = expiryStr.split('/');
+    if (parts.length !== 2 || parts[1].length < 4) {
+      showPmMsg('Validade inválida. Use o formato MM/AAAA.', 'error');
+      btn.disabled    = false;
+      btn.textContent = 'CONFIRMAR PAGAMENTO';
+      return;
+    }
+    const expirationDate = parts[1] + '-' + parts[0].padStart(2, '0') + '-01';
+
+    endpoint = '/payment/makePaymentCard';
+    body = { orderId: order.backendOrderId || null, cardNumber, name: cardName, expirationDate, cvv, cpf };
+  }
+
+  if (!body.orderId) {
+    showPmMsg('Pedido sem ID de backend — o endpoint POST /order/createOrder precisa retornar o objeto do pedido com o campo "id" para que o pagamento possa ser processado.', 'error');
+    btn.disabled    = false;
+    btn.textContent = 'CONFIRMAR PAGAMENTO';
+    return;
+  }
+
+  try {
+    const res = await fetch(API_BASE + endpoint, {
+      method:  'POST',
+      headers: { ...authHeader(), 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body)
+    });
+
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+
+    if (!res.ok) {
+      const data = await res.json().catch(function () { return {}; });
+      const msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao processar pagamento.';
+      showPmMsg(msg, 'error');
+      btn.disabled    = false;
+      btn.textContent = 'CONFIRMAR PAGAMENTO';
+      return;
+    }
+
+    const payment  = await res.json().catch(function () { return {}; });
+    let   newStatus = 'NOT_PAID';
+    if (payment.status === 'SUCCESS') newStatus = 'PAID';
+    if (payment.status === 'FAILED')  newStatus = 'FAILED';
+
+    const stored = JSON.parse(localStorage.getItem('of_orders') || '[]');
+    const oidx   = stored.findIndex(function (o) { return o.orderId === order.orderId; });
+    if (oidx !== -1) {
+      stored[oidx].status = newStatus;
+      localStorage.setItem('of_orders', JSON.stringify(stored));
+    }
+
+    closePaymentModal();
+    loadOrders();
+  } catch (e) {
+    console.error('submitPayment:', e);
+    showPmMsg('Erro de conexão ao processar pagamento.', 'error');
+    btn.disabled    = false;
+    btn.textContent = 'CONFIRMAR PAGAMENTO';
+  }
+}
+
+document.getElementById('paymentModal').addEventListener('click', function (e) {
+  if (e.target === this) closePaymentModal();
+});
 
 /* ── Init ─────────────────────────────────────────────────────────── */
 
