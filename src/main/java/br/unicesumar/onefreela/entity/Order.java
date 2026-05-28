@@ -1,6 +1,7 @@
 package br.unicesumar.onefreela.entity;
 
 import br.unicesumar.onefreela.enums.OrderStatus;
+import br.unicesumar.onefreela.enums.PaymentMethod;
 import jakarta.persistence.*;
 import org.hibernate.engine.internal.Cascade;
 
@@ -28,6 +29,11 @@ public class Order {
 
     @OneToMany (mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItemlist;
+
+    private PaymentMethod paymentMethod;
+
+    @OneToOne (mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Payment payment;
 
     public Long getId() {
         return id;
@@ -83,5 +89,21 @@ public class Order {
 
     public void setOrderItemlist(List<OrderItem> orderItemlist) {
         this.orderItemlist = orderItemlist;
+    }
+
+    public Payment getPayment() {
+        return payment;
+    }
+
+    public void setPayment(Payment payment) {
+        this.payment = payment;
+    }
+
+    public PaymentMethod getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 }
