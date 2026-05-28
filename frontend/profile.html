@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -25,6 +26,28 @@
     .service-cat-tag { font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
     .works-loading { color: var(--muted2); font-size: 13px; padding: 12px 0; }
     .works-error   { color: #ef4444;       font-size: 13px; padding: 12px 0; }
+
+    /* ── Orders section ──────────────────────────── */
+    .order-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; transition: border-color .2s; }
+    .order-card:hover { border-color: rgba(127,255,0,.25); }
+    .order-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; }
+    .order-card-meta { flex: 1; min-width: 0; }
+    .order-id { font-size: 13px; font-weight: 700; color: var(--green); font-family: var(--font-display); letter-spacing: 1px; }
+    .order-date { font-size: 11px; color: var(--muted2); margin-top: 3px; }
+    .order-status-badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 4px; text-transform: uppercase; letter-spacing: .5px; flex-shrink: 0; white-space: nowrap; }
+    .order-status-not-paid { background: rgba(251,191,36,.1); color: #fbbf24; border: 1px solid rgba(251,191,36,.2); }
+    .order-status-paid     { background: rgba(127,255,0,.1);  color: var(--green); border: 1px solid rgba(127,255,0,.2); }
+    .order-status-refunded { background: rgba(239,68,68,.1);  color: #ef4444; border: 1px solid rgba(239,68,68,.2); }
+    .order-items-list { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px; display: flex; flex-direction: column; gap: 5px; }
+    .order-item-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+    .order-item-title { color: var(--muted2); }
+    .order-item-price { color: var(--muted2); flex-shrink: 0; margin-left: 10px; }
+    .order-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 10px; }
+    .order-method-tag { font-size: 11px; color: var(--muted); }
+    .order-total-val { font-size: 15px; font-weight: 700; color: var(--green); }
+    .orders-empty { color: var(--muted2); font-size: 13px; padding: 32px 24px; text-align: center; background: var(--card); border: 1px dashed var(--border); border-radius: 10px; }
+    .orders-empty a { color: var(--green); text-decoration: none; }
+    .orders-empty a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -66,6 +89,13 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
         Serviços
         <span class="nav-item-badge" id="worksBadge" style="display:none">0</span>
+      </a>
+
+      <!-- Client only -->
+      <a href="#pedidos" class="nav-item" id="sidebarPedidos" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Pedidos
+        <span class="nav-item-badge" id="ordersBadge" style="display:none">0</span>
       </a>
 
       <a href="#config" class="nav-item">
@@ -120,6 +150,12 @@
       <div id="servicos" class="section-block reveal" style="display:none">
         <div class="block-title">Meus Serviços</div>
         <div class="services-list" id="servicesList"></div>
+      </div>
+
+      <!-- Client only: orders -->
+      <div id="pedidos" class="section-block reveal" style="display:none">
+        <div class="block-title">Meus Pedidos</div>
+        <div id="ordersList"></div>
       </div>
 
       <!-- Both: personal info -->

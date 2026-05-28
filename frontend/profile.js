@@ -42,6 +42,16 @@ function initProfile() {
   // Main sections
   if (isFreelancer) show('servicos'); else hide('servicos');
 
+  // Client only: orders
+  if (!isFreelancer) {
+    show('sidebarPedidos');
+    show('pedidos');
+    loadOrders();
+  } else {
+    hide('sidebarPedidos');
+    hide('pedidos');
+  }
+
   // Client-only settings fields
   document.querySelectorAll('.client-only').forEach(function (el) {
     el.style.display = isFreelancer ? 'none' : '';
@@ -275,6 +285,93 @@ async function confirmDeleteWork(workId) {
 document.getElementById('workModal').addEventListener('click', function (e) {
   if (e.target === this) closeWorkModal();
 });
+
+/* ── Client: orders ───────────────────────────────────────────────── */
+
+var METHOD_LABELS = {
+  pix:    '⚡ PIX',
+  card:   '💳 Cartão de Crédito',
+  boleto: '📄 Boleto Bancário'
+};
+
+var STATUS_LABELS = {
+  NOT_PAID:  'Aguardando',
+  PAID:      'Pago',
+  REFUNDED:  'Reembolsado'
+};
+
+var STATUS_CLASSES = {
+  NOT_PAID:  'order-status-not-paid',
+  PAID:      'order-status-paid',
+  REFUNDED:  'order-status-refunded'
+};
+
+function loadOrders() {
+  var orders = [];
+  try {
+    orders = JSON.parse(localStorage.getItem('of_orders') || '[]');
+  } catch (e) {
+    orders = [];
+  }
+  renderOrders(orders);
+}
+
+function renderOrders(orders) {
+  var list  = document.getElementById('ordersList');
+  var badge = document.getElementById('ordersBadge');
+
+  if (badge) {
+    badge.textContent = orders.length;
+    badge.style.display = orders.length > 0 ? '' : 'none';
+  }
+
+  if (!orders.length) {
+    list.innerHTML = '<div class="orders-empty">Nenhum pedido realizado ainda.<br><a href="exploreFreelancers.html">Explore freelancers</a> para começar.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+
+  orders.forEach(function (order) {
+    var statusClass = STATUS_CLASSES[order.status] || 'order-status-not-paid';
+    var statusLabel = STATUS_LABELS[order.status]  || order.status;
+    var methodLabel = METHOD_LABELS[order.method]  || order.method;
+
+    var itemsHtml = '';
+    if (order.items && order.items.length) {
+      itemsHtml = '<div class="order-items-list">';
+      order.items.forEach(function (item) {
+        var amt   = item.amount > 1 ? ' × ' + item.amount : '';
+        var price = item.price != null ? formatPrice(item.price * (item.amount || 1)) : '—';
+        itemsHtml += '<div class="order-item-row">' +
+          '<span class="order-item-title">' + (item.title || 'Serviço') + amt + '</span>' +
+          '<span class="order-item-price">' + price + '</span>' +
+        '</div>';
+      });
+      itemsHtml += '</div>';
+    }
+
+    var totalHtml = order.total != null ? formatPrice(order.total) : '—';
+
+    var card = document.createElement('div');
+    card.className = 'order-card';
+    card.innerHTML =
+      '<div class="order-card-header">' +
+        '<div class="order-card-meta">' +
+          '<div class="order-id">' + order.orderId + '</div>' +
+          '<div class="order-date">' + order.date + '</div>' +
+        '</div>' +
+        '<span class="order-status-badge ' + statusClass + '">' + statusLabel + '</span>' +
+      '</div>' +
+      itemsHtml +
+      '<div class="order-footer">' +
+        '<span class="order-method-tag">' + methodLabel + '</span>' +
+        '<span class="order-total-val">Total: ' + totalHtml + '</span>' +
+      '</div>';
+
+    list.appendChild(card);
+  });
+}
 
 /* ── Init ─────────────────────────────────────────────────────────── */
 

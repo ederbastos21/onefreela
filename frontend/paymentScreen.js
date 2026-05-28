@@ -1,8 +1,11 @@
+const API_BASE = 'http://localhost:8080';
+
 OFAuth.loadNav();
 
 let currentMethod = 'pix';
 let pixInterval   = null;
 let pixSeconds    = 15 * 60; // 15 minutes
+let cartSnapshot  = null;
 
 /* ── Payment method switching ─────────────────────────────── */
 
@@ -99,29 +102,128 @@ function downloadBoleto() {
   showToast('Preparando PDF do boleto...');
 }
 
+/* ── Cart snapshot for order history ──────────────────────── */
+
+async function loadCartSummary() {
+  if (!OFAuth.isLoggedIn()) return;
+  try {
+    const res = await fetch(API_BASE + '/cart/show', {
+      headers: { 'Authorization': OFAuth.getToken() }
+    });
+    if (!res.ok) return;
+    const cart      = await res.json();
+    const items     = (cart && cart.cartItemList) ? cart.cartItemList : [];
+    const workCache = JSON.parse(localStorage.getItem('of_work_cache') || '{}');
+    const cartMap   = JSON.parse(localStorage.getItem('of_cart_workmap') || '{}');
+    cartSnapshot = items.map(item => ({
+      ...item,
+      _work: workCache[String(cartMap[String(item.id)])] || null
+    }));
+  } catch (e) {
+    console.error('loadCartSummary:', e);
+  }
+}
+
 /* ── Payment validation & confirmation ────────────────────── */
 
-function confirmPayment() {
+async function confirmPayment() {
   if (currentMethod === 'card' && !validateCard()) return;
 
-  const btn = document.getElementById('confirmBtn');
-  btn.textContent   = 'PROCESSANDO...';
-  btn.disabled      = true;
-  btn.style.opacity = '.7';
+  const btn          = document.getElementById('confirmBtn');
+  const originalText = btn.textContent;
+  btn.textContent    = 'PROCESSANDO...';
+  btn.disabled       = true;
+  btn.style.opacity  = '.7';
 
-  /* persist order context for the confirmation page */
-  const rand = Math.floor(Math.random() * 90000) + 10000;
-  sessionStorage.setItem('of_last_order', JSON.stringify({
-    orderId: '#OF-2026-' + rand,
-    method:  currentMethod,
-    date:    new Date().toLocaleDateString('pt-BR'),
-  }));
-  sessionStorage.removeItem('of_payment_done');
+  const methodMap     = { pix: 'PIX', card: 'CARTAO', boleto: 'PIX' };
+  const paymentMethod = methodMap[currentMethod] || 'PIX';
 
-  setTimeout(() => {
+  try {
+    const res = await fetch(API_BASE + '/order/createOrder', {
+      method:  'POST',
+      headers: {
+        'Authorization': OFAuth.getToken(),
+        'Content-Type':  'application/json'
+      },
+      body: JSON.stringify({ paymentMethod })
+    });
+
+    if (res.status === 401 || res.status === 403) {
+      OFAuth.logout();
+      return;
+    }
+
+    if (!res.ok) {
+      let msg = 'Erro ao criar pedido.';
+      try {
+        const data = await res.json();
+        if (Array.isArray(data.errors) && data.errors.length) {
+          msg = data.errors.map(e => e.message).join(' • ');
+        }
+      } catch (_) {}
+      showToast(msg);
+      btn.textContent   = originalText;
+      btn.disabled      = false;
+      btn.style.opacity = '1';
+      return;
+    }
+
+    /* build order record for local history */
+    const rand      = Math.floor(Math.random() * 90000) + 10000;
+    const orderId   = '#OF-' + new Date().getFullYear() + '-' + rand;
+    const orderDate = new Date().toLocaleDateString('pt-BR');
+
+    const items = [];
+    let total   = 0;
+    if (cartSnapshot && cartSnapshot.length) {
+      cartSnapshot.forEach(item => {
+        const work  = item._work;
+        const price = work ? Number(work.price) : 0;
+        items.push({
+          title:    work ? (work.title || 'Serviço') : 'Serviço',
+          category: work ? (work.category || '') : '',
+          price,
+          amount:   item.amount || 1
+        });
+        total += price * (item.amount || 1);
+      });
+    }
+
+    const orderRecord = {
+      orderId,
+      method:        currentMethod,
+      paymentMethod,
+      date:          orderDate,
+      timestamp:     Date.now(),
+      status:        'NOT_PAID',
+      items,
+      total
+    };
+
+    const orders = JSON.parse(localStorage.getItem('of_orders') || '[]');
+    orders.unshift(orderRecord);
+    localStorage.setItem('of_orders', JSON.stringify(orders));
+
+    /* clear cart local cache */
+    localStorage.removeItem('of_cart_workmap');
+
+    sessionStorage.setItem('of_last_order', JSON.stringify({
+      orderId,
+      method: currentMethod,
+      date:   orderDate
+    }));
+    sessionStorage.removeItem('of_payment_done');
+
     clearInterval(pixInterval);
     window.location.href = 'orderConfirmation.html';
-  }, 1800);
+
+  } catch (e) {
+    console.error('confirmPayment:', e);
+    showToast('Erro de conexão ao processar pagamento.');
+    btn.textContent   = originalText;
+    btn.disabled      = false;
+    btn.style.opacity = '1';
+  }
 }
 
 function validateCard() {
@@ -141,3 +243,4 @@ function validateCard() {
 
 startPixTimer();
 initNotifPanel();
+loadCartSummary();
