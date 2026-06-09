@@ -26,6 +26,7 @@ public class OrderItem {
     private LocalDate createdAt;
     private LocalDate deliveredAt;
     private LocalDate deadlineDate;
+    private String deliverFileUrl;
 
     public Long getId() {
         return id;
@@ -97,5 +98,13 @@ public class OrderItem {
 
     public void setDeadlineDate(LocalDate deadlineDate) {
         this.deadlineDate = deadlineDate;
+    }
+
+    public String getDeliverFileUrl() {
+        return deliverFileUrl;
+    }
+
+    public void setDeliverFileUrl(String deliverFileUrl) {
+        this.deliverFileUrl = deliverFileUrl;
     }
 }
