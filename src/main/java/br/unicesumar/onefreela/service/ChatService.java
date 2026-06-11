@@ -96,4 +96,13 @@ public class ChatService {
 
         return messages.stream().map(MessageResponse::fromEntity).toList();
     }
+
+    // temporary - til delivery be done
+    public Conversation createConversation(Order order) {
+    
+        Conversation conversation = new Conversation();
+        conversation.setOrder(order);
+        conversation.setCreatedAt(LocalDateTime.now());
+        return conversationRepository.save(conversation);
+    }
 }
