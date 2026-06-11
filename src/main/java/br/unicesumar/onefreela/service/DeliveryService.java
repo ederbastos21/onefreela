@@ -10,11 +10,9 @@ import org.springframework.stereotype.Service;
 public class DeliveryService {
 
     DeliveryRepository deliveryRepository;
-    OrderItem orderItem;
 
-    public DeliveryService(DeliveryRepository deliveryRepository, OrderItem orderItem){
+    public DeliveryService(DeliveryRepository deliveryRepository){
         this.deliveryRepository = deliveryRepository;
-        this.orderItem = orderItem;
     }
 
     public Delivery save (Delivery delivery){
