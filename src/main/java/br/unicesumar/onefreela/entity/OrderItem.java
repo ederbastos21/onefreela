@@ -33,6 +33,8 @@ public class OrderItem {
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Delivery> deliveryList;
 
+    private int deliveryTries;
+
     public Long getId() {
         return id;
     }
@@ -119,5 +121,13 @@ public class OrderItem {
 
     public void setDeliveryList(List<Delivery> deliveryList) {
         this.deliveryList = deliveryList;
+    }
+
+    public int getDeliveryTries() {
+        return deliveryTries;
+    }
+
+    public void setDeliveryTries(int deliveryTries) {
+        this.deliveryTries = deliveryTries;
     }
 }
