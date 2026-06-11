@@ -5,6 +5,7 @@ import br.unicesumar.onefreela.dto.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.MakeOrderDTO;
 import br.unicesumar.onefreela.entity.*;
+import br.unicesumar.onefreela.enums.OrderItemStatus;
 import br.unicesumar.onefreela.enums.OrderStatus;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.OrderItemRepository;
@@ -43,6 +44,10 @@ public class OrderService {
 
     public Order saveOrder (Order order){
         return orderRepository.save(order);
+    }
+
+    public OrderItem saveOrderItem (OrderItem orderItem){
+        return orderItemRepository.save(orderItem);
     }
 
     public List<Order> findAllOrders (){
@@ -97,7 +102,19 @@ public class OrderService {
 
     @Transactional
     public Delivery makeDelivery (User user, DeliverDTO deliverDto){
+        int MAX_DELIVERY_TRIES = 3;
         OrderItem orderItem = findOrderItemById(deliverDto.getOrderItemId());
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        if (orderItem == null){
+            errors.add(new ErrorDetail(ErrorCode.ORDER_ITEM_NOT_FOUND, "delivery", "Nao foi encontrado nenhum pedido"));
+            throw new ValidationException(errors);
+        }
+
+        if (orderItem.getDeliveryTries() >= MAX_DELIVERY_TRIES){
+            errors.add(new ErrorDetail(ErrorCode.DELIVERY_TOO_MANY_TRIES, "delivery", "O limite de envio é de 3 tentativas"));
+        }
+
         Delivery delivery = new Delivery();
 
         if (delivery.getOrderItem().getWork().getOwner().equals(user)){
@@ -120,12 +137,31 @@ public class OrderService {
             }
 
             deliveryService.save(delivery);
+
+            orderItem.setDeliveryTries(orderItem.getDeliveryTries() + 1);
+            orderItem.setStatus(OrderItemStatus.PENDING_DELIVERY_REVISION);
+            orderItemRepository.save(orderItem);
         }
         else {
-            List <ErrorDetail> errors = new ArrayList<>();
             errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
             throw new ValidationException(errors);
         }
         return delivery;
+    }
+
+    @Transactional
+    public OrderItem refuseAdjustment (User user, Long orderItemId){
+        List<ErrorDetail> errors = new ArrayList<>();
+        OrderItem orderItem = findOrderItemById(orderItemId);
+
+        if (orderItem.getWork().getOwner().equals(user)) {
+            orderItem.setStatus(OrderItemStatus.ADJUSTMENT_REFUSED);
+        } else {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
+            throw new ValidationException(errors);
+        }
+
+        saveOrderItem(orderItem);
+        return orderItem;
     }
 }
