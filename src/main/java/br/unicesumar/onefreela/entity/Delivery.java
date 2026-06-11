@@ -2,16 +2,51 @@ package br.unicesumar.onefreela.entity;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 public class Delivery {
 
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
-    Long id;
-
-    String fileUrl;
-    String message;
+    private Long id;
+    private String message;
 
     @ManyToOne
-    OrderItem orderItem;
+    private OrderItem orderItem;
+
+    @OneToMany(mappedBy = "delivery", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DeliveryFile> fileList;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public OrderItem getOrderItem() {
+        return orderItem;
+    }
+
+    public void setOrderItem(OrderItem orderItem) {
+        this.orderItem = orderItem;
+    }
+
+    public List<DeliveryFile> getFileList() {
+        return fileList;
+    }
+
+    public void setFileList(List<DeliveryFile> fileList) {
+        this.fileList = fileList;
+    }
 }
