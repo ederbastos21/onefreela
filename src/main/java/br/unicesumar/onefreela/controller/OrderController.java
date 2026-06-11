@@ -30,24 +30,4 @@ public class OrderController {
         return ResponseEntity.ok().body(order);
     }
 
-    @GetMapping("/findDeliveries")
-    public ResponseEntity<?> findDeliveries (HttpServletRequest httpServletRequest){
-        User user = authService.getAuthenticatedUser(httpServletRequest);
-        List<OrderItem> orders = orderService.findDeliveries(user.getId());
-        return ResponseEntity.ok().body(orders);
-    }
-
-    @GetMapping("/findPendingDeliveries")
-    public ResponseEntity<?> findPendingDeliveries (HttpServletRequest httpServletRequest){
-        User user = authService.getAuthenticatedUser(httpServletRequest);
-        List<OrderItem> orders = orderService.findPendingDeliveries(user.getId());
-        return ResponseEntity.ok().body(orders);
-    }
-
-    @PostMapping("/makeDelivery")
-    public ResponseEntity<?> makeDelivery (HttpServletRequest httpServletRequest, @ModelAttribute DeliverDTO deliver){
-        User user = authService.getAuthenticatedUser(httpServletRequest);
-
-    }
-
 }

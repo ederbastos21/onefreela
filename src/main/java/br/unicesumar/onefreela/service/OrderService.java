@@ -83,17 +83,4 @@ public class OrderService {
 
         return saveOrder(order);
     }
-
-    public List<OrderItem> findPendingDeliveries(Long freelancerId){
-        return orderItemRepository.findPendingDeliveries(freelancerId);
-    }
-
-    public List<OrderItem> findDeliveries(Long freelancerId){
-        return orderItemRepository.findDeliveries(freelancerId);
-    }
-
-    public void makeDelivery (Long freelancerId, String fileUrl){
-
-    }
-
 }

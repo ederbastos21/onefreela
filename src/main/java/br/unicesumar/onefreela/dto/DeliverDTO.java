@@ -5,4 +5,5 @@ import org.springframework.web.multipart.MultipartFile;
 public class DeliverDTO {
     String message;
     MultipartFile file;
+    Long workId;
 }
