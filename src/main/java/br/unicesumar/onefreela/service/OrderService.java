@@ -92,4 +92,8 @@ public class OrderService {
         return orderItemRepository.findDeliveries(freelancerId);
     }
 
+    public void makeDelivery (Long freelancerId, String fileUrl){
+
+    }
+
 }

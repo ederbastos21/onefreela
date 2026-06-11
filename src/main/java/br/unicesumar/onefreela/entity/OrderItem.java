@@ -1,5 +1,6 @@
 package br.unicesumar.onefreela.entity;
 
+import br.unicesumar.onefreela.enums.OrderItemStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -24,9 +25,9 @@ public class OrderItem {
     private double unitPrice;
     private double totalPrice;
     private LocalDate createdAt;
-    private LocalDate deliveredAt;
     private LocalDate deadlineDate;
-    private String deliverFileUrl;
+    private LocalDate deliveredAt;
+    private OrderItemStatus status;
 
     public Long getId() {
         return id;
@@ -100,11 +101,11 @@ public class OrderItem {
         this.deadlineDate = deadlineDate;
     }
 
-    public String getDeliverFileUrl() {
-        return deliverFileUrl;
+    public OrderItemStatus getStatus() {
+        return status;
     }
 
-    public void setDeliverFileUrl(String deliverFileUrl) {
-        this.deliverFileUrl = deliverFileUrl;
+    public void setStatus(OrderItemStatus status) {
+        this.status = status;
     }
 }

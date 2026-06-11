@@ -1,18 +1,14 @@
 package br.unicesumar.onefreela.controller;
 
+import br.unicesumar.onefreela.dto.DeliverDTO;
 import br.unicesumar.onefreela.dto.MakeOrderDTO;
 import br.unicesumar.onefreela.entity.*;
-import br.unicesumar.onefreela.repository.OrderItemRepository;
-import br.unicesumar.onefreela.repository.OrderRepository;
 import br.unicesumar.onefreela.service.AuthService;
 import br.unicesumar.onefreela.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -46,6 +42,12 @@ public class OrderController {
         User user = authService.getAuthenticatedUser(httpServletRequest);
         List<OrderItem> orders = orderService.findPendingDeliveries(user.getId());
         return ResponseEntity.ok().body(orders);
+    }
+
+    @PostMapping("/makeDelivery")
+    public ResponseEntity<?> makeDelivery (HttpServletRequest httpServletRequest, @ModelAttribute DeliverDTO deliver){
+        User user = authService.getAuthenticatedUser(httpServletRequest);
+
     }
 
 }
