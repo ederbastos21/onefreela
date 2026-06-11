@@ -11,10 +11,7 @@ import br.unicesumar.onefreela.service.WorkService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -61,5 +58,12 @@ public class DeliveryController {
         User user = authService.getAuthenticatedUser(httpServletRequest);
         return ResponseEntity.ok().body(orderService.makeDelivery(user, deliverDto));
     }
-    
+
+    @PostMapping("/refuseAdjustment/{id}")
+    public ResponseEntity<?> refuseAdjustment (HttpServletRequest httpServletRequest, @PathVariable Long orderItemId){
+        User user = authService.getAuthenticatedUser(httpServletRequest);
+        return ResponseEntity.ok().body(orderService.refuseAdjustment(user, orderItemId));
+    }
+
+    @PostMapping("/openDispute")
 }
