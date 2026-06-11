@@ -4,6 +4,7 @@ import br.unicesumar.onefreela.dto.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.WorkRegisterDTO;
 import br.unicesumar.onefreela.dto.WorkResponse;
+import br.unicesumar.onefreela.dto.WorkReviewDTO;
 import br.unicesumar.onefreela.dto.WorkUpdateDTO;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.entity.Work;
@@ -15,6 +16,7 @@ import br.unicesumar.onefreela.service.validator.WorkValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +34,7 @@ public class WorkService {
     }
 
     public Work findById(Long id){
-        return repository.findById(id).orElseThrow();
+        return repository.findById(id).orElse(null);
     }
 
     public List<Work> findAll(){
@@ -50,10 +52,12 @@ public class WorkService {
 
         Work work = workMapper.toWork(workRegisterDTO);
         work.setOwner(authenticatedUser);
-        work.setStatus(WorkStatus.ACTIVE);
+        work.setStatus(WorkStatus.PENDING_REVIEW);
+        work.setAdminNotes(null);
+        work.setReviewedBy(null);
+        work.setReviewedAt(null);
 
         Work savedWork = repository.save(work);
-
         return WorkResponse.fromEntity(savedWork);
     }
 
@@ -61,7 +65,6 @@ public class WorkService {
     public WorkResponse updateWork(User authenticatedUser, Long workId, WorkUpdateDTO workUpdateDTO) {
         List<ErrorDetail> errors = new ArrayList<>();
         errors.addAll(workValidator.validateUpdate(workUpdateDTO));
-
         Work work = repository.findById(workId).orElse(null);
 
         if (work == null) {
@@ -79,16 +82,18 @@ public class WorkService {
         }
 
         workMapper.updateWork(work, workUpdateDTO);
+        work.setStatus(WorkStatus.PENDING_REVIEW);
+        work.setAdminNotes(null);
+        work.setReviewedBy(null);
+        work.setReviewedAt(null);
 
         Work savedWork = repository.save(work);
-
         return WorkResponse.fromEntity(savedWork);
     }
 
     @Transactional
     public void deleteWork(User authenticatedUser, Long workId) {
         List<ErrorDetail> errors = new ArrayList<>();
-
         Work work = repository.findById(workId).orElse(null);
 
         if (work == null) {
@@ -105,24 +110,73 @@ public class WorkService {
             errors.add(new ErrorDetail(ErrorCode.WORK_CANNOT_BE_DELETED, "work", "Este serviço possui pendências e não pode ser excluído no momento"));
             throw new ValidationException(errors);
         }
-
         repository.delete(work);
     }
 
     @Transactional(readOnly = true)
     public List<WorkResponse> findMyWorks(User authenticatedUser) {
         List<Work> works = repository.findByOwnerId(authenticatedUser.getId());
-
         return works.stream().map(WorkResponse::fromEntity).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<WorkResponse> search(String q, String category, BigDecimal minPrice, BigDecimal maxPrice, Long ownerId) {
-        List<ErrorDetail> errors = workValidator.validateSearch(minPrice, maxPrice);
+    public List<WorkResponse> findByStatusForAdmin(String status) {
+        List<ErrorDetail> errors = new ArrayList<>();
+        WorkStatus workStatus = null;
+
+        if (status == null || status.isBlank()) {
+            errors.add(new ErrorDetail(ErrorCode.WORK_REVIEW_STATUS_REQUIRED, "status", "O status é obrigatório"));
+            throw new ValidationException(errors);
+        }
+
+        try {
+            workStatus = WorkStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            errors.add(new ErrorDetail(ErrorCode.WORK_REVIEW_STATUS_INVALID, "status", "Status de serviço inválido"));
+            throw new ValidationException(errors);
+        }
+
+        List<Work> works = repository.findByStatus(workStatus);
+        return works.stream().map(WorkResponse::fromEntity).toList();
+    }
+
+    @Transactional
+    public WorkResponse reviewWork(User admin, Long workId, WorkReviewDTO workReviewDTO) {
+        List<ErrorDetail> errors = new ArrayList<>();
+        errors.addAll(workValidator.validateReview(workReviewDTO));
+        Work work = repository.findById(workId).orElse(null);
+
+        if (work == null) {
+            errors.add(new ErrorDetail(ErrorCode.WORK_NOT_FOUND, "work", "Serviço não encontrado"));
+            throw new ValidationException(errors);
+        }
 
         if (!errors.isEmpty()) {
             throw new ValidationException(errors);
         }
+
+        WorkStatus status = WorkStatus.valueOf(workReviewDTO.getStatus());
+
+        work.setStatus(status);
+        work.setAdminNotes(workReviewDTO.getAdminNotes());
+        work.setReviewedBy(admin);
+        work.setReviewedAt(LocalDateTime.now());
+
+        Work savedWork = repository.save(work);
+        return WorkResponse.fromEntity(savedWork);
+    }
+
+    @Transactional(readOnly = true)
+    public List<WorkResponse> search(String q, String category, String minPrice, String maxPrice, String ownerId) {
+        List<ErrorDetail> errors = workValidator.validateSearch(q, category, minPrice, maxPrice, ownerId);
+
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
+        }
+
+        BigDecimal parsedMinPrice = minPrice != null && !minPrice.isBlank() ? new BigDecimal(minPrice) : null;
+        BigDecimal parsedMaxPrice = maxPrice != null && !maxPrice.isBlank() ? new BigDecimal(maxPrice) : null;
+        Long parsedOwnerId = ownerId != null && !ownerId.isBlank() ? Long.parseLong(ownerId) : null;
 
         String normalizedQ;
         if (q == null) {
@@ -140,7 +194,6 @@ public class WorkService {
 
         boolean hasQ = normalizedQ != null && !normalizedQ.isBlank();
         boolean hasCategory = normalizedCategory != null && !normalizedCategory.isBlank();
-
         List<Work> works;
 
         if (hasQ) {
@@ -155,18 +208,17 @@ public class WorkService {
             works = works.stream().filter(work -> work.getCategory() != null).filter(work -> work.getCategory().equalsIgnoreCase(normalizedCategory)).toList();
         }
 
-        if (minPrice != null) {
-            works = works.stream().filter(work -> work.getPrice() != null).filter(work -> work.getPrice().compareTo(minPrice) >= 0).toList();
+        if (parsedMinPrice != null) {
+            works = works.stream().filter(work -> work.getPrice() != null).filter(work -> work.getPrice().compareTo(parsedMinPrice) >= 0).toList();
         }
 
-        if (maxPrice != null) {
-            works = works.stream().filter(work -> work.getPrice() != null).filter(work -> work.getPrice().compareTo(maxPrice) <= 0).toList();
+        if (parsedMaxPrice != null) {
+            works = works.stream().filter(work -> work.getPrice() != null).filter(work -> work.getPrice().compareTo(parsedMaxPrice) <= 0).toList();
         }
 
-        if (ownerId != null) {
-            works = works.stream().filter(work -> work.getOwner() != null).filter(work -> work.getOwner().getId().equals(ownerId)).toList();
+        if (parsedOwnerId != null) {
+            works = works.stream().filter(work -> work.getOwner() != null).filter(work -> work.getOwner().getId().equals(parsedOwnerId)).toList();
         }
-
         return works.stream().map(WorkResponse::fromEntity).toList();
     }
 
