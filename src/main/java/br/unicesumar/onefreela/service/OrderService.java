@@ -161,7 +161,24 @@ public class OrderService {
             throw new ValidationException(errors);
         }
 
-        saveOrderItem(orderItem);
-        return orderItem;
+        return saveOrderItem(orderItem);
+    }
+
+    @Transactional
+    public OrderItem openDispute (User user, Long orderItemId){
+        List<ErrorDetail> errors = new ArrayList<>();
+        OrderItem orderItem = findOrderItemById(orderItemId);
+
+        if (orderItem.getWork().getOwner().equals(user)) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao pode abrir disputa em seu proprio pedido"));
+            throw new ValidationException(errors);
+        } else {
+            if (orderItem.getOrder().getUser() == user){
+                orderItem.setStatus(OrderItemStatus.ON_DISPUTE);
+                saveOrderItem(orderItem);
+            }
+        }
+
+        return saveOrderItem(orderItem);
     }
 }
