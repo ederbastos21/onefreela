@@ -50,6 +50,46 @@ public class OrderService {
         return orderItemRepository.save(orderItem);
     }
 
+    private boolean isWorkOwner(User user, OrderItem orderItem){
+        return orderItem.getWork().getOwner().getId().equals(user.getId());
+    }
+
+    private boolean isOrderOwner(User user, OrderItem orderItem){
+        return orderItem.getOrder().getUser().getId().equals(user.getId());
+    }
+
+    private boolean reachedMaxDeliveryTries(OrderItem orderItem, int max){
+        return orderItem.getDeliveryTries() >= max;
+    }
+
+    private boolean hasStatus(OrderItem orderItem, OrderItemStatus status){
+        return orderItem.getStatus().equals(status);
+    }
+
+    private boolean canMakeDelivery(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY);
+    }
+
+    private boolean canAcceptDelivery(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY);
+    }
+
+    private boolean canRequestAdjustment(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY_REVISION);
+    }
+
+    private boolean canRefuseAdjustment(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.ADJUSTMENT_REQUEST);
+    }
+
+    private boolean canOpenDispute(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY_REVISION);
+    }
+
+    private boolean isCompleted(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.COMPLETED);
+    }
+
     public List<Order> findAllOrders (){
         return orderRepository.findAll();
     }
