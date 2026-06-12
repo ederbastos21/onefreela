@@ -71,7 +71,7 @@ public class OrderService {
     }
 
     private boolean canAcceptDelivery(OrderItem orderItem){
-        return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY);
+        return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY_REVISION);
     }
 
     private boolean canRequestAdjustment(OrderItem orderItem){
@@ -145,19 +145,18 @@ public class OrderService {
         int MAX_DELIVERY_TRIES = 3;
         OrderItem orderItem = findOrderItemById(deliverDto.getOrderItemId());
         List<ErrorDetail> errors = new ArrayList<>();
+        Delivery delivery = new Delivery();
 
         if (orderItem == null){
-            errors.add(new ErrorDetail(ErrorCode.ORDER_ITEM_NOT_FOUND, "delivery", "Nao foi encontrado nenhum pedido"));
+            errors.add(new ErrorDetail(ErrorCode.ORDER_ITEM_NOT_FOUND, "delivery", "O pedido nao foi encontrado"));
             throw new ValidationException(errors);
         }
 
-        if (orderItem.getDeliveryTries() >= MAX_DELIVERY_TRIES){
-            errors.add(new ErrorDetail(ErrorCode.DELIVERY_TOO_MANY_TRIES, "delivery", "O limite de envio é de 3 tentativas"));
+        if (reachedMaxDeliveryTries(orderItem, MAX_DELIVERY_TRIES)){
+            errors.add(new ErrorDetail(ErrorCode.DELIVERY_TOO_MANY_TRIES, "delivery", "O limite de envio é de 3 tentativas, espere o retorno do cliente"));
         }
 
-        Delivery delivery = new Delivery();
-
-        if (!delivery.getOrderItem().getWork().getOwner().equals(user)){
+        if (!isWorkOwner(user, orderItem)){
             errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
             throw new ValidationException(errors);
         }
@@ -194,12 +193,12 @@ public class OrderService {
         List<ErrorDetail> errors = new ArrayList<>();
         OrderItem orderItem = findOrderItemById(orderItemId);
 
-        if (!orderItem.getStatus().equals(OrderItemStatus.ADJUSTMENT_REQUEST)){
-            errors.add(new ErrorDetail(E));
+        if (!canRefuseAdjustment(orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.NO_PENDING_ADJUSTMENT_REQUEST, "delivey", "nao há nenhum ajuste pendente"));
             throw new ValidationException(errors);
         }
 
-        if (!orderItem.getWork().getOwner().equals(user)) {
+        if (!isWorkOwner(user, orderItem)) {
             errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
             throw new ValidationException(errors);
         }
@@ -213,12 +212,12 @@ public class OrderService {
         List<ErrorDetail> errors = new ArrayList<>();
         OrderItem orderItem = findOrderItemById(orderItemId);
 
-        if (orderItem.getWork().getOwner().equals(user)) {
+        if (isWorkOwner(user, orderItem)) {
             errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao pode abrir disputa em seu proprio pedido"));
             throw new ValidationException(errors);
         }
 
-        if (orderItem.getOrder().getUser().getId().equals(user.getId())){
+        if (isOrderOwner(user, orderItem)){
             orderItem.setStatus(OrderItemStatus.ON_DISPUTE);
             saveOrderItem(orderItem);
         }
@@ -231,17 +230,17 @@ public class OrderService {
         List<ErrorDetail> errors = new ArrayList<>();
         OrderItem orderItem = findOrderItemById(orderItemId);
 
-        if (!orderItem.getStatus().equals(OrderItemStatus.PENDING_DELIVERY_REVISION)){
+        if (!canAcceptDelivery(orderItem)){
             errors.add(new ErrorDetail(ErrorCode.NO_PENDING_DELIVERY_REVIEW, "delivery", "nao há nenhum pedido de revisao pendente"));
             throw new ValidationException(errors);
         }
 
-        if (orderItem.getWork().getOwner().getId().equals(user.getId())) {
+        if (isWorkOwner(user, orderItem)) {
             errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao aceitar seu proprio serviço"));
             throw new ValidationException(errors);
         }
 
-        if (!orderItem.getOrder().getUser().getId().equals(user.getId())){
+        if (!isOrderOwner(user, orderItem)){
             errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
             throw new ValidationException(errors);
         }
