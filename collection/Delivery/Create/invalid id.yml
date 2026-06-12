@@ -1,0 +1,35 @@
+info:
+  name: invalid id
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://localhost:8080/delivery/makeDelivery
+  headers:
+    - name: Authorization
+      value: ""
+  body:
+    type: multipart-form
+    data:
+      - name: orderItemId
+        type: text
+        value: "9999"
+      - name: files
+        type: file
+        value:
+          - /home/eder/Downloads/teste.txt
+      - name: files
+        type: file
+        value:
+          - /home/eder/Downloads/teste1.txt
+      - name: message
+        type: text
+        value: envio arquivo x
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
