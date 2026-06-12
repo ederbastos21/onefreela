@@ -7,9 +7,7 @@ import br.unicesumar.onefreela.entity.Work;
 import br.unicesumar.onefreela.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -38,6 +36,17 @@ public class AdminController {
             List<User> users = userService.findAll();
             return ResponseEntity.ok().body(users);
         }
+        return null;
+    }
+
+    @PostMapping("/removeUser/{id}")
+    public ResponseEntity<?> removeUser (HttpServletRequest httpServletRequest, @PathVariable Long userId){
+        User user = authService.getAuthenticatedUser(httpServletRequest);
+        if (authService.checkAdmin(httpServletRequest, user)){
+            userService.deleteById(userId);
+            return ResponseEntity.ok().body("deletado com sucesso");
+        }
+
         return null;
     }
 

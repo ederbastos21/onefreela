@@ -1,0 +1,32 @@
+info:
+  name: no message
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://localhost:8080/delivery/makeDelivery
+  headers:
+    - name: Authorization
+      value: ""
+  body:
+    type: multipart-form
+    data:
+      - name: orderItemId
+        type: text
+        value: "1"
+      - name: files
+        type: file
+        value:
+          - /home/eder/Downloads/teste.txt
+      - name: files
+        type: file
+        value:
+          - /home/eder/Downloads/teste1.txt
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

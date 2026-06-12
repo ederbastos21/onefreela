@@ -34,7 +34,7 @@ public class PaymentController {
     @PostMapping("/makePaymentCard")
     public ResponseEntity<?> makePaymentCard (HttpServletRequest httpServletRequest, @RequestBody CardPaymentMethodDTO cardPaymentMethodDTO){
         User user = authService.getAuthenticatedUser(httpServletRequest);
-        Order order = orderService.findById(cardPaymentMethodDTO.getOrderId());
+        Order order = orderService.findOrderById(cardPaymentMethodDTO.getOrderId());
         Payment payment = paymentService.makePayment(user, order);
         Payment createdPayment = paymentService.processPaymentCard(payment, cardPaymentMethodDTO);
         return ResponseEntity.ok().body(createdPayment);
@@ -44,7 +44,7 @@ public class PaymentController {
     @PostMapping("/makePaymentPix")
     public ResponseEntity<?> makePaymentPix (HttpServletRequest httpServletRequest, @RequestBody PixPaymentMethodDTO pixPaymentMethodDTO){
         User user = authService.getAuthenticatedUser(httpServletRequest);
-        Order order = orderService.findById(pixPaymentMethodDTO.getOrderId());
+        Order order = orderService.findOrderById(pixPaymentMethodDTO.getOrderId());
         Payment payment = paymentService.makePayment(user, order);
         Payment createdPayment = paymentService.processPaymentPix(payment, pixPaymentMethodDTO);
         return ResponseEntity.ok().body(createdPayment);

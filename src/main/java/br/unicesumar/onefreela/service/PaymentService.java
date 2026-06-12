@@ -5,8 +5,10 @@ import br.unicesumar.onefreela.dto.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.PixPaymentMethodDTO;
 import br.unicesumar.onefreela.entity.Order;
+import br.unicesumar.onefreela.entity.OrderItem;
 import br.unicesumar.onefreela.entity.Payment;
 import br.unicesumar.onefreela.entity.User;
+import br.unicesumar.onefreela.enums.OrderItemStatus;
 import br.unicesumar.onefreela.enums.PaymentStatus;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.PaymentRepository;
@@ -21,9 +23,11 @@ import java.util.List;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final OrderService orderService;
 
-    public PaymentService (PaymentRepository paymentRepository){
+    public PaymentService (PaymentRepository paymentRepository, OrderService orderService){
         this.paymentRepository = paymentRepository;
+        this.orderService = orderService;
     }
 
     @Transactional
@@ -45,6 +49,13 @@ public class PaymentService {
         payment.setValue(order.getTotalPrice());
         payment.setReleasedAt(null);
         payment.setPlatformFee(paymentFee);
+
+        List <OrderItem> orderItemList = order.getOrderItemlist();
+
+        for (OrderItem orderItem : orderItemList){
+            orderItem.setStatus(OrderItemStatus.PENDING_DELIVERY);
+        }
+        orderService.saveOrder(order);
         return paymentRepository.save(payment);
     }
 

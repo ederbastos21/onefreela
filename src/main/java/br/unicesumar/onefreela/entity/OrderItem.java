@@ -1,9 +1,11 @@
 package br.unicesumar.onefreela.entity;
 
+import br.unicesumar.onefreela.enums.OrderItemStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 public class OrderItem {
@@ -24,8 +26,16 @@ public class OrderItem {
     private double unitPrice;
     private double totalPrice;
     private LocalDate createdAt;
-    private LocalDate deliveredAt;
     private LocalDate deadlineDate;
+    private LocalDate deliveredAt;
+
+    @Enumerated(EnumType.STRING)
+    private OrderItemStatus status;
+
+    @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Delivery> deliveryList;
+
+    private int deliveryTries;
 
     public Long getId() {
         return id;
@@ -97,5 +107,29 @@ public class OrderItem {
 
     public void setDeadlineDate(LocalDate deadlineDate) {
         this.deadlineDate = deadlineDate;
+    }
+
+    public OrderItemStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderItemStatus status) {
+        this.status = status;
+    }
+
+    public List<Delivery> getDeliveryList() {
+        return deliveryList;
+    }
+
+    public void setDeliveryList(List<Delivery> deliveryList) {
+        this.deliveryList = deliveryList;
+    }
+
+    public int getDeliveryTries() {
+        return deliveryTries;
+    }
+
+    public void setDeliveryTries(int deliveryTries) {
+        this.deliveryTries = deliveryTries;
     }
 }
