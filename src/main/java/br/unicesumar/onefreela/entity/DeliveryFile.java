@@ -1,5 +1,6 @@
 package br.unicesumar.onefreela.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -17,6 +18,7 @@ public class DeliveryFile {
     private LocalDate uploadedAt;
     private Long fileSize;
 
+    @JsonIgnore
     @ManyToOne
     private Delivery delivery;
 

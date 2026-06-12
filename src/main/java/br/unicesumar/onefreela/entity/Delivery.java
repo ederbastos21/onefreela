@@ -1,7 +1,9 @@
 package br.unicesumar.onefreela.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -12,11 +14,12 @@ public class Delivery {
     private Long id;
     private String message;
 
+    @JsonIgnore
     @ManyToOne
     private OrderItem orderItem;
 
     @OneToMany(mappedBy = "delivery", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DeliveryFile> fileList;
+    private List<DeliveryFile> fileList = new ArrayList<>();
 
     public Long getId() {
         return id;
