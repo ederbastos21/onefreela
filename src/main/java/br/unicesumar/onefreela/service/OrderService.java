@@ -78,7 +78,7 @@ public class OrderService {
         return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY_REVISION);
     }
 
-    private boolean canRefuseAdjustment(OrderItem orderItem){
+    private boolean canAcceptAdjustment(OrderItem orderItem){
         return hasStatus(orderItem, OrderItemStatus.ADJUSTMENT_REQUEST);
     }
 
@@ -96,9 +96,11 @@ public class OrderService {
 
 
     public Order makeOrder (User user, MakeOrderDTO makeOrderDTO){
-        Cart cart = user.getCart();
         List<ErrorDetail> errors = new ArrayList<>();
-
+        Cart cart = user.getCart();
+        if (cart == null){
+            errors.add(new ErrorDetail(ErrorCode.CART_NOT_FOUND, "order", "O carrinho nao foi encontrado"));
+        }
         List<CartItem> cartItemList = cart.getCartItemList();
 
         if (cartItemList.isEmpty()){
@@ -110,34 +112,41 @@ public class OrderService {
         List <OrderItem> orderItemList = new ArrayList<>();
 
         for (CartItem ci : cartItemList){
+            boolean isAvailable = true;
             if (ci.getWork().getStatus().equals(WorkStatus.INACTIVE)){
                 errors.add(new ErrorDetail(ErrorCode.WORK_INACTIVE, "order", "o serviço " + ci.getWork().getTitle() + " está indisponivel"));
+                isAvailable = false;
             }
-            OrderItem orderItem = new OrderItem();
-            orderItem.setAmount(ci.getAmount());
-            orderItem.setWork(ci.getWork());
-            orderItem.setCreatedAt(LocalDate.now());
-            orderItem.setDeadlineDate(LocalDate.now().plusWeeks(2));
-            orderItem.setUnitPrice(ci.getWork().getPrice().doubleValue());
-            orderItem.setTotalPrice(ci.getAmount() * ci.getWork().getPrice().doubleValue());
-            orderItemList.add(orderItem);
-            orderItem.setOrder(order);
+            if (isAvailable) {
+                OrderItem orderItem = new OrderItem();
+                orderItem.setAmount(ci.getAmount());
+                orderItem.setWork(ci.getWork());
+                orderItem.setCreatedAt(LocalDate.now());
+                orderItem.setDeadlineDate(LocalDate.now().plusWeeks(2));
+                orderItem.setUnitPrice(ci.getWork().getPrice().doubleValue());
+                orderItem.setTotalPrice(ci.getAmount() * ci.getWork().getPrice().doubleValue());
+                orderItemList.add(orderItem);
+                orderItem.setOrder(order);
+            }
         }
 
-        order.setCreatedAt(LocalDate.now());
-        order.setStatus(OrderStatus.NOT_PAID);
-        order.setUser(user);
-        order.setPaymentMethod(makeOrderDTO.getPaymentMethod());
+        if (errors.isEmpty()){
+            order.setCreatedAt(LocalDate.now());
+            order.setStatus(OrderStatus.NOT_PAID);
+            order.setUser(user);
+            order.setPaymentMethod(makeOrderDTO.getPaymentMethod());
 
-        double total = 0;
-        for (OrderItem orderItem : orderItemList){
-            total += orderItem.getTotalPrice();
+            double total = 0;
+            for (OrderItem orderItem : orderItemList){
+                total += orderItem.getTotalPrice();
+            }
+
+            order.setTotalPrice(total);
+            order.setOrderItemlist(orderItemList);
+
+            return saveOrder(order);
         }
-
-        order.setTotalPrice(total);
-        order.setOrderItemlist(orderItemList);
-
-        return saveOrder(order);
+        throw new ValidationException(errors);
     }
 
     @Transactional
@@ -154,6 +163,12 @@ public class OrderService {
 
         if (reachedMaxDeliveryTries(orderItem, MAX_DELIVERY_TRIES)){
             errors.add(new ErrorDetail(ErrorCode.DELIVERY_TOO_MANY_TRIES, "delivery", "O limite de envio é de 3 tentativas, espere o retorno do cliente"));
+            throw new ValidationException(errors);
+        }
+
+        if (!canMakeDelivery(orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.NO_PENDING_DELIVERY, "delivery", "Nao há nenhum envio de arquivos pendente"));
+            throw new ValidationException(errors);
         }
 
         if (!isWorkOwner(user, orderItem)){
@@ -167,33 +182,38 @@ public class OrderService {
 
         List <MultipartFile> files = deliverDto.getFiles();
 
-        for (MultipartFile file : files){
-            DeliveryFile deliveryFile = new DeliveryFile();
+        if (files != null){
+            for (MultipartFile file : files){
+                DeliveryFile deliveryFile = new DeliveryFile();
 
-            deliveryFile.setDelivery(savedDelivery);
-            deliveryFile.setFileSize(file.getSize());
-            deliveryFile.setExtension(file.getContentType());
-            deliveryFile.setOriginalName(file.getName());
-            deliveryFile.setUploadedAt(LocalDate.now());
-            deliveryFile.setPath(deliveryFileStorageService.store(file));
-            delivery.getFileList().add(deliveryFile);
+                deliveryFile.setDelivery(savedDelivery);
+                deliveryFile.setFileSize(file.getSize());
+                deliveryFile.setExtension(file.getContentType());
+                deliveryFile.setOriginalName(file.getName());
+                deliveryFile.setUploadedAt(LocalDate.now());
+                deliveryFile.setPath(deliveryFileStorageService.store(file));
+                savedDelivery.getFileList().add(deliveryFile);
+            }
+        } else {
+            errors.add(new ErrorDetail(ErrorCode.DELIVERY_FILE_EMPTY, "delivery", "nenhum arquivo de envio encontrado"));
+            throw new ValidationException(errors);
         }
 
-        deliveryService.save(delivery);
+        deliveryService.save(savedDelivery);
 
         orderItem.setDeliveryTries(orderItem.getDeliveryTries() + 1);
         orderItem.setStatus(OrderItemStatus.PENDING_DELIVERY_REVISION);
-        orderItemRepository.save(orderItem);
+        saveOrderItem(orderItem);
 
         return delivery;
     }
 
     @Transactional
-    public OrderItem refuseAdjustment (User user, Long orderItemId){
+    public OrderItem refuseAdjustmentRequest (User user, Long orderItemId){
         List<ErrorDetail> errors = new ArrayList<>();
         OrderItem orderItem = findOrderItemById(orderItemId);
 
-        if (!canRefuseAdjustment(orderItem)){
+        if (!canAcceptAdjustment(orderItem)){
             errors.add(new ErrorDetail(ErrorCode.NO_PENDING_ADJUSTMENT_REQUEST, "delivey", "nao há nenhum ajuste pendente"));
             throw new ValidationException(errors);
         }
@@ -203,7 +223,26 @@ public class OrderService {
             throw new ValidationException(errors);
         }
 
-        orderItem.setStatus(OrderItemStatus.ADJUSTMENT_REFUSED);
+        orderItem.setStatus(OrderItemStatus.FROZEN);
+        return saveOrderItem(orderItem);
+    }
+
+    @Transactional
+    public OrderItem acceptAdjustmentRequest (User user, Long orderItemId){
+        List<ErrorDetail> errors = new ArrayList<>();
+        OrderItem orderItem = findOrderItemById(orderItemId);
+
+        if (!canAcceptAdjustment(orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.NO_PENDING_ADJUSTMENT_REQUEST, "delivey", "nao há nenhum ajuste pendente"));
+            throw new ValidationException(errors);
+        }
+
+        if (!isWorkOwner(user, orderItem)) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
+            throw new ValidationException(errors);
+        }
+
+        orderItem.setStatus(OrderItemStatus.PENDING_DELIVERY);
         return saveOrderItem(orderItem);
     }
 
@@ -236,7 +275,7 @@ public class OrderService {
         }
 
         if (isWorkOwner(user, orderItem)) {
-            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao aceitar seu proprio serviço"));
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao pode aceitar seu proprio serviço"));
             throw new ValidationException(errors);
         }
 
@@ -246,6 +285,34 @@ public class OrderService {
         }
 
         orderItem.setStatus(OrderItemStatus.COMPLETED);
+        return saveOrderItem(orderItem);
+    }
+
+    @Transactional
+    public OrderItem refuseDelivery (User user, Long orderItemId){
+        List<ErrorDetail> errors = new ArrayList<>();
+        OrderItem orderItem = findOrderItemById(orderItemId);
+
+        if (!canAcceptDelivery(orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.NO_PENDING_DELIVERY_REVIEW, "delivery", "nao há nenhum pedido com revisao pendente"));
+            throw new ValidationException(errors);
+        }
+
+        if (isWorkOwner(user, orderItem)){
+            errors.add (new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao pode recusar seu proprio serviço"));
+        }
+
+        if (!isOrderOwner(user, orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
+            throw new ValidationException(errors);
+        }
+
+        if (orderItem.getDeliveryTries() == 3){
+            orderItem.setStatus(OrderItemStatus.FROZEN);
+            return saveOrderItem(orderItem);
+        }
+
+        orderItem.setStatus(OrderItemStatus.ADJUSTMENT_REQUEST);
         return saveOrderItem(orderItem);
     }
 }
