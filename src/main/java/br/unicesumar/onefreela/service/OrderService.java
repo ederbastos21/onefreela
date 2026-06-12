@@ -117,35 +117,35 @@ public class OrderService {
 
         Delivery delivery = new Delivery();
 
-        if (delivery.getOrderItem().getWork().getOwner().equals(user)){
-            delivery.setMessage(deliverDto.getMessage());
-            delivery.setOrderItem(orderItem);
-            Delivery savedDelivery = deliveryService.save(delivery);
-
-            List <MultipartFile> files = deliverDto.getFiles();
-
-            for (MultipartFile file : files){
-                DeliveryFile deliveryFile = new DeliveryFile();
-
-                deliveryFile.setDelivery(savedDelivery);
-                deliveryFile.setFileSize(file.getSize());
-                deliveryFile.setExtension(file.getContentType());
-                deliveryFile.setOriginalName(file.getName());
-                deliveryFile.setUploadedAt(LocalDate.now());
-                deliveryFile.setPath(deliveryFileStorageService.store(file));
-                delivery.getFileList().add(deliveryFile);
-            }
-
-            deliveryService.save(delivery);
-
-            orderItem.setDeliveryTries(orderItem.getDeliveryTries() + 1);
-            orderItem.setStatus(OrderItemStatus.PENDING_DELIVERY_REVISION);
-            orderItemRepository.save(orderItem);
-        }
-        else {
+        if (!delivery.getOrderItem().getWork().getOwner().equals(user)){
             errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
             throw new ValidationException(errors);
         }
+
+        delivery.setMessage(deliverDto.getMessage());
+        delivery.setOrderItem(orderItem);
+        Delivery savedDelivery = deliveryService.save(delivery);
+
+        List <MultipartFile> files = deliverDto.getFiles();
+
+        for (MultipartFile file : files){
+            DeliveryFile deliveryFile = new DeliveryFile();
+
+            deliveryFile.setDelivery(savedDelivery);
+            deliveryFile.setFileSize(file.getSize());
+            deliveryFile.setExtension(file.getContentType());
+            deliveryFile.setOriginalName(file.getName());
+            deliveryFile.setUploadedAt(LocalDate.now());
+            deliveryFile.setPath(deliveryFileStorageService.store(file));
+            delivery.getFileList().add(deliveryFile);
+        }
+
+        deliveryService.save(delivery);
+
+        orderItem.setDeliveryTries(orderItem.getDeliveryTries() + 1);
+        orderItem.setStatus(OrderItemStatus.PENDING_DELIVERY_REVISION);
+        orderItemRepository.save(orderItem);
+
         return delivery;
     }
 
@@ -154,13 +154,17 @@ public class OrderService {
         List<ErrorDetail> errors = new ArrayList<>();
         OrderItem orderItem = findOrderItemById(orderItemId);
 
-        if (orderItem.getWork().getOwner().equals(user)) {
-            orderItem.setStatus(OrderItemStatus.ADJUSTMENT_REFUSED);
-        } else {
+        if (!orderItem.getStatus().equals(OrderItemStatus.ADJUSTMENT_REQUEST)){
+            errors.add(new ErrorDetail(E));
+            throw new ValidationException(errors);
+        }
+
+        if (!orderItem.getWork().getOwner().equals(user)) {
             errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
             throw new ValidationException(errors);
         }
 
+        orderItem.setStatus(OrderItemStatus.ADJUSTMENT_REFUSED);
         return saveOrderItem(orderItem);
     }
 
@@ -172,13 +176,37 @@ public class OrderService {
         if (orderItem.getWork().getOwner().equals(user)) {
             errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao pode abrir disputa em seu proprio pedido"));
             throw new ValidationException(errors);
-        } else {
-            if (orderItem.getOrder().getUser() == user){
-                orderItem.setStatus(OrderItemStatus.ON_DISPUTE);
-                saveOrderItem(orderItem);
-            }
         }
 
+        if (orderItem.getOrder().getUser().getId().equals(user.getId())){
+            orderItem.setStatus(OrderItemStatus.ON_DISPUTE);
+            saveOrderItem(orderItem);
+        }
+
+        return saveOrderItem(orderItem);
+    }
+
+    @Transactional
+    public OrderItem acceptDelivery (User user, Long orderItemId){
+        List<ErrorDetail> errors = new ArrayList<>();
+        OrderItem orderItem = findOrderItemById(orderItemId);
+
+        if (!orderItem.getStatus().equals(OrderItemStatus.PENDING_DELIVERY_REVISION)){
+            errors.add(new ErrorDetail(ErrorCode.NO_PENDING_DELIVERY_REVIEW, "delivery", "nao há nenhum pedido de revisao pendente"));
+            throw new ValidationException(errors);
+        }
+
+        if (orderItem.getWork().getOwner().getId().equals(user.getId())) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao aceitar seu proprio serviço"));
+            throw new ValidationException(errors);
+        }
+
+        if (!orderItem.getOrder().getUser().getId().equals(user.getId())){
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
+            throw new ValidationException(errors);
+        }
+
+        orderItem.setStatus(OrderItemStatus.COMPLETED);
         return saveOrderItem(orderItem);
     }
 }
