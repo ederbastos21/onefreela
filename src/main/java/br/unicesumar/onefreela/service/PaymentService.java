@@ -1,7 +1,7 @@
 package br.unicesumar.onefreela.service;
 
 import br.unicesumar.onefreela.dto.CardPaymentMethodDTO;
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.PixPaymentMethodDTO;
 import br.unicesumar.onefreela.entity.Order;

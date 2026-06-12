@@ -1,17 +1,17 @@
 package br.unicesumar.onefreela.service;
 
 import br.unicesumar.onefreela.dto.DeliverDTO;
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.MakeOrderDTO;
 import br.unicesumar.onefreela.entity.*;
 import br.unicesumar.onefreela.enums.OrderItemStatus;
 import br.unicesumar.onefreela.enums.OrderStatus;
+import br.unicesumar.onefreela.enums.WorkStatus;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.OrderItemRepository;
 import br.unicesumar.onefreela.repository.OrderRepository;
 import jakarta.transaction.Transactional;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 

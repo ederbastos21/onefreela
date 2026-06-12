@@ -1,12 +1,12 @@
 package br.unicesumar.onefreela.service.validator;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.WorkAdditionalDTO;
 import br.unicesumar.onefreela.dto.WorkRegisterDTO;
 import br.unicesumar.onefreela.dto.WorkReviewDTO;
 import br.unicesumar.onefreela.dto.WorkUpdateDTO;
-import br.unicesumar.onefreela.entity.WorkStatus;
+import br.unicesumar.onefreela.enums.WorkStatus;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.ArrayList;

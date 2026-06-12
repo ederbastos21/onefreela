@@ -1,13 +1,13 @@
 package br.unicesumar.onefreela.service;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.ReportRegisterDTO;
 import br.unicesumar.onefreela.dto.ReportResponse;
 import br.unicesumar.onefreela.dto.ReportReviewDTO;
 import br.unicesumar.onefreela.entity.Report;
 import br.unicesumar.onefreela.entity.ReportAttachment;
-import br.unicesumar.onefreela.entity.ReportStatus;
+import br.unicesumar.onefreela.enums.ReportStatus;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.ReportRepository;

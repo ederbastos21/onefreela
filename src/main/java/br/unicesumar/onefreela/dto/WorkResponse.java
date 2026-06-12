@@ -1,7 +1,7 @@
 package br.unicesumar.onefreela.dto;
 
 import br.unicesumar.onefreela.entity.Work;
-import br.unicesumar.onefreela.entity.WorkStatus;
+import br.unicesumar.onefreela.enums.WorkStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;

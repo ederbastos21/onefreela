@@ -1,6 +1,6 @@
 package br.unicesumar.onefreela.exception;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;

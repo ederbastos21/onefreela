@@ -1,7 +1,7 @@
 package br.unicesumar.onefreela.repository;
 
 import br.unicesumar.onefreela.entity.Work;
-import br.unicesumar.onefreela.entity.WorkStatus;
+import br.unicesumar.onefreela.enums.WorkStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 

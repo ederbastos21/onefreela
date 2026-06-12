@@ -1,6 +1,6 @@
 package br.unicesumar.onefreela.service;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.WorkRegisterDTO;
 import br.unicesumar.onefreela.dto.WorkResponse;
@@ -8,7 +8,7 @@ import br.unicesumar.onefreela.dto.WorkReviewDTO;
 import br.unicesumar.onefreela.dto.WorkUpdateDTO;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.entity.Work;
-import br.unicesumar.onefreela.entity.WorkStatus;
+import br.unicesumar.onefreela.enums.WorkStatus;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.WorkRepository;
 import br.unicesumar.onefreela.service.mapper.WorkMapper;

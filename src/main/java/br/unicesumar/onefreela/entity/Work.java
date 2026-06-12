@@ -1,5 +1,6 @@
 package br.unicesumar.onefreela.entity;
 
+import br.unicesumar.onefreela.enums.WorkStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;

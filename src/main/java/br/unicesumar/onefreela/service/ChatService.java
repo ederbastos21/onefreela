@@ -2,6 +2,7 @@ package br.unicesumar.onefreela.service;
 
 import br.unicesumar.onefreela.dto.*;
 import br.unicesumar.onefreela.entity.*;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.ConversationRepository;
 import br.unicesumar.onefreela.repository.MessageRepository;

@@ -1,4 +1,4 @@
-package br.unicesumar.onefreela.dto;
+package br.unicesumar.onefreela.enums;
 
 public enum ErrorCode {
 
