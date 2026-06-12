@@ -59,11 +59,28 @@ public class DeliveryController {
         return ResponseEntity.ok().body(orderService.makeDelivery(user, deliverDto));
     }
 
-    @PostMapping("/refuseAdjustment/{id}")
+    @PostMapping("/refuseAdjustment/{orderItemId}")
     public ResponseEntity<?> refuseAdjustment (HttpServletRequest httpServletRequest, @PathVariable Long orderItemId){
         User user = authService.getAuthenticatedUser(httpServletRequest);
-        return ResponseEntity.ok().body(orderService.refuseAdjustment(user, orderItemId));
+        return ResponseEntity.ok().body(orderService.refuseAdjustmentRequest(user, orderItemId));
     }
 
-    @PostMapping("/openDispute")
+    @PostMapping("/acceptAdjustment/{orderItemId}")
+    public ResponseEntity<?> acceptAdjustment (HttpServletRequest httpServletRequest, @PathVariable Long orderItemId) {
+        User user = authService.getAuthenticatedUser(httpServletRequest);
+        return ResponseEntity.ok().body(orderService.acceptAdjustmentRequest(user,orderItemId));
+    }
+
+    @PostMapping("/acceptDelivery/{orderItemId}")
+    public ResponseEntity<?> acceptDelivery (HttpServletRequest httpServletRequest, @PathVariable Long orderItemId) {
+        User user = authService.getAuthenticatedUser(httpServletRequest);
+        return ResponseEntity.ok().body(orderService.acceptDelivery(user,orderItemId));
+    }
+
+    @PostMapping("/refuseDelivery/{orderItemId}")
+    public ResponseEntity<?> refuseDelivery (HttpServletRequest httpServletRequest, @PathVariable Long orderItemId) {
+        User user = authService.getAuthenticatedUser(httpServletRequest);
+        return ResponseEntity.ok().body(orderService.refuseDelivery(user,orderItemId));
+    }
+
 }
