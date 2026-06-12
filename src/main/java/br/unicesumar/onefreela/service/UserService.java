@@ -52,6 +52,10 @@ public class UserService {
         return repository.findByEmail(email);
     }
 
+    public void deleteById(Long id){
+        repository.deleteById(id);
+    }
+
     public Boolean existsByEmail (String email){
         return repository.existsByEmail(email);
     }
