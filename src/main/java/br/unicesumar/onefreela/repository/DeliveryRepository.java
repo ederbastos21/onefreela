@@ -12,11 +12,4 @@ import java.util.List;
 
 @Repository
 public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
-    @Query("""
-    SELECT oi FROM OrderItem oi
-    WHERE oi.work.user = :freelancer
-    AND oi.status = :status
-    """)
-
-    List<OrderItem> findByFreelancerAndStatus(User freelancer, OrderItemStatus status);
 }
