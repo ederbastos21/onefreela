@@ -28,6 +28,8 @@ public class OrderItem {
     private LocalDate createdAt;
     private LocalDate deadlineDate;
     private LocalDate deliveredAt;
+
+    @Enumerated(EnumType.STRING)
     private OrderItemStatus status;
 
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
