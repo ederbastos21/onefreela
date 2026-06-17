@@ -6333,3 +6333,122 @@ footer {
   font-size: 12px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
+
+
+/* ============================================================
+   LAYER 6 — LIGHT THEME OVERRIDES
+   Activated via html[data-theme="light"]
+   ============================================================ */
+
+html[data-theme="light"] {
+  /* Colors */
+  --black:     #f8f9fa;
+  --surface:   #f0f2f5;
+  --card:      #ffffff;
+  --card2:     #f5f7f9;
+  --input:     #eef0f3;
+  --border:    #e2e5ea;
+  --border2:   #c8cdd6;
+  --green:     #4d9200;
+  --green-dim: #3d7400;
+  --gdim:      rgba(77,146,0,.12);
+  --purple:    #6d28d9;
+  --red:       #dc2626;
+  --text:      #111111;
+  --muted:     #6b7280;
+  --muted2:    #4b5563;
+
+  /* Shadows */
+  --shadow-md: 0 8px 32px rgba(0,0,0,.10);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,.18);
+}
+
+/* ── Structural background overrides (hardcoded values) ──── */
+
+html[data-theme="light"] nav {
+  background: rgba(248,249,250,.88);
+  border-bottom: 1px solid rgba(0,0,0,.07);
+}
+
+html[data-theme="light"] nav.nav-app {
+  background: rgba(255,255,255,.97);
+  border-bottom: 1px solid var(--border);
+}
+
+html[data-theme="light"] .filter-bar {
+  background: var(--surface);
+}
+
+html[data-theme="light"] .actions-bar {
+  background: rgba(255,255,255,.97);
+  border-top: 1px solid var(--border);
+}
+
+/* ── Hover states (rgba white → rgba black) ─────────────── */
+
+html[data-theme="light"] .nav-item:hover,
+html[data-theme="light"] .side-item:hover,
+html[data-theme="light"] .shortcut:hover,
+html[data-theme="light"] .dd-opt:hover,
+html[data-theme="light"] .dd-star:hover,
+html[data-theme="light"] .dd-av:hover,
+html[data-theme="light"] .faq-q:hover,
+html[data-theme="light"] .plans-compare-table tr:hover td,
+html[data-theme="light"] .legal-table tbody tr:hover td {
+  background: rgba(0,0,0,.04);
+}
+
+html[data-theme="light"] .conv-item:hover { background: rgba(0,0,0,.03); }
+
+html[data-theme="light"] .fl-card:hover  { box-shadow: 0 12px 40px rgba(0,0,0,.12); }
+html[data-theme="light"] .cat-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.10); }
+html[data-theme="light"] .valor-card:hover { box-shadow: 0 12px 32px rgba(0,0,0,.10); }
+
+/* ── Decorative overlays ────────────────────────────────── */
+
+html[data-theme="light"] .float-tag {
+  color: rgba(0,0,0,.04);
+}
+
+html[data-theme="light"] .left-grid {
+  background-image:
+    linear-gradient(rgba(0,0,0,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,.05) 1px, transparent 1px);
+}
+
+html[data-theme="light"] .cursor-glow {
+  background: radial-gradient(circle, rgba(77,146,0,.07) 0%, transparent 70%);
+}
+
+/* ── Message file attachment ────────────────────────────── */
+
+html[data-theme="light"] .msg-file {
+  background: rgba(0,0,0,.05);
+  border: 1px solid rgba(0,0,0,.08);
+}
+
+/* ── Theme Toggle Button ────────────────────────────────── */
+
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--muted2);
+  transition: border-color .2s, color .2s, background .2s;
+  flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+  border-color: var(--border2);
+  color: var(--text);
+}
+
+html[data-theme="light"] .theme-toggle {
+  background: var(--surface);
+}
