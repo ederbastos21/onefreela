@@ -10,9 +10,12 @@ public class Conversation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "order_id", nullable = false, unique = true)
+    @ManyToOne
     private Order order;
+
+    @OneToOne
+    @JoinColumn(name = "order_item_id", nullable = false, unique = true)
+    private OrderItem orderItem;
 
     private LocalDateTime createdAt;
 
@@ -20,20 +23,28 @@ public class Conversation {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public Order getOrder() {
         return order;
+    }
+
+    public OrderItem getOrderItem() {
+        return orderItem;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public void setOrder(Order order) {
         this.order = order;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public void setOrderItem(OrderItem orderItem) {
+        this.orderItem = orderItem;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {

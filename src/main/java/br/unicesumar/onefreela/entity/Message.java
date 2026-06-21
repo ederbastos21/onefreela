@@ -1,7 +1,10 @@
 package br.unicesumar.onefreela.entity;
 
+import br.unicesumar.onefreela.enums.MessageType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "message")
@@ -18,8 +21,17 @@ public class Message {
     @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
-    @Column(length = 5000, nullable = false)
+    @Column(length = 5000)
     private String content;
+
+    @Enumerated(EnumType.STRING)
+    private MessageType type;
+
+    @OneToOne
+    private Delivery delivery;
+
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MessageAttachment> attachmentList = new ArrayList<>();
 
     private LocalDateTime sentAt;
 
@@ -37,6 +49,18 @@ public class Message {
 
     public String getContent() {
         return content;
+    }
+
+    public MessageType getType() {
+        return type;
+    }
+
+    public Delivery getDelivery() {
+        return delivery;
+    }
+
+    public List<MessageAttachment> getAttachmentList() {
+        return attachmentList;
     }
 
     public LocalDateTime getSentAt() {
@@ -57,6 +81,18 @@ public class Message {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public void setType(MessageType type) {
+        this.type = type;
+    }
+
+    public void setDelivery(Delivery delivery) {
+        this.delivery = delivery;
+    }
+
+    public void setAttachmentList(List<MessageAttachment> attachmentList) {
+        this.attachmentList = attachmentList;
     }
 
     public void setSentAt(LocalDateTime sentAt) {

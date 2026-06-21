@@ -1,7 +1,8 @@
 package br.unicesumar.onefreela.controller;
 
+import br.unicesumar.onefreela.dto.ChatMessageDTO;
+import br.unicesumar.onefreela.dto.DeliverDTO;
 import br.unicesumar.onefreela.dto.MessageResponse;
-import br.unicesumar.onefreela.dto.MessageSendDTO;
 import br.unicesumar.onefreela.service.ChatService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +18,43 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    @PostMapping("/order/{orderId}")
-    public MessageResponse sendMessage(@PathVariable Long orderId, @RequestBody MessageSendDTO dto, HttpServletRequest request) {
-        return chatService.sendMessage(orderId, dto, request);
+    @PostMapping("/orderItem/{orderItemId}/message")
+    public MessageResponse sendMessage(@PathVariable Long orderItemId, @ModelAttribute ChatMessageDTO dto, HttpServletRequest request) {
+        return chatService.sendMessage(orderItemId, dto, request);
     }
 
-    @GetMapping("/order/{orderId}")
-    public List<MessageResponse> getMessages(@PathVariable Long orderId, HttpServletRequest request) {
-        return chatService.getMessages(orderId, request);
+    @GetMapping("/orderItem/{orderItemId}")
+    public List<MessageResponse> getMessages(@PathVariable Long orderItemId, HttpServletRequest request) {
+        return chatService.getMessages(orderItemId, request);
+    }
+
+    @PostMapping("/orderItem/{orderItemId}/delivery")
+    public MessageResponse makeDelivery(@PathVariable Long orderItemId, @ModelAttribute DeliverDTO dto, HttpServletRequest request) {
+        return chatService.makeDelivery(orderItemId, dto, request);
+    }
+
+    @PostMapping("/orderItem/{orderItemId}/acceptDelivery")
+    public MessageResponse acceptDelivery(@PathVariable Long orderItemId, HttpServletRequest request) {
+        return chatService.acceptDelivery(orderItemId, request);
+    }
+
+    @PostMapping("/orderItem/{orderItemId}/refuseDelivery")
+    public MessageResponse refuseDelivery(@PathVariable Long orderItemId, HttpServletRequest request) {
+        return chatService.refuseDelivery(orderItemId, request);
+    }
+
+    @PostMapping("/orderItem/{orderItemId}/acceptAdjustment")
+    public MessageResponse acceptAdjustment(@PathVariable Long orderItemId, HttpServletRequest request) {
+        return chatService.acceptAdjustment(orderItemId, request);
+    }
+
+    @PostMapping("/orderItem/{orderItemId}/refuseAdjustment")
+    public MessageResponse refuseAdjustment(@PathVariable Long orderItemId, HttpServletRequest request) {
+        return chatService.refuseAdjustment(orderItemId, request);
+    }
+
+    @PostMapping("/orderItem/{orderItemId}/openDispute")
+    public MessageResponse openDispute(@PathVariable Long orderItemId, HttpServletRequest request) {
+        return chatService.openDispute(orderItemId, request);
     }
 }
