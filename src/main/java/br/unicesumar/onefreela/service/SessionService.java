@@ -8,6 +8,10 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class SessionService {
+
+    public static final long SESSION_TTL_HOURS = 1;
+    public static final long SESSION_TTL_MS = TimeUnit.HOURS.toMillis(SESSION_TTL_HOURS);
+
     private final RedisTemplate<String,String> redisTemplate;
 
      public SessionService (RedisTemplate<String, String> redisTemplate){
@@ -18,8 +22,8 @@ public class SessionService {
          try{
              String token = UUID.randomUUID().toString();
              String userId = id.toString();
-             redisTemplate.opsForValue().set(token,userId,1, TimeUnit.HOURS);
-             redisTemplate.opsForValue().set(userId,token,1, TimeUnit.HOURS);
+             redisTemplate.opsForValue().set(token, userId, SESSION_TTL_HOURS, TimeUnit.HOURS);
+             redisTemplate.opsForValue().set(userId, token, SESSION_TTL_HOURS, TimeUnit.HOURS);
 
              return token;
          } catch (Exception e){

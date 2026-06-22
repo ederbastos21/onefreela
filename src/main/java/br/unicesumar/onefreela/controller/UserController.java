@@ -1,6 +1,7 @@
 package br.unicesumar.onefreela.controller;
 
 import br.unicesumar.onefreela.dto.LoginRequestDTO;
+import br.unicesumar.onefreela.dto.LoginResponseDTO;
 import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.dto.UserUpdateDTO;
 import br.unicesumar.onefreela.entity.User;
@@ -45,10 +46,10 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login (@RequestBody LoginRequestDTO loginRequestDTO) {
-        //first auth checks if existing token is valid
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO) {
         String token = authService.authenticate(loginRequestDTO);
-        return ResponseEntity.ok(token);
+        long expiresAt = System.currentTimeMillis() + SessionService.SESSION_TTL_MS;
+        return ResponseEntity.ok(new LoginResponseDTO(token, expiresAt));
     }
 
     @PostMapping("/loginToken")
