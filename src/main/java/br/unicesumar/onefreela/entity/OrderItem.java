@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -34,6 +35,9 @@ public class OrderItem {
 
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Delivery> deliveryList;
+
+    @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItemAdditional> additionals = new ArrayList<>();
 
     private int deliveryTries;
 
@@ -131,5 +135,13 @@ public class OrderItem {
 
     public void setDeliveryTries(int deliveryTries) {
         this.deliveryTries = deliveryTries;
+    }
+
+    public List<OrderItemAdditional> getAdditionals() {
+        return additionals;
+    }
+
+    public void setAdditionals(List<OrderItemAdditional> additionals) {
+        this.additionals = additionals;
     }
 }

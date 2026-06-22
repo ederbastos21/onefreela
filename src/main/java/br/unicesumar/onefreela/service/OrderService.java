@@ -11,13 +11,16 @@ import br.unicesumar.onefreela.enums.WorkStatus;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.OrderItemRepository;
 import br.unicesumar.onefreela.repository.OrderRepository;
+import br.unicesumar.onefreela.repository.WorkAdditionalRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class OrderService {
@@ -26,12 +29,14 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final DeliveryService deliveryService;
     private final DeliveryFileStorageService deliveryFileStorageService;
+    private final WorkAdditionalRepository workAdditionalRepository;
 
-    public OrderService (OrderItemRepository orderItemRepository, OrderRepository orderRepository, DeliveryService deliveryService, DeliveryFileStorageService deliveryFileStorageService){
+    public OrderService (OrderItemRepository orderItemRepository, OrderRepository orderRepository, DeliveryService deliveryService, DeliveryFileStorageService deliveryFileStorageService, WorkAdditionalRepository workAdditionalRepository){
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.deliveryService = deliveryService;
         this.deliveryFileStorageService = deliveryFileStorageService;
+        this.workAdditionalRepository = workAdditionalRepository;
     }
 
     public Order findOrderById(Long id){
@@ -95,58 +100,150 @@ public class OrderService {
     }
 
 
-    public Order makeOrder (User user, MakeOrderDTO makeOrderDTO){
-        List<ErrorDetail> errors = new ArrayList<>();
-        Cart cart = user.getCart();
-        if (cart == null){
-            errors.add(new ErrorDetail(ErrorCode.CART_NOT_FOUND, "order", "O carrinho nao foi encontrado"));
-        }
-        List<CartItem> cartItemList = cart.getCartItemList();
+    @Transactional
+    public Order makeOrder(User user, MakeOrderDTO dto) {
 
-        if (cartItemList.isEmpty()){
-            errors.add(new ErrorDetail(ErrorCode.CART_EMPTY, "order", "o carrinho nao possui nenhum item"));
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        Cart cart = user.getCart();
+
+        if (cart == null) {
+            errors.add(new ErrorDetail(ErrorCode.CART_NOT_FOUND, "order", "Carrinho não encontrado"));
+            throw new ValidationException(errors);
+        }
+
+        if (cart.getCartItemList() == null || cart.getCartItemList().isEmpty()) {
+            errors.add(new ErrorDetail(ErrorCode.CART_EMPTY, "order", "Carrinho vazio"));
+            throw new ValidationException(errors);
+        }
+
+        if (dto.getCartItemIds() == null || dto.getCartItemIds().isEmpty()) {
+            errors.add(new ErrorDetail(ErrorCode.CART_EMPTY, "order", "Nenhum item selecionado"));
+            throw new ValidationException(errors);
+        }
+
+        List<CartItem> selectedItems = cart.getCartItemList()
+                .stream()
+                .filter(ci -> dto.getCartItemIds().contains(ci.getId()))
+                .toList();
+
+        if (selectedItems.size() != dto.getCartItemIds().size()) {
+            errors.add(new ErrorDetail(
+                    ErrorCode.CART_ITEM_ID_NOT_FOUND,
+                    "order",
+                    "Um ou mais itens não pertencem ao carrinho"
+            ));
             throw new ValidationException(errors);
         }
 
         Order order = new Order();
-        List <OrderItem> orderItemList = new ArrayList<>();
+        List<OrderItem> orderItems = new ArrayList<>();
+        double totalOrderPrice = 0;
 
-        for (CartItem ci : cartItemList){
-            boolean isAvailable = true;
-            if (ci.getWork().getStatus().equals(WorkStatus.INACTIVE)){
-                errors.add(new ErrorDetail(ErrorCode.WORK_INACTIVE, "order", "o serviço " + ci.getWork().getTitle() + " está indisponivel"));
-                isAvailable = false;
+
+        for (CartItem ci : selectedItems) {
+
+            Work work = ci.getWork();
+
+            if (work == null) {
+                errors.add(new ErrorDetail(ErrorCode.WORK_NOT_FOUND, "order", "Serviço não encontrado"));
+                continue;
             }
-            if (isAvailable) {
-                OrderItem orderItem = new OrderItem();
-                orderItem.setAmount(ci.getAmount());
-                orderItem.setWork(ci.getWork());
-                orderItem.setCreatedAt(LocalDate.now());
-                orderItem.setDeadlineDate(LocalDate.now().plusWeeks(2));
-                orderItem.setUnitPrice(ci.getWork().getPrice().doubleValue());
-                orderItem.setTotalPrice(ci.getAmount() * ci.getWork().getPrice().doubleValue());
-                orderItemList.add(orderItem);
-                orderItem.setOrder(order);
+
+            if (work.getStatus() == WorkStatus.INACTIVE) {
+                errors.add(new ErrorDetail(
+                        ErrorCode.WORK_INACTIVE,
+                        "order",
+                        "Serviço " + work.getTitle() + " está indisponível"
+                ));
+                continue;
             }
+
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setWork(work);
+            orderItem.setAmount(ci.getAmount());
+            orderItem.setCreatedAt(LocalDate.now());
+            orderItem.setDeadlineDate(LocalDate.now().plusWeeks(2));
+            orderItem.setStatus(OrderItemStatus.PENDING_DELIVERY);
+
+            double basePrice = work.getPrice().doubleValue();
+            double totalItemPrice = basePrice * ci.getAmount();
+
+            orderItem.setUnitPrice(basePrice);
+
+            List<Long> additionalIds = dto.getAdditionalsByCartItem() != null
+                    ? dto.getAdditionalsByCartItem().get(ci.getId())
+                    : null;
+
+            if (additionalIds != null && !additionalIds.isEmpty()) {
+
+                Set<Long> uniqueIds = new HashSet<>(additionalIds);
+                if (uniqueIds.size() != additionalIds.size()) {
+                    errors.add(new ErrorDetail(
+                            ErrorCode.WORK_ADDITIONAL_DUPLICATED,
+                            "order",
+                            "Adicional duplicado no item " + ci.getId()
+                    ));
+                    continue;
+                }
+
+                List<WorkAdditional> additionals = workAdditionalRepository.findAllById(additionalIds);
+
+                for (Long addId : additionalIds) {
+
+                    WorkAdditional wa = additionals.stream()
+                            .filter(a -> a.getId().equals(addId))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (wa == null) {
+                        errors.add(new ErrorDetail(
+                                ErrorCode.WORK_ADDITIONAL_NOT_FOUND,
+                                "order",
+                                "Adicional não encontrado: " + addId
+                        ));
+                        continue;
+                    }
+
+                    if (!wa.getWork().getId().equals(work.getId())) {
+                        errors.add(new ErrorDetail(
+                                ErrorCode.WORK_ADDITIONAL_DOES_NOT_BELONG_TO_WORK,
+                                "order",
+                                "Adicional não pertence ao serviço"
+                        ));
+                        continue;
+                    }
+
+                    OrderItemAdditional oia = new OrderItemAdditional();
+                    oia.setOrderItem(orderItem);
+                    oia.setWorkAdditional(wa);
+                    oia.setPrice(wa.getPrice().doubleValue());
+
+                    orderItem.getAdditionals().add(oia);
+
+                    totalItemPrice += wa.getPrice().doubleValue();
+                }
+            }
+
+            orderItem.setTotalPrice(totalItemPrice);
+            totalOrderPrice += totalItemPrice;
+
+            orderItems.add(orderItem);
         }
 
-        if (errors.isEmpty()){
-            order.setCreatedAt(LocalDate.now());
-            order.setStatus(OrderStatus.NOT_PAID);
-            order.setUser(user);
-            order.setPaymentMethod(makeOrderDTO.getPaymentMethod());
-
-            double total = 0;
-            for (OrderItem orderItem : orderItemList){
-                total += orderItem.getTotalPrice();
-            }
-
-            order.setTotalPrice(total);
-            order.setOrderItemlist(orderItemList);
-
-            return saveOrder(order);
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
         }
-        throw new ValidationException(errors);
+
+        order.setUser(user);
+        order.setCreatedAt(LocalDate.now());
+        order.setStatus(OrderStatus.NOT_PAID);
+        order.setPaymentMethod(dto.getPaymentMethod());
+        order.setTotalPrice(totalOrderPrice);
+        order.setOrderItemlist(orderItems);
+
+        return orderRepository.save(order);
     }
 
     @Transactional
