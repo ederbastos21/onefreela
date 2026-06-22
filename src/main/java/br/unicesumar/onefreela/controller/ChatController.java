@@ -57,4 +57,9 @@ public class ChatController {
     public MessageResponse openDispute(@PathVariable Long orderItemId, HttpServletRequest request) {
         return chatService.openDispute(orderItemId, request);
     }
+
+    @PostMapping("/orderItem/{orderItemId}/acceptDeliveryAfterFreeze")
+    public MessageResponse acceptDeliveryAfterFreeze(@PathVariable Long orderItemId, HttpServletRequest request) {
+        return chatService.acceptDeliveryAfterFreeze(orderItemId, request);
+    }
 }

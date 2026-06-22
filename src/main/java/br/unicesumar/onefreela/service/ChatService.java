@@ -60,7 +60,6 @@ public class ChatService {
 
     private void validateParticipant(Conversation conversation, User authenticatedUser) {
         boolean isCustomer = conversation.getOrder().getUser().getId().equals(authenticatedUser.getId());
-
         boolean isFreelancer = conversation.getOrderItem().getWork().getOwner().getId().equals(authenticatedUser.getId());
 
         if (!isCustomer && !isFreelancer) {
@@ -68,6 +67,20 @@ public class ChatService {
             errors.add(new ErrorDetail(ErrorCode.CHAT_ACCESS_DENIED, "user", "voce nao participa desta conversa"));
             throw new ValidationException(errors);
         }
+    }
+
+    private void validateNotLocked(Conversation conversation) {
+        if (conversation.isLocked()) {
+            List<ErrorDetail> errors = new ArrayList<>();
+            errors.add(new ErrorDetail(ErrorCode.CHAT_LOCKED, "conversation",
+                    "Este chat foi encerrado e nao aceita novas mensagens"));
+            throw new ValidationException(errors);
+        }
+    }
+
+    private void lockConversation(Conversation conversation) {
+        conversation.setLocked(true);
+        conversationRepository.save(conversation);
     }
 
     private void addAttachments(Message message, List<MultipartFile> files) {
@@ -119,6 +132,7 @@ public class ChatService {
         Conversation conversation = findConversationByOrderItem(orderItemId);
 
         validateParticipant(conversation, authenticatedUser);
+        validateNotLocked(conversation);
 
         List<ErrorDetail> errors = chatValidator.validateMessage(dto.getContent(), dto.getFiles());
 
@@ -163,6 +177,7 @@ public class ChatService {
         Conversation conversation = findConversationByOrderItem(orderItemId);
 
         validateParticipant(conversation, authenticatedUser);
+        validateNotLocked(conversation);
 
         dto.setOrderItemId(orderItemId);
 
@@ -190,8 +205,23 @@ public class ChatService {
         validateParticipant(conversation, authenticatedUser);
 
         orderService.acceptDelivery(authenticatedUser, orderItemId);
+        lockConversation(conversation);
 
         return createEventMessage(conversation, authenticatedUser, MessageType.DELIVERY_ACCEPTED, "Entrega aceita pelo cliente");
+    }
+
+    @Transactional
+    public MessageResponse acceptDeliveryAfterFreeze(Long orderItemId, HttpServletRequest request) {
+        User authenticatedUser = authService.getAuthenticatedUser(request);
+        Conversation conversation = findConversationByOrderItem(orderItemId);
+
+        validateParticipant(conversation, authenticatedUser);
+
+        orderService.acceptFrozenDelivery(authenticatedUser, orderItemId);
+        lockConversation(conversation);
+
+        return createEventMessage(conversation, authenticatedUser, MessageType.DELIVERY_ACCEPTED_AFTER_FREEZE,
+                "Entrega aceita pelo cliente apos recusa de ajuste");
     }
 
     @Transactional
@@ -239,6 +269,17 @@ public class ChatService {
 
         orderService.openDispute(authenticatedUser, orderItemId);
 
-        return createEventMessage(conversation, authenticatedUser, MessageType.DISPUTE_OPENED, "Disputa aberta pelo cliente");
+        OrderItem item = conversation.getOrderItem();
+        String summary = String.format(
+                "DISPUTA ABERTA — Pedido #%d | Servico: %s | Cliente: %s | Freelancer: %s | Tentativas de entrega: %d. "
+                        + "Aguardando revisao do administrador.",
+                item.getOrder().getId(),
+                item.getWork().getTitle(),
+                item.getOrder().getUser().getName(),
+                item.getWork().getOwner().getName(),
+                item.getDeliveryTries()
+        );
+
+        return createEventMessage(conversation, authenticatedUser, MessageType.DISPUTE_OPENED, summary);
     }
 }

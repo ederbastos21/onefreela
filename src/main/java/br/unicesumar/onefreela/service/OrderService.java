@@ -350,21 +350,55 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderItem openDispute (User user, Long orderItemId){
+    public OrderItem openDispute(User user, Long orderItemId) {
         List<ErrorDetail> errors = new ArrayList<>();
         OrderItem orderItem = findOrderItemById(orderItemId);
 
-        if (isWorkOwner(user, orderItem)) {
-            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao pode abrir disputa em seu proprio pedido"));
+        if (!hasStatus(orderItem, OrderItemStatus.FROZEN)) {
+            errors.add(new ErrorDetail(ErrorCode.INVALID_DISPUTE_STATUS, "orderItem",
+                    "Disputa so pode ser aberta quando o item esta no estado FROZEN"));
             throw new ValidationException(errors);
         }
 
-        if (isOrderOwner(user, orderItem)){
-            orderItem.setStatus(OrderItemStatus.ON_DISPUTE);
-            saveOrderItem(orderItem);
+        if (isWorkOwner(user, orderItem)) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "orderItem", "Freelancer nao pode abrir disputa em seu proprio pedido"));
+            throw new ValidationException(errors);
         }
 
+        if (!isOrderOwner(user, orderItem)) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "orderItem", "acesso negado"));
+            throw new ValidationException(errors);
+        }
+
+        orderItem.setStatus(OrderItemStatus.ON_DISPUTE);
         return saveOrderItem(orderItem);
+    }
+
+    @Transactional
+    public OrderItem acceptFrozenDelivery(User user, Long orderItemId) {
+        List<ErrorDetail> errors = new ArrayList<>();
+        OrderItem orderItem = findOrderItemById(orderItemId);
+
+        if (!hasStatus(orderItem, OrderItemStatus.FROZEN)) {
+            errors.add(new ErrorDetail(ErrorCode.INVALID_DISPUTE_STATUS, "orderItem",
+                    "Aceitar entrega apos freeze so e possivel quando o item esta no estado FROZEN"));
+            throw new ValidationException(errors);
+        }
+
+        if (isWorkOwner(user, orderItem)) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "orderItem", "Freelancer nao pode aceitar sua propria entrega"));
+            throw new ValidationException(errors);
+        }
+
+        if (!isOrderOwner(user, orderItem)) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "orderItem", "acesso negado"));
+            throw new ValidationException(errors);
+        }
+
+        orderItem.setStatus(OrderItemStatus.COMPLETED);
+        OrderItem saved = saveOrderItem(orderItem);
+        paymentService.distributeOrderItemFunds(saved);
+        return saved;
     }
 
     @Transactional

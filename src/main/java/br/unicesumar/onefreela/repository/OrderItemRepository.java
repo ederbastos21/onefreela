@@ -10,4 +10,5 @@ import java.util.List;
 
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     List<OrderItem> findByWorkOwnerAndStatus(User owner, OrderItemStatus status);
+    List<OrderItem> findByStatus(OrderItemStatus status);
 }

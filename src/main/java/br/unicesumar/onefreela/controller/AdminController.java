@@ -1,12 +1,10 @@
 package br.unicesumar.onefreela.controller;
 
+import br.unicesumar.onefreela.dto.MessageResponse;
 import br.unicesumar.onefreela.dto.ReportReviewDTO;
 import br.unicesumar.onefreela.dto.WorkResponse;
 import br.unicesumar.onefreela.dto.WorkReviewDTO;
-import br.unicesumar.onefreela.entity.Cart;
-import br.unicesumar.onefreela.entity.Order;
-import br.unicesumar.onefreela.entity.User;
-import br.unicesumar.onefreela.entity.Work;
+import br.unicesumar.onefreela.entity.*;
 import br.unicesumar.onefreela.enums.WorkStatus;
 import br.unicesumar.onefreela.service.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,14 +24,18 @@ public class AdminController {
     private final CartService cartService;
     private final OrderService orderService;
     private final ReportService reportService;
+    private final DisputeService disputeService;
 
-    public AdminController(AuthService authService, UserService userService, WorkService workService, CartService cartService, OrderService orderService, ReportService reportService) {
+    public AdminController(AuthService authService, UserService userService, WorkService workService,
+                           CartService cartService, OrderService orderService, ReportService reportService,
+                           DisputeService disputeService) {
         this.authService = authService;
         this.userService = userService;
         this.workService = workService;
         this.cartService = cartService;
         this.orderService = orderService;
         this.reportService = reportService;
+        this.disputeService = disputeService;
     }
 
     @GetMapping("/users")
@@ -146,5 +148,36 @@ public class AdminController {
         User admin = authService.getAuthenticatedUser(request);
         authService.checkAdmin(request, admin);
         return ResponseEntity.ok(reportService.updateStatus(admin, id, reportReviewDTO));
+    }
+
+    @GetMapping("/disputes")
+    public ResponseEntity<?> getAllDisputes(HttpServletRequest request) {
+        User admin = authService.getAuthenticatedUser(request);
+        authService.checkAdmin(request, admin);
+        return ResponseEntity.ok(disputeService.getAllDisputedItems());
+    }
+
+    @GetMapping("/disputes/{orderItemId}/messages")
+    public ResponseEntity<?> getDisputeMessages(HttpServletRequest request, @PathVariable Long orderItemId) {
+        User admin = authService.getAuthenticatedUser(request);
+        authService.checkAdmin(request, admin);
+        return ResponseEntity.ok(disputeService.getDisputeMessages(orderItemId)
+                .stream().map(MessageResponse::fromEntity).toList());
+    }
+
+    @PostMapping("/disputes/{orderItemId}/resolveForFreelancer")
+    public ResponseEntity<MessageResponse> resolveForFreelancer(HttpServletRequest request,
+                                                                @PathVariable Long orderItemId) {
+        User admin = authService.getAuthenticatedUser(request);
+        authService.checkAdmin(request, admin);
+        return ResponseEntity.ok(disputeService.resolveForFreelancer(admin, orderItemId));
+    }
+
+    @PostMapping("/disputes/{orderItemId}/resolveForClient")
+    public ResponseEntity<MessageResponse> resolveForClient(HttpServletRequest request,
+                                                            @PathVariable Long orderItemId) {
+        User admin = authService.getAuthenticatedUser(request);
+        authService.checkAdmin(request, admin);
+        return ResponseEntity.ok(disputeService.resolveForClient(admin, orderItemId));
     }
 }

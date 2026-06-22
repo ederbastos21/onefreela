@@ -6,5 +6,6 @@ public enum OrderItemStatus {
     ADJUSTMENT_REQUEST,
     ON_DISPUTE,
     COMPLETED,
-    FROZEN
+    FROZEN,
+    REFUNDED
 }

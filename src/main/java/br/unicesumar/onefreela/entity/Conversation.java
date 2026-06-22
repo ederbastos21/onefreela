@@ -19,6 +19,8 @@ public class Conversation {
 
     private LocalDateTime createdAt;
 
+    private boolean locked = false;
+
     public Long getId() {
         return id;
     }
@@ -49,6 +51,14 @@ public class Conversation {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 
     public Conversation() {
