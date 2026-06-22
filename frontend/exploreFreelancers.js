@@ -133,7 +133,7 @@ function render(data) {
       <div class="fl-banner" style="background:${bg}">
         <span style="position:relative;z-index:1">${emoji}</span>
         <div class="fl-banner-overlay"></div>
-        <button class="fl-heart${lk ? ' liked' : ''}" onclick="toggleLike(event,${w.id},this)">♥</button>
+        <button class="fl-heart${lk ? ' liked' : ''}" data-wid="${w.id}" onclick="toggleLike(event,${w.id},this)">♥</button>
       </div>
       <div class="fl-card-body">
         <div class="fl-mini-profile">
@@ -172,7 +172,7 @@ function render(data) {
       </div>
       <div class="fl-list-price-col">
         <div class="fl-list-price">${price}</div>
-        <button class="fl-list-heart${lk ? ' liked' : ''}" onclick="toggleLike(event,${w.id},this)">♥</button>
+        <button class="fl-list-heart${lk ? ' liked' : ''}" data-wid="${w.id}" onclick="toggleLike(event,${w.id},this)">♥</button>
         <button class="btn-chat-fl" style="margin-top:4px" onclick="tryChat(event,${w.id})">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Falar
@@ -205,9 +205,21 @@ function setView(v) {
   }
 }
 
-function toggleLike(e, id, btn) {
+async function toggleLike(e, id, btn) {
   e.stopPropagation();
-  liked.has(id) ? (liked.delete(id), btn.classList.remove('liked')) : (liked.add(id), btn.classList.add('liked'));
+  if (!OFAuth.isLoggedIn()) return;
+  const token = OFAuth.getToken();
+  if (liked.has(id)) {
+    await fetch(`${API_BASE}/favorites/${id}`, { method: 'DELETE', headers: { Authorization: token } });
+    liked.delete(id);
+    btn.classList.remove('liked');
+    document.querySelectorAll(`.fl-heart[data-wid="${id}"], .fl-list-heart[data-wid="${id}"]`).forEach(b => b.classList.remove('liked'));
+  } else {
+    await fetch(`${API_BASE}/favorites/${id}`, { method: 'POST', headers: { Authorization: token } });
+    liked.add(id);
+    btn.classList.add('liked');
+    document.querySelectorAll(`.fl-heart[data-wid="${id}"], .fl-list-heart[data-wid="${id}"]`).forEach(b => b.classList.add('liked'));
+  }
 }
 
 function openDropdown(pillId, ddId) {
@@ -331,8 +343,20 @@ function openWork(w) {
   window.location.href = 'serviceScreen.html';
 }
 
+async function loadLiked() {
+  if (!OFAuth.isLoggedIn()) return;
+  try {
+    const res = await fetch(`${API_BASE}/favorites`, { headers: { Authorization: OFAuth.getToken() } });
+    if (res.ok) {
+      const favs = await res.json();
+      liked = new Set(favs.map(f => f.work.id));
+    }
+  } catch (_) {}
+}
+
 async function init() {
   setLoading(true);
+  await loadLiked();
   allWorks = await fetchWorks();
   buildCategoryDD(allWorks);
   render(allWorks);

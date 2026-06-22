@@ -186,11 +186,45 @@ function buyNow() { showToast('✓ Redirecionando para o pagamento...'); }
 
 initNotifPanel();
 
+let _currentWorkId = null;
+
+async function toggleServiceFavorite() {
+  if (!OFAuth.isLoggedIn()) { window.location.href = 'loginScreen.html'; return; }
+  const btn = document.getElementById('favBtn');
+  if (!_currentWorkId || !btn) return;
+  const token = OFAuth.getToken();
+  const isFav = btn.classList.contains('fav-active');
+  if (isFav) {
+    await fetch(`${API_BASE}/favorites/${_currentWorkId}`, { method: 'DELETE', headers: { Authorization: token } });
+    btn.classList.remove('fav-active');
+    btn.title = 'Adicionar aos favoritos';
+  } else {
+    await fetch(`${API_BASE}/favorites/${_currentWorkId}`, { method: 'POST', headers: { Authorization: token } });
+    btn.classList.add('fav-active');
+    btn.title = 'Remover dos favoritos';
+  }
+}
+
+async function checkIfFavorited(workId) {
+  if (!OFAuth.isLoggedIn()) return;
+  try {
+    const res = await fetch(`${API_BASE}/favorites/${workId}/check`, { headers: { Authorization: OFAuth.getToken() } });
+    if (res.ok) {
+      const data = await res.json();
+      const btn = document.getElementById('favBtn');
+      if (btn && data.favorited) { btn.classList.add('fav-active'); btn.title = 'Remover dos favoritos'; }
+    }
+  } catch (_) {}
+}
+
 (function loadSelectedWork() {
   const raw = localStorage.getItem('of_selected_work');
   if (!raw) return;
   try {
-    populateWork(JSON.parse(raw));
+    const w = JSON.parse(raw);
+    populateWork(w);
+    _currentWorkId = w.id;
+    checkIfFavorited(w.id);
   } catch (e) {
     console.error('Erro ao carregar serviço:', e);
   }
