@@ -104,6 +104,11 @@ public class ReportService {
             throw new ValidationException(errors);
         }
 
+        if (report.getStatus() == ReportStatus.RESOLVED || report.getStatus() == ReportStatus.REJECTED) {
+            errors.add(new ErrorDetail(ErrorCode.REPORT_ALREADY_CLOSED, "report", "Esta denúncia já foi encerrada e não pode ser alterada"));
+            throw new ValidationException(errors);
+        }
+
         if (!errors.isEmpty()) {
             throw new ValidationException(errors);
         }
