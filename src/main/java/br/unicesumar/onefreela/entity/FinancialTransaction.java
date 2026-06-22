@@ -1,5 +1,6 @@
 package br.unicesumar.onefreela.entity;
 
+import br.unicesumar.onefreela.enums.TransactionType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 

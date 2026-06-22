@@ -1,110 +1,162 @@
 package br.unicesumar.onefreela.service;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.dto.CardPaymentMethodDTO;
 import br.unicesumar.onefreela.dto.ErrorDetail;
+import br.unicesumar.onefreela.dto.PixPaymentMethodDTO;
 import br.unicesumar.onefreela.entity.*;
+import br.unicesumar.onefreela.enums.*;
 import br.unicesumar.onefreela.exception.ValidationException;
+import br.unicesumar.onefreela.repository.PaymentRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class PaymentService {
 
-    private static final BigDecimal PLATFORM_FEE_RATE = new BigDecimal("0.15");
+    private static final double PLATFORM_FEE_RATE = 0.15;
 
+    private final PaymentRepository paymentRepository;
+    private final OrderService orderService;
+    private final ChatService chatService;
     private final BalanceService balanceService;
 
-    public PaymentService(BalanceService balanceService) {
+    public PaymentService(PaymentRepository paymentRepository,
+                          @Lazy OrderService orderService,
+                          ChatService chatService,
+                          BalanceService balanceService) {
+        this.paymentRepository = paymentRepository;
+        this.orderService = orderService;
+        this.chatService = chatService;
         this.balanceService = balanceService;
     }
 
-    /**
-     * Processa o pagamento de um pedido pelo método escolhido.
-     * O valor total vai para o saldo pendente da plataforma.
-     */
     @Transactional
-    public void processPayment(Order order, PaymentMethod method) {
-        switch (method) {
-            case BALANCE -> processBalancePayment(order);
-            case CARD, PIX -> processExternalPayment(order, method);
+    public Payment makePayment(User user, Order order) {
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        if (!(order.getUser().getId().equals(user.getId()))) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "payment", "erro de permissao"));
+            throw new ValidationException(errors);
         }
-        balanceService.addToPlatformPending(order.getTotalAmount(), order);
+
+        Payment payment = new Payment();
+        payment.setPaymentMethod(order.getPaymentMethod());
+        payment.setStatus(PaymentStatus.PENDENT);
+        payment.setValue(order.getTotalPrice());
+        payment.setOrder(order);
+        payment.setReleasedAt(null);
+        payment.setPlatformFee(PLATFORM_FEE_RATE);
+
+        return paymentRepository.save(payment);
     }
 
-    /**
-     * Distribui o valor de um item concluído:
-     * - retira do saldo pendente da plataforma
-     * - taxa vai para o saldo disponível da plataforma
-     * - restante vai para o saldo do freelancer
-     */
+    private void confirmOrderPayment(Order order) {
+        order.setStatus(OrderStatus.PAID);
+
+        balanceService.addToPlatformPending(BigDecimal.valueOf(order.getTotalPrice()), order);
+
+        for (OrderItem orderItem : order.getOrderItemlist()) {
+            orderItem.setStatus(OrderItemStatus.PENDING_DELIVERY);
+            chatService.createConversation(order, orderItem);
+        }
+        orderService.saveOrder(order);
+    }
+
+    @Transactional
+    public Payment processPaymentCard(Payment payment, CardPaymentMethodDTO cardPaymentMethodDTO) {
+        payment.setStatus(PaymentStatus.SUCCESS);
+        payment.setPaidAt(LocalDate.now());
+        confirmOrderPayment(payment.getOrder());
+        return paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public Payment processPaymentPix(Payment payment, PixPaymentMethodDTO pixPaymentMethodDTO) {
+        payment.setStatus(PaymentStatus.SUCCESS);
+        payment.setPaidAt(LocalDate.now());
+        confirmOrderPayment(payment.getOrder());
+        return paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public Payment processPaymentBalance(User user, Order order) {
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        if (!(order.getUser().getId().equals(user.getId()))) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "payment", "erro de permissao"));
+            throw new ValidationException(errors);
+        }
+
+        BigDecimal totalAmount = BigDecimal.valueOf(order.getTotalPrice());
+        balanceService.debitUser(user, totalAmount, TransactionType.ORDER_PAYMENT,
+                "Pagamento do pedido #" + order.getId() + " via saldo", order, null);
+
+        Payment payment = new Payment();
+        payment.setPaymentMethod(PaymentMethod.BALANCE);
+        payment.setStatus(PaymentStatus.SUCCESS);
+        payment.setValue(order.getTotalPrice());
+        payment.setPlatformFee(PLATFORM_FEE_RATE);
+        payment.setOrder(order);
+        payment.setPaidAt(LocalDate.now());
+        Payment savedPayment = paymentRepository.save(payment);
+
+        confirmOrderPayment(order);
+
+        return savedPayment;
+    }
+
     @Transactional
     public void distributeOrderItemFunds(OrderItem item) {
-        BigDecimal itemAmount = item.getPrice();
-        BigDecimal platformFee = itemAmount.multiply(PLATFORM_FEE_RATE).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal freelancerAmount = itemAmount.subtract(platformFee);
+        double itemTotal = item.getTotalPrice();
+        double feeAmount = round(itemTotal * PLATFORM_FEE_RATE);
+        double freelancerAmount = round(itemTotal - feeAmount);
 
-        balanceService.releaseFromPlatformPending(itemAmount, platformFee, item.getOrder(), item);
+        balanceService.releaseFromPlatformPending(
+                BigDecimal.valueOf(itemTotal),
+                BigDecimal.valueOf(feeAmount),
+                item.getOrder(), item);
 
         balanceService.creditUser(
-                item.getFreelancer(),
-                freelancerAmount,
+                item.getWork().getOwner(),
+                BigDecimal.valueOf(freelancerAmount),
                 TransactionType.FREELANCER_CREDIT,
-                "Pagamento pelo serviço '" + item.getWork().getTitle() + "' (pedido #" + item.getOrder().getId() + ")",
-                item.getOrder(),
-                item
-        );
+                "Pagamento pelo servico '" + item.getWork().getTitle() + "' (pedido #" + item.getOrder().getId() + ")",
+                item.getOrder(), item);
+
+        Payment payment = item.getOrder().getPayment();
+        if (payment != null) {
+            payment.setReleasedAt(LocalDate.now());
+            payment.setFreelancerValue(freelancerAmount);
+            paymentRepository.save(payment);
+        }
     }
 
-    /**
-     * Reembolsa o valor de um item para o cliente.
-     * Válido apenas se o item ainda não foi concluído (dinheiro ainda está no pendente da plataforma).
-     */
     @Transactional
     public void refundOrderItem(OrderItem item) {
+        List<ErrorDetail> errors = new ArrayList<>();
+
         if (item.getStatus() == OrderItemStatus.COMPLETED) {
-            throw new ValidationException(List.of(
-                    new ErrorDetail(ErrorCode.ORDER_ITEM_ALREADY_COMPLETED, "orderItem",
-                            "Item já concluído não pode ser reembolsado")
-            ));
-        }
-        if (item.getStatus() == OrderItemStatus.REFUNDED) {
-            throw new ValidationException(List.of(
-                    new ErrorDetail(ErrorCode.ORDER_ALREADY_REFUNDED, "orderItem",
-                            "Item já foi reembolsado")
-            ));
+            errors.add(new ErrorDetail(ErrorCode.ORDER_ITEM_ALREADY_COMPLETED, "orderItem",
+                    "Item ja concluido nao pode ser reembolsado"));
+            throw new ValidationException(errors);
         }
 
-        balanceService.debitFromPlatformPending(item.getPrice(), item.getOrder(), item);
-        balanceService.creditUser(
-                item.getOrder().getClient(),
-                item.getPrice(),
+        User client = item.getOrder().getUser();
+        balanceService.debitFromPlatformPending(BigDecimal.valueOf(item.getTotalPrice()), item.getOrder(), item);
+        balanceService.creditUser(client, BigDecimal.valueOf(item.getTotalPrice()),
                 TransactionType.CLIENT_REFUND,
                 "Reembolso do item '" + item.getWork().getTitle() + "' (pedido #" + item.getOrder().getId() + ")",
-                item.getOrder(),
-                item
-        );
+                item.getOrder(), item);
     }
 
-    private void processBalancePayment(Order order) {
-        balanceService.debitUser(
-                order.getClient(),
-                order.getTotalAmount(),
-                TransactionType.ORDER_PAYMENT,
-                "Pagamento do pedido #" + order.getId() + " via saldo",
-                order,
-                null
-        );
-    }
-
-    private void processExternalPayment(Order order, PaymentMethod method) {
-        // Integração com gateway externo (Stripe, Pagar.me, etc.) seria feita aqui.
-        // Por ora, o pagamento externo é simulado como sempre aprovado.
-        System.out.println("[PAYMENT] Processando pagamento externo via " + method
-                + " para o pedido #" + order.getId()
-                + " no valor de R$ " + order.getTotalAmount());
+    private double round(double value) {
+        return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 }

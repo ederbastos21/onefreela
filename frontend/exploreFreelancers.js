@@ -1,21 +1,104 @@
-const DATA = [
-  { id:1,  name:'Marina Rocha',   adTitle:'Vou criar seu Design System completo no Figma',          emoji:'🎨', bannerBg:'linear-gradient(135deg,#0d1f0d,#1a3a1a)', tags:['Figma','Prototyping','Design System'], rating:4.98, reviews:214, price:120, color:'#7fff00', avail:'green',  badge:'TOP', cat:'design' },
-  { id:2,  name:'Lucas Ferreira', adTitle:'Desenvolvo seu front-end com React e Next.js',           emoji:'💻', bannerBg:'linear-gradient(135deg,#0d0d1f,#1a1a3a)', tags:['React','TypeScript','Next.js'],        rating:4.95, reviews:183, price:95,  color:'#b0ff4e', avail:'green',  badge:'',    cat:'dev'    },
-  { id:3,  name:'Julia Santos',   adTitle:'Escrevo textos otimizados para SEO que convertem',       emoji:'✍️', bannerBg:'linear-gradient(135deg,#1f1a0d,#3a2e0d)', tags:['SEO','Blog','Branding'],               rating:4.99, reviews:301, price:65,  color:'#a3e635', avail:'green',  badge:'TOP', cat:'copy'   },
-  { id:4,  name:'Pedro Castro',   adTitle:'Produzo animações e motion graphics para sua marca',     emoji:'🎬', bannerBg:'linear-gradient(135deg,#1f0d1f,#3a1a3a)', tags:['After Effects','Cinema 4D'],          rating:4.87, reviews:97,  price:80,  color:'#5bbd00', avail:'yellow', badge:'',    cat:'video'  },
-  { id:5,  name:'Ana Beatriz',    adTitle:'Gerencio suas redes sociais com estratégia e resultado', emoji:'📱', bannerBg:'linear-gradient(135deg,#1f0d0d,#3a1a1a)', tags:['Instagram','TikTok','Copy'],          rating:4.91, reviews:145, price:55,  color:'#84cc16', avail:'green',  badge:'NEW', cat:'mkt'    },
-  { id:6,  name:'Rafael Mendes',  adTitle:'Desenvolvo sua aplicação full stack do zero ao deploy',  emoji:'⚡', bannerBg:'linear-gradient(135deg,#0d1a1f,#0d2a2a)', tags:['Node.js','React','AWS'],              rating:4.93, reviews:88,  price:140, color:'#65a30d', avail:'red',    badge:'',    cat:'dev'    },
-  { id:7,  name:'Camila Torres',  adTitle:'Crio dashboards e análises de dados com Power BI',       emoji:'📊', bannerBg:'linear-gradient(135deg,#0d0d1a,#1a1a2a)', tags:['Python','Power BI','SQL'],            rating:4.80, reviews:62,  price:110, color:'#4d7c0f', avail:'green',  badge:'',    cat:'dados'  },
-  { id:8,  name:'Diego Lima',     adTitle:'Desenvolvo a identidade visual completa da sua marca',   emoji:'🖌️', bannerBg:'linear-gradient(135deg,#1a1a0d,#2a2a0d)', tags:['Illustrator','Branding','Print'],     rating:4.76, reviews:134, price:70,  color:'#7fff00', avail:'yellow', badge:'',    cat:'design' },
-  { id:9,  name:'Fernanda Costa', adTitle:'Crio seu app mobile com Flutter para iOS e Android',     emoji:'📲', bannerBg:'linear-gradient(135deg,#0d1a0d,#1a2a1a)', tags:['Flutter','Dart','Firebase'],          rating:4.88, reviews:56,  price:130, color:'#b0ff4e', avail:'green',  badge:'NEW', cat:'dev'    },
-  { id:10, name:'Bruno Alves',    adTitle:'Elevo o tráfego orgânico do seu site com SEO técnico',   emoji:'🔍', bannerBg:'linear-gradient(135deg,#1a0d0d,#2a1a1a)', tags:['SEO','Analytics','Google Ads'],       rating:4.84, reviews:203, price:75,  color:'#a3e635', avail:'green',  badge:'',    cat:'mkt'    },
-  { id:11, name:'Larissa Nunes',  adTitle:'Integro Inteligência Artificial ao seu produto digital', emoji:'🤖', bannerBg:'linear-gradient(135deg,#0d1f1f,#0d3030)', tags:['Python','LLMs','TensorFlow'],         rating:4.97, reviews:44,  price:180, color:'#5bbd00', avail:'red',    badge:'TOP', cat:'ia'     },
-  { id:12, name:'Thiago Ramos',   adTitle:'Produzo vídeos profissionais para YouTube e redes',      emoji:'🎥', bannerBg:'linear-gradient(135deg,#1a0d1a,#2a0d2a)', tags:['Premiere','DaVinci','YouTube'],       rating:4.72, reviews:89,  price:90,  color:'#84cc16', avail:'green',  badge:'',    cat:'video'  },
-];
+const API_BASE = 'http://localhost:8080';
 
-let liked  = new Set();
-let state  = { cat:'todos', star:0, avail:'todos', maxPrice:500 };
-let openDd = null;
+const GRADIENTS = [
+  'linear-gradient(135deg,#0d1f0d,#1a3a1a)',
+  'linear-gradient(135deg,#0d0d1f,#1a1a3a)',
+  'linear-gradient(135deg,#1f1a0d,#3a2e0d)',
+  'linear-gradient(135deg,#1f0d1f,#3a1a3a)',
+  'linear-gradient(135deg,#1f0d0d,#3a1a1a)',
+  'linear-gradient(135deg,#0d1a1f,#0d2a2a)',
+  'linear-gradient(135deg,#0d0d1a,#1a1a2a)',
+  'linear-gradient(135deg,#1a1a0d,#2a2a0d)',
+  'linear-gradient(135deg,#0d1a0d,#1a2a1a)',
+  'linear-gradient(135deg,#1a0d0d,#2a1a1a)',
+  'linear-gradient(135deg,#0d1f1f,#0d3030)',
+  'linear-gradient(135deg,#1a0d1a,#2a0d2a)',
+];
+const COLORS = ['#7fff00','#b0ff4e','#a3e635','#5bbd00','#84cc16','#65a30d','#4d7c0f'];
+
+let liked    = new Set();
+let state    = { cat: '', minPrice: 0, maxPrice: 10000 };
+let openDd   = null;
+let allWorks = [];
+const workMap = {};
+
+function catEmoji(cat) {
+  if (!cat) return '🛠️';
+  const c = cat.toLowerCase();
+  if (c.includes('design') || c.includes('arte') || c.includes('figma')) return '🎨';
+  if (c.includes('dev') || c.includes('programa') || c.includes('web') || c.includes('front') || c.includes('back') || c.includes('react') || c.includes('flutter')) return '💻';
+  if (c.includes('market') || c.includes('redes') || c.includes('social') || c.includes('instagram') || c.includes('tiktok')) return '📱';
+  if (c.includes('redaç') || c.includes('texto') || c.includes('copy') || c.includes('conteú')) return '✍️';
+  if (c.includes('vídeo') || c.includes('video') || c.includes('anim') || c.includes('motion') || c.includes('youtube')) return '🎬';
+  if (c.includes('dados') || c.includes('data') || c.includes(' bi') || c.includes('anali')) return '📊';
+  if (c.includes(' ia') || c.includes('intelig') || c.includes('machine') || c.includes(' ml') || c.includes('llm')) return '🤖';
+  if (c.includes('foto') || c.includes('photo')) return '📷';
+  if (c.includes('mús') || c.includes('audio') || c.includes('áudio') || c.includes('som')) return '🎵';
+  return '🛠️';
+}
+
+function workGradient(id)   { return GRADIENTS[Number(id) % GRADIENTS.length]; }
+function workColor(id)      { return COLORS[Number(id) % COLORS.length]; }
+
+function getInitials(name) {
+  if (!name || !name.trim()) return '?';
+  const p = name.trim().split(/\s+/);
+  return p.length === 1 ? p[0][0].toUpperCase() : (p[0][0] + p[p.length - 1][0]).toUpperCase();
+}
+
+function truncate(str, max) {
+  if (!str) return '';
+  return str.length > max ? str.slice(0, max) + '…' : str;
+}
+
+function formatPrice(price) {
+  if (price == null) return '—';
+  const n = Number(price);
+  return 'R$' + (Number.isInteger(n) ? n : n.toFixed(2).replace('.', ','));
+}
+
+function setLoading(on) {
+  const grid = document.getElementById('flGrid');
+  if (on) {
+    grid.innerHTML = '<div class="explore-loading">Carregando serviços...</div>';
+    document.getElementById('flList').innerHTML = '';
+  }
+}
+
+async function fetchWorks() {
+  const params = new URLSearchParams();
+  const q = document.getElementById('navSearch').value.trim();
+  if (q)                      params.set('q', q);
+  if (state.cat)              params.set('category', state.cat);
+  if (state.minPrice > 0)     params.set('minPrice', state.minPrice);
+  if (state.maxPrice < 10000) params.set('maxPrice', state.maxPrice);
+
+  try {
+    const res = await fetch(`${API_BASE}/works/search?${params}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch (e) {
+    console.error('Erro ao buscar serviços:', e);
+    document.getElementById('flGrid').innerHTML =
+      '<div class="explore-error">Erro ao carregar serviços. Verifique se o servidor está ativo.</div>';
+    return [];
+  }
+}
+
+function buildCategoryDD(works) {
+  const cats = [...new Set(works.map(w => w.category).filter(Boolean))].sort();
+  const opts = document.querySelector('#ddCat .dd-options');
+  opts.innerHTML = `<div class="dd-opt active" data-cat="" onclick="pickCat(this)"><span>🔥 Todos</span><span class="dd-count">${works.length}</span></div>`;
+  cats.forEach(cat => {
+    const count = works.filter(w => w.category === cat).length;
+    const div = document.createElement('div');
+    div.className = 'dd-opt';
+    div.dataset.cat = cat;
+    div.setAttribute('onclick', 'pickCat(this)');
+    div.innerHTML = `<span>${catEmoji(cat)} ${cat}</span><span class="dd-count">${count}</span>`;
+    opts.appendChild(div);
+  });
+}
 
 function render(data) {
   const grid  = document.getElementById('flGrid');
@@ -24,68 +107,73 @@ function render(data) {
   const pag   = document.getElementById('pagination');
   grid.innerHTML = ''; list.innerHTML = '';
   document.getElementById('resultCount').textContent = data.length;
+
   if (!data.length) { empty.classList.add('show'); pag.classList.add('hidden'); return; }
   empty.classList.remove('show'); pag.classList.remove('hidden');
 
-  data.forEach((f, i) => {
-    const ac   = f.avail==='green'?'#22c55e':f.avail==='yellow'?'#eab308':'#ef4444';
-    const al   = f.avail==='green'?'Disponível':f.avail==='yellow'?'Esta semana':'Este mês';
-    const bp   = f.badge ? `<span class="fl-banner-badge badge-${f.badge.toLowerCase()}">${f.badge}</span>` : '';
-    const lk   = liked.has(f.id);
-    const ini  = f.name.split(' ').map(n=>n[0]).join('');
-    const tags = f.tags.map(t=>`<span class="fl-tag">${t}</span>`).join('');
+  data.forEach((w, i) => {
+    workMap[w.id] = w;
+
+    const bg     = workGradient(w.id);
+    const color  = workColor(w.ownerId || w.id);
+    const ini    = getInitials(w.ownerName);
+    const emoji  = catEmoji(w.category);
+    const tag    = w.category ? `<span class="fl-tag">${w.category}</span>` : '';
+    const lk     = liked.has(w.id);
+    const name   = w.ownerName || 'Freelancer';
+    const price  = formatPrice(w.price);
+    const desc   = truncate(w.description, 85);
 
     const gc = document.createElement('div');
     gc.className = 'fl-card';
-    gc.style.animationDelay = (i*40)+'ms'; /* dynamic: stagger computed from render index */
+    gc.style.animationDelay = (i * 40) + 'ms';
+    gc.style.cursor = 'pointer';
+    gc.addEventListener('click', () => openWork(w));
     gc.innerHTML = `
-      <div class="fl-banner" style="background:${f.bannerBg}">
-        <span style="position:relative;z-index:1">${f.emoji}</span>
+      <div class="fl-banner" style="background:${bg}">
+        <span style="position:relative;z-index:1">${emoji}</span>
         <div class="fl-banner-overlay"></div>
-        ${bp}
-        <button class="fl-heart${lk?' liked':''}" onclick="toggleLike(event,${f.id},this)">♥</button>
+        <button class="fl-heart${lk ? ' liked' : ''}" onclick="toggleLike(event,${w.id},this)">♥</button>
       </div>
       <div class="fl-card-body">
         <div class="fl-mini-profile">
-          <div class="fl-mini-avatar" style="background:${f.color}">${ini}</div>
-          <span class="fl-mini-name">${f.name}</span>
-          <span class="avail-dot" style="background:${ac};margin-left:auto"></span>
+          <div class="fl-mini-avatar" style="background:${color}">${ini}</div>
+          <span class="fl-mini-name">${name}</span>
         </div>
-        <div class="fl-ad-title">${f.adTitle}</div>
-        <div class="fl-tags">${tags}</div>
+        <div class="fl-ad-title">${w.title}</div>
+        <div class="fl-work-desc">${desc}</div>
+        <div class="fl-tags">${tag}</div>
         <div class="fl-footer">
-          <div class="fl-rating">★ ${f.rating} <span>(${f.reviews})</span></div>
-          <div class="fl-price">R$${f.price}<small>/hr</small></div>
+          <div class="fl-price">${price}</div>
         </div>
-        <button class="btn-chat-fl" onclick="tryChat(event,'${f.name}','${ini}','${f.color}','${f.adTitle}')">
+        <button class="btn-chat-fl" onclick="tryChat(event,${w.id})">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Falar com ${f.name.split(' ')[0]}
+          Falar com ${name.split(' ')[0]}
         </button>
       </div>`;
     grid.appendChild(gc);
 
     const lc = document.createElement('div');
     lc.className = 'fl-list-card';
-    lc.style.animationDelay = (i*30)+'ms'; /* dynamic: stagger computed from render index */
+    lc.style.animationDelay = (i * 30) + 'ms';
+    lc.style.cursor = 'pointer';
+    lc.addEventListener('click', () => openWork(w));
     lc.innerHTML = `
-      <div class="fl-list-thumb" style="background:${f.bannerBg}">${f.emoji}</div>
+      <div class="fl-list-thumb" style="background:${bg}">${emoji}</div>
       <div class="fl-list-body">
-        <div class="fl-list-ad-title">${f.adTitle}</div>
+        <div class="fl-list-ad-title">${w.title}</div>
         <div class="fl-list-mini">
-          <div class="fl-list-mini-avatar" style="background:${f.color}">${ini}</div>
-          <span class="fl-list-mini-name">${f.name}</span>
-          ${f.badge ? `<span class="fl-banner-badge badge-${f.badge.toLowerCase()}" style="font-size:9px;padding:2px 7px">${f.badge}</span>` : ''}
+          <div class="fl-list-mini-avatar" style="background:${color}">${ini}</div>
+          <span class="fl-list-mini-name">${name}</span>
+          <span class="avail-dot" style="background:#22c55e;margin-left:4px"></span>
         </div>
-        <div class="fl-list-tags">${tags}</div>
-      </div>
-      <div class="fl-list-stats">
-        <div class="fl-list-rating">★ ${f.rating} <span>(${f.reviews})</span></div>
-        <div class="fl-list-avail"><span class="avail-dot" style="background:${ac}"></span>${al}</div>
+        <div class="fl-work-desc" style="margin-bottom:6px">${desc}</div>
+        <div class="fl-list-tags">${tag}</div>
       </div>
       <div class="fl-list-price-col">
-        <div class="fl-list-price">R$${f.price}<small>/hr</small></div>
-        <button class="fl-list-heart${lk?' liked':''}" onclick="toggleLike(event,${f.id},this)">♥</button>
-        <button class="btn-chat-fl" style="margin-top:4px" onclick="tryChat(event,'${f.name}','${ini}','${f.color}','${f.adTitle}')">
+        <div class="fl-list-price">${price}</div>
+        <button class="fl-list-heart${lk ? ' liked' : ''}" onclick="toggleLike(event,${w.id},this)">♥</button>
+        <button class="btn-chat-fl" style="margin-top:4px" onclick="tryChat(event,${w.id})">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Falar
         </button>
@@ -94,27 +182,19 @@ function render(data) {
   });
 }
 
-function applyFilters() {
-  const q = document.getElementById('navSearch').value.toLowerCase();
-  let result = DATA.filter(f => {
-    if (state.cat !== 'todos' && f.cat !== state.cat) return false;
-    if (f.rating < state.star) return false;
-    if (f.price > state.maxPrice) return false;
-    if (state.avail !== 'todos' && f.avail !== state.avail) return false;
-    if (q && !f.name.toLowerCase().includes(q) && !f.adTitle.toLowerCase().includes(q) && !f.tags.some(t=>t.toLowerCase().includes(q))) return false;
-    return true;
-  });
+async function applyFilters() {
+  setLoading(true);
+  let works = await fetchWorks();
   const sort = document.getElementById('sortSelect').value;
-  if (sort==='preco-asc')  result.sort((a,b)=>a.price-b.price);
-  if (sort==='preco-desc') result.sort((a,b)=>b.price-a.price);
-  if (sort==='nota')       result.sort((a,b)=>b.rating-a.rating);
-  render(result);
+  if (sort === 'preco-asc')  works.sort((a, b) => Number(a.price) - Number(b.price));
+  if (sort === 'preco-desc') works.sort((a, b) => Number(b.price) - Number(a.price));
+  render(works);
 }
 
 function setView(v) {
   const grid = document.getElementById('flGrid');
   const list = document.getElementById('flList');
-  if (v==='grid') {
+  if (v === 'grid') {
     grid.classList.remove('hidden'); list.classList.add('hidden');
     document.getElementById('btnGrid').classList.add('active');
     document.getElementById('btnList').classList.remove('active');
@@ -125,13 +205,15 @@ function setView(v) {
   }
 }
 
-function toggleLike(e, id, btn) { e.stopPropagation(); liked.has(id)?(liked.delete(id),btn.classList.remove('liked')):(liked.add(id),btn.classList.add('liked')); }
+function toggleLike(e, id, btn) {
+  e.stopPropagation();
+  liked.has(id) ? (liked.delete(id), btn.classList.remove('liked')) : (liked.add(id), btn.classList.add('liked'));
+}
 
 function openDropdown(pillId, ddId) {
   const pill = document.getElementById(pillId);
   const dd   = document.getElementById(ddId);
   const rect = pill.getBoundingClientRect();
-  /* dynamic: position:fixed dropdown anchored to pill via runtime getBoundingClientRect */
   dd.style.top  = (rect.bottom + 8) + 'px';
   dd.style.left = rect.left + 'px';
   dd.classList.add('open');
@@ -148,7 +230,7 @@ function closeAllDd() {
 document.querySelectorAll('.fpill').forEach(pill => {
   pill.addEventListener('click', e => {
     e.stopPropagation();
-    const ddId = pill.dataset.dd;
+    const ddId  = pill.dataset.dd;
     const isOpen = document.getElementById(ddId).classList.contains('open');
     closeAllDd();
     if (!isOpen) openDropdown(pill.id, ddId);
@@ -161,24 +243,29 @@ document.querySelectorAll('.filter-dropdown').forEach(dd => {
 
 document.addEventListener('click', closeAllDd);
 
-function tryChat(e, name, initials, color, role) {
+function tryChat(e, workId) {
   e.stopPropagation();
-  const type = localStorage.getItem('of_user_type');
+  const w     = workMap[workId] || {};
+  const name  = w.ownerName || 'Freelancer';
+  const ini   = getInitials(name);
+  const color = workColor(w.ownerId || w.id || 0);
+  const role  = w.title || '';
+  const type  = localStorage.getItem('of_user_type');
   if (type === 'cliente') {
     window.location.href = 'chatScreenClient.html';
   } else if (type === 'freelancer') {
     window.location.href = 'chatScreenFreelancer.html';
   } else {
-    openAuthModal(name, initials, color, role);
+    openAuthModal(name, ini, color, role);
   }
 }
 
 function openAuthModal(name, initials, color, role) {
   document.getElementById('modalFreelancerName').textContent = name.split(' ')[0].toUpperCase();
-  document.getElementById('modalAvatar').textContent = initials;
-  document.getElementById('modalAvatar').style.background = color;
-  document.getElementById('modalName').textContent = name;
-  document.getElementById('modalRole').textContent = role;
+  document.getElementById('modalAvatar').textContent         = initials;
+  document.getElementById('modalAvatar').style.background    = color;
+  document.getElementById('modalName').textContent           = name;
+  document.getElementById('modalRole').textContent           = role;
   document.getElementById('authOverlay').classList.add('show');
 }
 
@@ -194,52 +281,63 @@ document.getElementById('authOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeAuthModal();
 });
 
-initNotifPanel();
-
 function pickCat(el) {
-  document.querySelectorAll('#ddCat .dd-opt').forEach(o=>o.classList.remove('active'));
+  document.querySelectorAll('#ddCat .dd-opt').forEach(o => o.classList.remove('active'));
   el.classList.add('active');
-  state.cat = el.dataset.cat;
-  document.getElementById('pillCatLabel').textContent = el.querySelector('span').textContent.trim();
-  document.getElementById('pillCat').classList.toggle('active', state.cat !== 'todos');
+  state.cat = el.dataset.cat || '';
+  document.getElementById('pillCatLabel').textContent = state.cat
+    ? el.querySelector('span').textContent.trim()
+    : 'Categoria';
+  document.getElementById('pillCat').classList.toggle('active', !!state.cat);
   closeAllDd(); applyFilters();
 }
 
-function pickStar(el) {
-  document.querySelectorAll('.dd-star').forEach(s=>s.classList.remove('active'));
-  el.classList.add('active');
-  state.star = parseFloat(el.dataset.val);
-  document.getElementById('pillStarLabel').textContent = state.star > 0 ? `★ ${el.querySelector('.star-lbl').textContent}` : 'Avaliação';
-  document.getElementById('pillStar').classList.toggle('active', state.star > 0);
-  closeAllDd(); applyFilters();
+function syncMax() {
+  const v = document.getElementById('priceSlider').value;
+  document.getElementById('priceMax').value = v;
+  document.getElementById('rangeVal').textContent = `Até R$ ${v}`;
 }
 
-function pickAvail(el) {
-  document.querySelectorAll('.dd-av').forEach(a=>a.classList.remove('active'));
-  el.classList.add('active');
-  state.avail = el.dataset.val;
-  document.getElementById('pillAvailLabel').textContent = state.avail !== 'todos' ? el.textContent.trim() : 'Disponibilidade';
-  document.getElementById('pillAvail').classList.toggle('active', state.avail !== 'todos');
-  closeAllDd(); applyFilters();
+function syncSlider() {
+  const v = document.getElementById('priceMax').value;
+  document.getElementById('priceSlider').value = v;
+  document.getElementById('rangeVal').textContent = `Até R$ ${v}`;
 }
 
-function syncMax() { const v=document.getElementById('priceSlider').value; document.getElementById('priceMax').value=v; document.getElementById('rangeVal').textContent=`Até R$ ${v}/hr`; }
-function syncSlider() { const v=document.getElementById('priceMax').value; document.getElementById('priceSlider').value=v; document.getElementById('rangeVal').textContent=`Até R$ ${v}/hr`; }
 function applyPrice() {
-  state.maxPrice = parseInt(document.getElementById('priceMax').value)||500;
-  const active = state.maxPrice < 500;
-  document.getElementById('pillPrecoLabel').textContent = active ? `Até R$${state.maxPrice}` : 'Preço';
-  document.getElementById('pillPreco').classList.toggle('active', active);
+  state.minPrice = parseInt(document.getElementById('priceMin').value) || 0;
+  state.maxPrice = parseInt(document.getElementById('priceMax').value) || 10000;
+  const hasMin = state.minPrice > 0;
+  const hasMax = state.maxPrice < 10000;
+  let label = 'Preço';
+  if (hasMin && hasMax) label = `R$${state.minPrice} — R$${state.maxPrice}`;
+  else if (hasMax)      label = `Até R$${state.maxPrice}`;
+  else if (hasMin)      label = `A partir de R$${state.minPrice}`;
+  document.getElementById('pillPrecoLabel').textContent = label;
+  document.getElementById('pillPreco').classList.toggle('active', hasMin || hasMax);
   closeAllDd(); applyFilters();
 }
 
 document.querySelectorAll('.page-btn').forEach(btn => {
   btn.addEventListener('click', function() {
-    document.querySelectorAll('.page-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
     this.classList.add('active');
-    window.scrollTo({top:0,behavior:'smooth'});
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
 
-render(DATA);
-OFAuth.loadNav();
+function openWork(w) {
+  localStorage.setItem('of_selected_work', JSON.stringify(w));
+  window.location.href = 'serviceScreen.html';
+}
+
+async function init() {
+  setLoading(true);
+  allWorks = await fetchWorks();
+  buildCategoryDD(allWorks);
+  render(allWorks);
+  OFAuth.loadNav();
+  initNotifPanel();
+}
+
+init();

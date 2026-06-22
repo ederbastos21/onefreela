@@ -1,263 +1,423 @@
 package br.unicesumar.onefreela.service;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.dto.DeliverDTO;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
-import br.unicesumar.onefreela.dto.OrderCreateDTO;
-import br.unicesumar.onefreela.dto.OrderResponse;
+import br.unicesumar.onefreela.dto.MakeOrderDTO;
 import br.unicesumar.onefreela.entity.*;
+import br.unicesumar.onefreela.enums.OrderItemStatus;
+import br.unicesumar.onefreela.enums.OrderStatus;
+import br.unicesumar.onefreela.enums.WorkStatus;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.OrderItemRepository;
 import br.unicesumar.onefreela.repository.OrderRepository;
-import br.unicesumar.onefreela.repository.WorkRepository;
+import br.unicesumar.onefreela.repository.WorkAdditionalRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class OrderService {
 
-    private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
-    private final WorkRepository workRepository;
+    private final OrderRepository orderRepository;
+    private final DeliveryService deliveryService;
+    private final DeliveryFileStorageService deliveryFileStorageService;
+    private final WorkAdditionalRepository workAdditionalRepository;
     private final PaymentService paymentService;
 
-    public OrderService(OrderRepository orderRepository,
-                        OrderItemRepository orderItemRepository,
-                        WorkRepository workRepository,
-                        PaymentService paymentService) {
+    public OrderService(OrderItemRepository orderItemRepository, OrderRepository orderRepository,
+                        DeliveryService deliveryService, DeliveryFileStorageService deliveryFileStorageService,
+                        WorkAdditionalRepository workAdditionalRepository,
+                        @Lazy PaymentService paymentService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
-        this.workRepository = workRepository;
+        this.deliveryService = deliveryService;
+        this.deliveryFileStorageService = deliveryFileStorageService;
+        this.workAdditionalRepository = workAdditionalRepository;
         this.paymentService = paymentService;
     }
 
+    public Order findOrderById(Long id){
+        return orderRepository.findById(id).orElseThrow();
+    }
+
+    public OrderItem findOrderItemById(Long id){
+        return orderItemRepository.findById(id).orElseThrow();
+    }
+
+    public Order saveOrder (Order order){
+        return orderRepository.save(order);
+    }
+
+    public OrderItem saveOrderItem (OrderItem orderItem){
+        return orderItemRepository.save(orderItem);
+    }
+
+    private boolean isWorkOwner(User user, OrderItem orderItem){
+        return orderItem.getWork().getOwner().getId().equals(user.getId());
+    }
+
+    private boolean isOrderOwner(User user, OrderItem orderItem){
+        return orderItem.getOrder().getUser().getId().equals(user.getId());
+    }
+
+    private boolean reachedMaxDeliveryTries(OrderItem orderItem, int max){
+        return orderItem.getDeliveryTries() >= max;
+    }
+
+    private boolean hasStatus(OrderItem orderItem, OrderItemStatus status){
+        return orderItem.getStatus().equals(status);
+    }
+
+    private boolean canMakeDelivery(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY);
+    }
+
+    private boolean canAcceptDelivery(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY_REVISION);
+    }
+
+    private boolean canRequestAdjustment(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY_REVISION);
+    }
+
+    private boolean canAcceptAdjustment(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.ADJUSTMENT_REQUEST);
+    }
+
+    private boolean canOpenDispute(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY_REVISION);
+    }
+
+    private boolean isCompleted(OrderItem orderItem){
+        return hasStatus(orderItem, OrderItemStatus.COMPLETED);
+    }
+
+    public List<Order> findAllOrders (){
+        return orderRepository.findAll();
+    }
+
+
     @Transactional
-    public OrderResponse createOrder(User client, OrderCreateDTO dto) {
+    public Order makeOrder(User user, MakeOrderDTO dto) {
+
         List<ErrorDetail> errors = new ArrayList<>();
 
-        if (dto.getWorkIds() == null || dto.getWorkIds().isEmpty()) {
-            errors.add(new ErrorDetail(ErrorCode.ORDER_NOT_FOUND, "workIds", "O pedido deve conter ao menos um serviço"));
+        Cart cart = user.getCart();
+
+        if (cart == null) {
+            errors.add(new ErrorDetail(ErrorCode.CART_NOT_FOUND, "order", "Carrinho não encontrado"));
             throw new ValidationException(errors);
         }
 
-        List<Work> works = workRepository.findAllById(dto.getWorkIds());
-
-        for (Long workId : dto.getWorkIds()) {
-            boolean found = works.stream().anyMatch(w -> w.getId().equals(workId));
-            if (!found) {
-                errors.add(new ErrorDetail(ErrorCode.WORK_NOT_FOUND, "workIds",
-                        "Serviço com id " + workId + " não encontrado"));
-            }
+        if (cart.getCartItemList() == null || cart.getCartItemList().isEmpty()) {
+            errors.add(new ErrorDetail(ErrorCode.CART_EMPTY, "order", "Carrinho vazio"));
+            throw new ValidationException(errors);
         }
 
-        for (Work work : works) {
-            if (work.getStatus() != WorkStatus.ACTIVE) {
-                errors.add(new ErrorDetail(ErrorCode.WORK_INACTIVE, "workIds",
-                        "O serviço '" + work.getTitle() + "' não está disponível"));
+        if (dto.getCartItemIds() == null || dto.getCartItemIds().isEmpty()) {
+            errors.add(new ErrorDetail(ErrorCode.CART_EMPTY, "order", "Nenhum item selecionado"));
+            throw new ValidationException(errors);
+        }
+
+        List<CartItem> selectedItems = cart.getCartItemList()
+                .stream()
+                .filter(ci -> dto.getCartItemIds().contains(ci.getId()))
+                .toList();
+
+        if (selectedItems.size() != dto.getCartItemIds().size()) {
+            errors.add(new ErrorDetail(
+                    ErrorCode.CART_ITEM_ID_NOT_FOUND,
+                    "order",
+                    "Um ou mais itens não pertencem ao carrinho"
+            ));
+            throw new ValidationException(errors);
+        }
+
+        Order order = new Order();
+        List<OrderItem> orderItems = new ArrayList<>();
+        double totalOrderPrice = 0;
+
+
+        for (CartItem ci : selectedItems) {
+
+            Work work = ci.getWork();
+
+            if (work == null) {
+                errors.add(new ErrorDetail(ErrorCode.WORK_NOT_FOUND, "order", "Serviço não encontrado"));
+                continue;
             }
-            if (work.getOwner().getId().equals(client.getId())) {
-                errors.add(new ErrorDetail(ErrorCode.WORK_BELONGS_TO_CLIENT, "workIds",
-                        "Você não pode contratar seu próprio serviço: '" + work.getTitle() + "'"));
+
+            if (work.getStatus() == WorkStatus.INACTIVE) {
+                errors.add(new ErrorDetail(
+                        ErrorCode.WORK_INACTIVE,
+                        "order",
+                        "Serviço " + work.getTitle() + " está indisponível"
+                ));
+                continue;
             }
+
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setWork(work);
+            orderItem.setAmount(ci.getAmount());
+            orderItem.setCreatedAt(LocalDate.now());
+            orderItem.setDeadlineDate(LocalDate.now().plusWeeks(2));
+            orderItem.setStatus(OrderItemStatus.PENDING_DELIVERY);
+
+            double basePrice = work.getPrice().doubleValue();
+            double totalItemPrice = basePrice * ci.getAmount();
+
+            orderItem.setUnitPrice(basePrice);
+
+            List<Long> additionalIds = dto.getAdditionalsByCartItem() != null
+                    ? dto.getAdditionalsByCartItem().get(ci.getId())
+                    : null;
+
+            if (additionalIds != null && !additionalIds.isEmpty()) {
+
+                Set<Long> uniqueIds = new HashSet<>(additionalIds);
+                if (uniqueIds.size() != additionalIds.size()) {
+                    errors.add(new ErrorDetail(
+                            ErrorCode.WORK_ADDITIONAL_DUPLICATED,
+                            "order",
+                            "Adicional duplicado no item " + ci.getId()
+                    ));
+                    continue;
+                }
+
+                List<WorkAdditional> additionals = workAdditionalRepository.findAllById(additionalIds);
+
+                for (Long addId : additionalIds) {
+
+                    WorkAdditional wa = additionals.stream()
+                            .filter(a -> a.getId().equals(addId))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (wa == null) {
+                        errors.add(new ErrorDetail(
+                                ErrorCode.WORK_ADDITIONAL_NOT_FOUND,
+                                "order",
+                                "Adicional não encontrado: " + addId
+                        ));
+                        continue;
+                    }
+
+                    if (!wa.getWork().getId().equals(work.getId())) {
+                        errors.add(new ErrorDetail(
+                                ErrorCode.WORK_ADDITIONAL_DOES_NOT_BELONG_TO_WORK,
+                                "order",
+                                "Adicional não pertence ao serviço"
+                        ));
+                        continue;
+                    }
+
+                    OrderItemAdditional oia = new OrderItemAdditional();
+                    oia.setOrderItem(orderItem);
+                    oia.setWorkAdditional(wa);
+                    oia.setPrice(wa.getPrice().doubleValue());
+
+                    orderItem.getAdditionals().add(oia);
+
+                    totalItemPrice += wa.getPrice().doubleValue();
+                }
+            }
+
+            orderItem.setTotalPrice(totalItemPrice);
+            totalOrderPrice += totalItemPrice;
+
+            orderItems.add(orderItem);
         }
 
         if (!errors.isEmpty()) {
             throw new ValidationException(errors);
         }
 
-        BigDecimal total = works.stream()
-                .map(Work::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        order.setUser(user);
+        order.setCreatedAt(LocalDate.now());
+        order.setStatus(OrderStatus.NOT_PAID);
+        order.setPaymentMethod(dto.getPaymentMethod());
+        order.setTotalPrice(totalOrderPrice);
+        order.setOrderItemlist(orderItems);
 
-        Order order = new Order();
-        order.setClient(client);
-        order.setTotalAmount(total);
-        order.setStatus(OrderStatus.PENDING_PAYMENT);
-        Order savedOrder = orderRepository.save(order);
-
-        for (Work work : works) {
-            OrderItem item = new OrderItem();
-            item.setOrder(savedOrder);
-            item.setWork(work);
-            item.setFreelancer(work.getOwner());
-            item.setPrice(work.getPrice());
-            item.setStatus(OrderItemStatus.PENDING);
-            savedOrder.getItems().add(orderItemRepository.save(item));
-        }
-
-        return OrderResponse.fromEntity(savedOrder);
+        return orderRepository.save(order);
     }
 
     @Transactional
-    public OrderResponse payOrder(User client, Long orderId, PaymentMethod paymentMethod) {
+    public Delivery makeDelivery (User user, DeliverDTO deliverDto){
+        int MAX_DELIVERY_TRIES = 3;
+        OrderItem orderItem = findOrderItemById(deliverDto.getOrderItemId());
         List<ErrorDetail> errors = new ArrayList<>();
+        Delivery delivery = new Delivery();
 
-        Order order = findOrderOrThrow(orderId);
-
-        if (!order.getClient().getId().equals(client.getId())) {
-            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "order", "Você não tem permissão para pagar este pedido"));
-            throw new ValidationException(errors);
-        }
-        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
-            errors.add(new ErrorDetail(ErrorCode.ORDER_ALREADY_PAID, "order", "Este pedido já foi pago ou não pode ser pago"));
+        if (orderItem == null){
+            errors.add(new ErrorDetail(ErrorCode.ORDER_ITEM_NOT_FOUND, "delivery", "O pedido nao foi encontrado"));
             throw new ValidationException(errors);
         }
 
-        paymentService.processPayment(order, paymentMethod);
-
-        order.setPaymentMethod(paymentMethod);
-        order.setStatus(OrderStatus.PAID);
-        orderRepository.save(order);
-
-        for (OrderItem item : order.getItems()) {
-            item.setStatus(OrderItemStatus.IN_PROGRESS);
-            orderItemRepository.save(item);
+        if (reachedMaxDeliveryTries(orderItem, MAX_DELIVERY_TRIES)){
+            errors.add(new ErrorDetail(ErrorCode.DELIVERY_TOO_MANY_TRIES, "delivery", "O limite de envio é de 3 tentativas, espere o retorno do cliente"));
+            throw new ValidationException(errors);
         }
 
-        return OrderResponse.fromEntity(order);
+        if (!canMakeDelivery(orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.NO_PENDING_DELIVERY, "delivery", "Nao há nenhum envio de arquivos pendente"));
+            throw new ValidationException(errors);
+        }
+
+        if (!isWorkOwner(user, orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
+            throw new ValidationException(errors);
+        }
+
+        delivery.setMessage(deliverDto.getMessage());
+        delivery.setOrderItem(orderItem);
+        Delivery savedDelivery = deliveryService.save(delivery);
+
+        List <MultipartFile> files = deliverDto.getFiles();
+
+        if (files != null){
+            for (MultipartFile file : files){
+                DeliveryFile deliveryFile = new DeliveryFile();
+
+                deliveryFile.setDelivery(savedDelivery);
+                deliveryFile.setFileSize(file.getSize());
+                deliveryFile.setExtension(file.getContentType());
+                deliveryFile.setOriginalName(file.getName());
+                deliveryFile.setUploadedAt(LocalDate.now());
+                deliveryFile.setPath(deliveryFileStorageService.store(file));
+                savedDelivery.getFileList().add(deliveryFile);
+            }
+        } else {
+            errors.add(new ErrorDetail(ErrorCode.DELIVERY_FILE_EMPTY, "delivery", "nenhum arquivo de envio encontrado"));
+            throw new ValidationException(errors);
+        }
+
+        deliveryService.save(savedDelivery);
+
+        orderItem.setDeliveryTries(orderItem.getDeliveryTries() + 1);
+        orderItem.setStatus(OrderItemStatus.PENDING_DELIVERY_REVISION);
+        saveOrderItem(orderItem);
+
+        return delivery;
     }
 
     @Transactional
-    public OrderResponse completeOrderItem(User requester, Long orderId, Long itemId) {
+    public OrderItem refuseAdjustmentRequest (User user, Long orderItemId){
         List<ErrorDetail> errors = new ArrayList<>();
+        OrderItem orderItem = findOrderItemById(orderItemId);
 
-        Order order = findOrderOrThrow(orderId);
-
-        if (order.getStatus() == OrderStatus.PENDING_PAYMENT) {
-            errors.add(new ErrorDetail(ErrorCode.ORDER_NOT_PAID, "order", "O pedido ainda não foi pago"));
+        if (!canAcceptAdjustment(orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.NO_PENDING_ADJUSTMENT_REQUEST, "delivey", "nao há nenhum ajuste pendente"));
             throw new ValidationException(errors);
         }
 
-        OrderItem item = order.getItems().stream()
-                .filter(i -> i.getId().equals(itemId))
-                .findFirst()
-                .orElse(null);
-
-        if (item == null) {
-            errors.add(new ErrorDetail(ErrorCode.ORDER_ITEM_NOT_FOUND, "orderItem", "Item não encontrado neste pedido"));
+        if (!isWorkOwner(user, orderItem)) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
             throw new ValidationException(errors);
         }
 
-        boolean isFreelancerOfItem = item.getFreelancer().getId().equals(requester.getId());
-        boolean isClientOfOrder = order.getClient().getId().equals(requester.getId());
-        boolean isAdmin = requester.getAdmin();
-
-        if (!isFreelancerOfItem && !isClientOfOrder && !isAdmin) {
-            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "orderItem", "Você não tem permissão para concluir este item"));
-            throw new ValidationException(errors);
-        }
-
-        if (item.getStatus() == OrderItemStatus.COMPLETED) {
-            errors.add(new ErrorDetail(ErrorCode.ORDER_ITEM_ALREADY_COMPLETED, "orderItem", "Este item já foi concluído"));
-            throw new ValidationException(errors);
-        }
-        if (item.getStatus() != OrderItemStatus.IN_PROGRESS) {
-            errors.add(new ErrorDetail(ErrorCode.ORDER_ITEM_NOT_IN_PROGRESS, "orderItem", "Este item não está em andamento"));
-            throw new ValidationException(errors);
-        }
-
-        paymentService.distributeOrderItemFunds(item);
-
-        item.setStatus(OrderItemStatus.COMPLETED);
-        orderItemRepository.save(item);
-
-        updateOrderStatusAfterItemChange(order);
-
-        return OrderResponse.fromEntity(order);
+        orderItem.setStatus(OrderItemStatus.FROZEN);
+        return saveOrderItem(orderItem);
     }
 
     @Transactional
-    public OrderResponse refundOrderItem(User requester, Long orderId, Long itemId) {
+    public OrderItem acceptAdjustmentRequest (User user, Long orderItemId){
         List<ErrorDetail> errors = new ArrayList<>();
+        OrderItem orderItem = findOrderItemById(orderItemId);
 
-        Order order = findOrderOrThrow(orderId);
-
-        boolean isClientOfOrder = order.getClient().getId().equals(requester.getId());
-        boolean isAdmin = requester.getAdmin();
-
-        if (!isClientOfOrder && !isAdmin) {
-            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "order", "Você não tem permissão para reembolsar este pedido"));
+        if (!canAcceptAdjustment(orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.NO_PENDING_ADJUSTMENT_REQUEST, "delivey", "nao há nenhum ajuste pendente"));
             throw new ValidationException(errors);
         }
 
-        if (order.getStatus() == OrderStatus.PENDING_PAYMENT) {
-            errors.add(new ErrorDetail(ErrorCode.ORDER_NOT_PAID, "order", "O pedido não foi pago e não requer reembolso"));
+        if (!isWorkOwner(user, orderItem)) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
             throw new ValidationException(errors);
         }
 
-        OrderItem item = order.getItems().stream()
-                .filter(i -> i.getId().equals(itemId))
-                .findFirst()
-                .orElse(null);
-
-        if (item == null) {
-            errors.add(new ErrorDetail(ErrorCode.ORDER_ITEM_NOT_FOUND, "orderItem", "Item não encontrado neste pedido"));
-            throw new ValidationException(errors);
-        }
-
-        paymentService.refundOrderItem(item);
-
-        item.setStatus(OrderItemStatus.REFUNDED);
-        orderItemRepository.save(item);
-
-        updateOrderStatusAfterItemChange(order);
-
-        return OrderResponse.fromEntity(order);
+        orderItem.setStatus(OrderItemStatus.PENDING_DELIVERY);
+        return saveOrderItem(orderItem);
     }
 
-    @Transactional(readOnly = true)
-    public List<OrderResponse> findMyOrders(User client) {
-        return orderRepository.findByClientId(client.getId())
-                .stream()
-                .map(OrderResponse::fromEntity)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public OrderResponse findById(User requester, Long orderId) {
+    @Transactional
+    public OrderItem openDispute (User user, Long orderItemId){
         List<ErrorDetail> errors = new ArrayList<>();
-        Order order = findOrderOrThrow(orderId);
+        OrderItem orderItem = findOrderItemById(orderItemId);
 
-        boolean isClient = order.getClient().getId().equals(requester.getId());
-        boolean isFreelancerInOrder = order.getItems().stream()
-                .anyMatch(i -> i.getFreelancer().getId().equals(requester.getId()));
-        boolean isAdmin = requester.getAdmin();
-
-        if (!isClient && !isFreelancerInOrder && !isAdmin) {
-            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "order", "Você não tem acesso a este pedido"));
+        if (isWorkOwner(user, orderItem)) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao pode abrir disputa em seu proprio pedido"));
             throw new ValidationException(errors);
         }
 
-        return OrderResponse.fromEntity(order);
-    }
-
-    private Order findOrderOrThrow(Long orderId) {
-        return orderRepository.findById(orderId).orElseThrow(() -> {
-            List<ErrorDetail> errors = new ArrayList<>();
-            errors.add(new ErrorDetail(ErrorCode.ORDER_NOT_FOUND, "order", "Pedido não encontrado"));
-            return new ValidationException(errors);
-        });
-    }
-
-    private void updateOrderStatusAfterItemChange(Order order) {
-        List<OrderItem> items = order.getItems();
-        long completedCount = items.stream().filter(i -> i.getStatus() == OrderItemStatus.COMPLETED).count();
-        long refundedCount = items.stream().filter(i -> i.getStatus() == OrderItemStatus.REFUNDED).count();
-        long cancelledCount = items.stream().filter(i -> i.getStatus() == OrderItemStatus.CANCELLED).count();
-        long total = items.size();
-        long resolvedCount = completedCount + refundedCount + cancelledCount;
-
-        if (completedCount == total) {
-            order.setStatus(OrderStatus.COMPLETED);
-        } else if (resolvedCount == total) {
-            order.setStatus(OrderStatus.REFUNDED);
-        } else if (completedCount > 0) {
-            order.setStatus(OrderStatus.PARTIALLY_COMPLETED);
+        if (isOrderOwner(user, orderItem)){
+            orderItem.setStatus(OrderItemStatus.ON_DISPUTE);
+            saveOrderItem(orderItem);
         }
 
-        orderRepository.save(order);
+        return saveOrderItem(orderItem);
+    }
+
+    @Transactional
+    public OrderItem acceptDelivery (User user, Long orderItemId){
+        List<ErrorDetail> errors = new ArrayList<>();
+        OrderItem orderItem = findOrderItemById(orderItemId);
+
+        if (!canAcceptDelivery(orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.NO_PENDING_DELIVERY_REVIEW, "delivery", "nao há nenhum pedido de revisao pendente"));
+            throw new ValidationException(errors);
+        }
+
+        if (isWorkOwner(user, orderItem)) {
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao pode aceitar seu proprio serviço"));
+            throw new ValidationException(errors);
+        }
+
+        if (!isOrderOwner(user, orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
+            throw new ValidationException(errors);
+        }
+
+        orderItem.setStatus(OrderItemStatus.COMPLETED);
+        OrderItem saved = saveOrderItem(orderItem);
+        paymentService.distributeOrderItemFunds(saved);
+        return saved;
+    }
+
+    @Transactional
+    public OrderItem refuseDelivery (User user, Long orderItemId){
+        List<ErrorDetail> errors = new ArrayList<>();
+        OrderItem orderItem = findOrderItemById(orderItemId);
+
+        if (!canAcceptDelivery(orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.NO_PENDING_DELIVERY_REVIEW, "delivery", "nao há nenhum pedido com revisao pendente"));
+            throw new ValidationException(errors);
+        }
+
+        if (isWorkOwner(user, orderItem)){
+            errors.add (new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao pode recusar seu proprio serviço"));
+        }
+
+        if (!isOrderOwner(user, orderItem)){
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "acesso negado"));
+            throw new ValidationException(errors);
+        }
+
+        if (orderItem.getDeliveryTries() == 3){
+            orderItem.setStatus(OrderItemStatus.FROZEN);
+            return saveOrderItem(orderItem);
+        }
+
+        orderItem.setStatus(OrderItemStatus.ADJUSTMENT_REQUEST);
+        return saveOrderItem(orderItem);
     }
 }

@@ -18,7 +18,7 @@
         <div class="nav-logo-text">One<span>Freela</span></div>
       </a>
       <div class="nav-sep"></div>
-      <a href="freelancerProfile.html" class="nav-back">
+      <a href="profile.html" class="nav-back">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
         Voltar ao perfil
       </a>
@@ -26,9 +26,23 @@
       <span class="nav-title">Editar Perfil</span>
     </div>
     <div class="nav-right">
-      <a href="freelancerProfile.html" class="nav-avatar" id="navAvatar"></a>
+      <a href="cartScreen.html" class="nav-icon-btn" title="Carrinho">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </a>
+      <div class="nav-icon-btn" id="notifBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div class="nav-icon-btn" title="Mensagens" onclick="goToChat()" style="cursor:pointer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <a href="profile.html" class="nav-avatar" id="navAvatar"></a>
+      <a href="adminScreen.html" id="adminAreaBtn" class="nav-admin-btn">Área do admin</a>
     </div>
   </nav>
+
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-title">Notificações</div>
+  </div>
 
   <div class="app-page">
     <aside class="sidebar sidebar-edit">
@@ -255,7 +269,7 @@
   <div class="actions-bar">
     <div class="actions-left">Alterações <span id="saveStatus">não salvas</span></div>
     <div class="actions-right">
-      <a href="freelancerProfile.html" class="btn-cancel">Cancelar</a>
+      <a href="profile.html" class="btn-cancel">Cancelar</a>
       <button class="btn-save" onclick="saveProfile()">SALVAR ALTERAÇÕES</button>
     </div>
   </div>

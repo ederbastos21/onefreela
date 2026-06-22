@@ -1,0 +1,25 @@
+info:
+  name: high amount
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: http://localhost:8080/cart/addItem
+  headers:
+    - name: Authorization
+      value: f653542c-19ed-474d-96d4-20417fcb33c9
+  body:
+    type: json
+    data: |-
+      {
+        "WorkId" : "1",
+        "amount" : "99"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

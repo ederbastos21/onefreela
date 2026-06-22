@@ -1,6 +1,6 @@
 package br.unicesumar.onefreela.service;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.entity.User;
@@ -8,6 +8,7 @@ import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.UserRepository;
 import br.unicesumar.onefreela.service.mapper.UserMapper;
 import br.unicesumar.onefreela.service.validator.UserValidator;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import br.unicesumar.onefreela.dto.UserUpdateDTO;
@@ -24,12 +25,14 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserValidator userValidator;
     private final UserMapper userMapper;
+    private final CartService cartService;
 
-    public UserService(UserRepository repository, PasswordEncoder passwordEncoder, UserValidator userValidator, UserMapper userMapper) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder, UserValidator userValidator, UserMapper userMapper, CartService cartService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.userValidator = userValidator;
         this.userMapper = userMapper;
+        this.cartService = cartService;
     }
 
     public List<User> findAll() {
@@ -48,10 +51,27 @@ public class UserService {
         return repository.findByEmail(email);
     }
 
+    public void deleteById(Long id){
+        repository.deleteById(id);
+    }
+
     public Boolean existsByEmail (String email){
         return repository.existsByEmail(email);
     }
 
+    public User makeAdmin(Long userId){
+        User user = findById(userId).orElseThrow();
+        user.setAdmin(true);
+        return save(user);
+    }
+
+    public User removeAdmin(Long userId){
+        User user = findById(userId).orElseThrow();
+        user.setAdmin(false);
+        return save(user);
+    }
+
+    @Transactional
     public void registerUser(UserRegisterDTO userRegisterDTO){
 
         List<ErrorDetail> errors = new ArrayList<>();
@@ -68,13 +88,18 @@ public class UserService {
             newUser.setProfilePicturePath("");
             newUser.setVerified(false);
             newUser.setRegisterDate(LocalDate.now().toString());
-            save(newUser);
-            
+            User createdUser = save(newUser);
+            cartService.createCart(newUser);
+            if (createdUser.getId() == 1L){
+                createdUser.setAdmin(true);
+                save(createdUser);
+            }
         } else {
             throw new ValidationException(errors);
         }
     }
 
+    @Transactional
     public void updateUser(User authenticatedUser, UserUpdateDTO userUpdateDTO) {
 
         List<ErrorDetail> errors = new ArrayList<>();

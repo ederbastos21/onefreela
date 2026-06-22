@@ -18,13 +18,14 @@
     getType:      function () { return localStorage.getItem('of_user_type') || ''; },
     getEmail:     function () { return localStorage.getItem('of_email')     || ''; },
     getToken:     function () { return localStorage.getItem('of_token')     || ''; },
+    isAdmin:      function () { return localStorage.getItem('of_is_admin')  === 'true'; },
     getInitials:  getInitials,
     getShortName: getShortName,
 
     isLoggedIn: function () { return !!this.getToken(); },
 
     logout: function () {
-      ['of_token', 'of_name', 'of_user_type', 'of_email'].forEach(function (k) {
+      ['of_token', 'of_name', 'of_user_type', 'of_email', 'of_is_admin'].forEach(function (k) {
         localStorage.removeItem(k);
       });
       window.location.href = 'loginScreen.html';
@@ -44,8 +45,8 @@
       var type        = this.getType();
       var initials    = getInitials(name);
       var shortName   = getShortName(name);
-      var roleLabel   = type === 'freelancer' ? 'Freelancer' : 'Cliente';
-      var profileHref = type === 'freelancer' ? 'freelancerProfile.html' : 'clientProfile.html';
+      var roleLabel   = this.isAdmin() ? 'Administrador' : (type === 'freelancer' ? 'Freelancer' : 'Cliente');
+      var profileHref = 'profile.html';
 
       var navAvatar   = document.getElementById('navAvatar');
       var navUserName = document.getElementById('navUserName');
@@ -57,6 +58,9 @@
       }
       if (navUserName) navUserName.textContent = shortName;
       if (navUserRole) navUserRole.textContent = roleLabel;
+
+      var adminBtn = document.getElementById('adminAreaBtn');
+      if (adminBtn && this.isAdmin()) adminBtn.style.display = 'flex';
     },
 
     /* Populates profile hero + settings inputs on profile pages */

@@ -18,8 +18,8 @@ public class SessionService {
          try{
              String token = UUID.randomUUID().toString();
              String userId = id.toString();
-             redisTemplate.opsForValue().set(token,userId,10, TimeUnit.MINUTES);
-             redisTemplate.opsForValue().set(userId,token,10, TimeUnit.MINUTES);
+             redisTemplate.opsForValue().set(token,userId,1, TimeUnit.HOURS);
+             redisTemplate.opsForValue().set(userId,token,1, TimeUnit.HOURS);
 
              return token;
          } catch (Exception e){

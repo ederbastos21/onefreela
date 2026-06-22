@@ -1,8 +1,9 @@
 package br.unicesumar.onefreela.service;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.entity.*;
+import br.unicesumar.onefreela.enums.ErrorCode;
+import br.unicesumar.onefreela.enums.TransactionType;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.FinancialTransactionRepository;
 import br.unicesumar.onefreela.repository.PlatformBalanceRepository;
@@ -81,7 +82,7 @@ public class BalanceService {
         platformBalanceRepository.save(balance);
         recordTransaction(TransactionType.ORDER_PAYMENT, amount,
                 "Pagamento do pedido #" + order.getId() + " recebido no saldo pendente",
-                order, null, order.getClient());
+                order, null, order.getUser());
     }
 
     @Transactional

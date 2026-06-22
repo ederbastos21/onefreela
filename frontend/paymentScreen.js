@@ -1,143 +1,271 @@
+const API_BASE = 'http://localhost:8080';
+
 OFAuth.loadNav();
 
 let currentMethod = 'pix';
-let pixInterval   = null;
-let pixSeconds    = 15 * 60; // 15 minutes
+let cartSnapshot  = null;
 
-/* ── Payment method switching ─────────────────────────────── */
+/* ── Helpers ──────────────────────────────────────────────── */
 
-function setMethod(method, btn) {
-  document.querySelectorAll('.pay-method-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.pay-pane').forEach(p => p.classList.remove('active'));
+const PAY_GRADIENTS = [
+  'linear-gradient(135deg,#0d1f0d,#1a3a1a)',
+  'linear-gradient(135deg,#0d0d1f,#1a1a3a)',
+  'linear-gradient(135deg,#1f1a0d,#3a2e0d)',
+  'linear-gradient(135deg,#1f0d1f,#3a1a3a)',
+  'linear-gradient(135deg,#1f0d0d,#3a1a1a)',
+  'linear-gradient(135deg,#0d1a1f,#0d2a2a)',
+];
 
-  btn.classList.add('active');
-  document.getElementById('pane-' + method).classList.add('active');
+function itemBg(id) {
+  return PAY_GRADIENTS[Number(id) % PAY_GRADIENTS.length];
+}
+
+function catEmoji(cat) {
+  if (!cat) return '🛠️';
+  const c = cat.toLowerCase();
+  if (c.includes('design') || c.includes('figma'))                         return '🎨';
+  if (c.includes('dev') || c.includes('web') || c.includes('react'))       return '💻';
+  if (c.includes('market') || c.includes('redes') || c.includes('social')) return '📱';
+  if (c.includes('redaç') || c.includes('copy') || c.includes('conteú'))   return '✍️';
+  if (c.includes('vídeo') || c.includes('video') || c.includes('anim'))    return '🎬';
+  if (c.includes('dados') || c.includes('data'))                            return '📊';
+  return '🛠️';
+}
+
+function formatMoney(n) {
+  if (n == null || isNaN(n)) return '—';
+  return 'R$ ' + Number(n).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+/* ── Method selector ──────────────────────────────────────── */
+
+function setMethod(method, el) {
   currentMethod = method;
+  document.querySelectorAll('.method-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
 
-  if (method === 'pix') {
-    startPixTimer();
-  } else {
-    clearInterval(pixInterval);
+  const psPixForm  = document.getElementById('psPixForm');
+  const psCardForm = document.getElementById('psCardForm');
+  if (psPixForm)  psPixForm.style.display  = (method === 'pix')  ? '' : 'none';
+  if (psCardForm) psCardForm.style.display = (method === 'card') ? '' : 'none';
+}
+
+/* ── Order items render ───────────────────────────────────── */
+
+function renderOrderSummary(snapshot) {
+  const container = document.getElementById('payOrderItems');
+  if (!container) return;
+
+  if (!snapshot || !snapshot.length) {
+    container.innerHTML = '<p class="pay-empty-msg">Nenhum item no carrinho. <a href="cartScreen.html">Voltar</a></p>';
+    return;
+  }
+
+  container.innerHTML = '';
+  snapshot.forEach(item => {
+    const work  = item._work;
+    const emoji = catEmoji(work ? work.category : '');
+    const bg    = work ? itemBg(work.id) : 'linear-gradient(135deg,#1a1a1a,#2a2a2a)';
+    const title = work ? (work.title     || 'Serviço') : 'Serviço';
+    const owner = work ? (work.ownerName || '—')       : '—';
+    const amt   = item.amount || 1;
+    const price = work ? Number(work.price) * amt : 0;
+    const amtLabel = amt > 1 ? ' × ' + amt : '';
+
+    const div = document.createElement('div');
+    div.className = 'pay-order-item';
+    div.innerHTML =
+      '<div class="pay-order-thumb" style="background:' + bg + '">' + emoji + '</div>' +
+      '<div class="pay-order-info">' +
+        '<div class="pay-order-title">' + title + amtLabel + '</div>' +
+        '<div class="pay-order-meta">' + owner + ' · Entrega em 14 dias</div>' +
+      '</div>' +
+      '<div class="pay-order-price">' + (work ? formatMoney(price) : '—') + '</div>';
+    container.appendChild(div);
+  });
+}
+
+function updateTotals(snapshot) {
+  let subtotal = 0;
+  (snapshot || []).forEach(item => {
+    if (item._work) subtotal += Number(item._work.price) * (item.amount || 1);
+  });
+  const fee   = subtotal * 0.10;
+  const total = subtotal + fee;
+  const count = (snapshot || []).length;
+
+  const subLabel = document.getElementById('paySubtotalLabel');
+  if (subLabel) subLabel.textContent = 'Subtotal (' + count + ' serviço' + (count !== 1 ? 's' : '') + ')';
+
+  const subVal = document.getElementById('paySubtotalVal');
+  if (subVal)  subVal.textContent = formatMoney(subtotal);
+
+  const feeVal = document.getElementById('payFeeVal');
+  if (feeVal)  feeVal.textContent = formatMoney(fee);
+
+  const totalVal = document.getElementById('payTotalVal');
+  if (totalVal) totalVal.textContent = formatMoney(total);
+
+  return total;
+}
+
+/* ── Load cart from API ───────────────────────────────────── */
+
+async function loadCartSummary() {
+  if (!OFAuth.isLoggedIn()) {
+    window.location.href = 'loginScreen.html';
+    return;
+  }
+
+  try {
+    const res = await fetch(API_BASE + '/cart/show', {
+      headers: { 'Authorization': OFAuth.getToken() }
+    });
+
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const cart      = await res.json();
+    const items     = (cart && cart.cartItemList) ? cart.cartItemList : [];
+    const workCache = JSON.parse(localStorage.getItem('of_work_cache')   || '{}');
+    const cartMap   = JSON.parse(localStorage.getItem('of_cart_workmap') || '{}');
+
+    cartSnapshot = items.map(item => ({
+      ...item,
+      _work: workCache[String(cartMap[String(item.id)])] || null
+    }));
+
+    if (!cartSnapshot.length) {
+      window.location.href = 'cartScreen.html';
+      return;
+    }
+
+    renderOrderSummary(cartSnapshot);
+    updateTotals(cartSnapshot);
+
+  } catch (e) {
+    console.error('loadCartSummary:', e);
+    const container = document.getElementById('payOrderItems');
+    if (container) container.innerHTML = '<p class="pay-loading-txt" style="color:#ef4444">Erro ao carregar itens.</p>';
   }
 }
 
-/* ── PIX countdown ────────────────────────────────────────── */
+/* ── Confirm order ────────────────────────────────────────── */
 
-function startPixTimer() {
-  clearInterval(pixInterval);
-  const el = document.getElementById('pixCountdown');
-  if (!el) return;
+const METHOD_DISPLAY = {
+  pix:    '⚡ PIX',
+  card:   '💳 Cartão de Crédito',
+  boleto: '📄 Boleto Bancário'
+};
 
-  pixInterval = setInterval(() => {
-    pixSeconds--;
-    if (pixSeconds <= 0) {
-      clearInterval(pixInterval);
-      el.textContent = '00:00';
-      el.style.color = 'var(--red)';
-      showToast('Código PIX expirado. Gere um novo.');
+const METHOD_MAP = { pix: 'PIX', card: 'CARTAO', boleto: 'PIX' };
+
+async function confirmPayment() {
+  const btn          = document.getElementById('confirmBtn');
+  const originalText = btn.textContent;
+  btn.textContent    = 'PROCESSANDO...';
+  btn.disabled       = true;
+  btn.style.opacity  = '.7';
+
+  const paymentMethod = METHOD_MAP[currentMethod] || 'PIX';
+
+  try {
+    const res = await fetch(API_BASE + '/order/createOrder', {
+      method:  'POST',
+      headers: {
+        'Authorization': OFAuth.getToken(),
+        'Content-Type':  'application/json'
+      },
+      body: JSON.stringify({ paymentMethod })
+    });
+
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+
+    if (!res.ok) {
+      let msg = 'Erro ao criar pedido.';
+      try {
+        const data = await res.json();
+        if (Array.isArray(data.errors) && data.errors.length) {
+          msg = data.errors.map(e => e.message).join(' • ');
+        }
+      } catch (_) {}
+      showToast(msg);
+      btn.textContent   = originalText;
+      btn.disabled      = false;
+      btn.style.opacity = '1';
       return;
     }
-    const m = Math.floor(pixSeconds / 60).toString().padStart(2, '0');
-    const s = (pixSeconds % 60).toString().padStart(2, '0');
-    el.textContent = m + ':' + s;
-  }, 1000);
-}
 
-function copyPix() {
-  const code = document.getElementById('pixCodeText').textContent.trim();
-  navigator.clipboard.writeText(code)
-    .then(() => showToast('✓ Código PIX copiado!'))
-    .catch(() => showToast('Não foi possível copiar. Copie manualmente.'));
-}
+    // Try to capture the backend-assigned order ID for payment processing
+    let backendOrderId = null;
+    try {
+      const text   = await res.text();
+      const parsed = JSON.parse(text);
+      if (parsed && typeof parsed === 'object' && (parsed.id || parsed.orderId)) {
+        backendOrderId = Number(parsed.id || parsed.orderId) || null;
+      }
+    } catch (_) {}
 
-/* ── Credit card formatting & visual update ───────────────── */
+    /* build order record */
+    const rand      = Math.floor(Math.random() * 90000) + 10000;
+    const orderId   = '#OF-' + new Date().getFullYear() + '-' + rand;
+    const orderDate = new Date().toLocaleDateString('pt-BR');
 
-function formatCardNumber(input) {
-  const raw = input.value.replace(/\D/g, '').slice(0, 16);
-  input.value = raw.match(/.{1,4}/g)?.join(' ') || raw;
+    const savedItems = [];
+    let   total      = 0;
+    if (cartSnapshot && cartSnapshot.length) {
+      cartSnapshot.forEach(item => {
+        const work  = item._work;
+        const price = work ? Number(work.price) : 0;
+        savedItems.push({
+          title:    work ? (work.title    || 'Serviço') : 'Serviço',
+          category: work ? (work.category || '')        : '',
+          price,
+          amount:   item.amount || 1
+        });
+        total += price * (item.amount || 1);
+      });
+    }
 
-  const padded = raw.padEnd(16, '·');
-  const groups = padded.match(/.{1,4}/g);
-  document.getElementById('cardVisualNumber').textContent = groups.join('  ');
+    const orderRecord = {
+      orderId,
+      backendOrderId,
+      method:        currentMethod,
+      paymentMethod,
+      date:          orderDate,
+      timestamp:     Date.now(),
+      status:        'NOT_PAID',
+      items:         savedItems,
+      total
+    };
 
-  updateCardBrand(raw);
-}
+    const orders = JSON.parse(localStorage.getItem('of_orders') || '[]');
+    orders.unshift(orderRecord);
+    localStorage.setItem('of_orders', JSON.stringify(orders));
+    localStorage.removeItem('of_cart_workmap');
 
-function updateCardName(input) {
-  document.getElementById('cardVisualName').textContent =
-    input.value.toUpperCase().trim() || 'SEU NOME';
-}
+    /* show inline success */
+    document.getElementById('preOrderState').style.display   = 'none';
+    document.getElementById('orderSuccessState').style.display = '';
 
-function formatExpiry(input) {
-  let raw = input.value.replace(/\D/g, '').slice(0, 4);
-  if (raw.length >= 3) raw = raw.slice(0, 2) + '/' + raw.slice(2);
-  input.value = raw;
-  document.getElementById('cardVisualExpiry').textContent = raw || 'MM/AA';
-}
+    document.getElementById('successOrderId').textContent = orderId;
+    document.getElementById('successDate').textContent    = orderDate;
+    document.getElementById('successMethod').textContent  = METHOD_DISPLAY[currentMethod] || currentMethod;
+    document.getElementById('successTotal').textContent   = formatMoney(total);
 
-function updateCardBrand(digits) {
-  const first = digits[0];
-  const el    = document.getElementById('cardBrand');
-  if (!el) return;
-  if (first === '4')      el.textContent = 'VISA';
-  else if (first === '5') el.textContent = 'MASTER';
-  else if (first === '3') el.textContent = 'AMEX';
-  else if (first === '6') el.textContent = 'ELO';
-  else                    el.textContent = 'CARD';
-}
-
-/* ── Boleto ───────────────────────────────────────────────── */
-
-function copyBoleto() {
-  const code = '10491.75714 15005.010924 02469.210003 7 10070000335500';
-  navigator.clipboard.writeText(code)
-    .then(() => showToast('✓ Código de barras copiado!'))
-    .catch(() => showToast('Não foi possível copiar. Copie manualmente.'));
-}
-
-function downloadBoleto() {
-  showToast('Preparando PDF do boleto...');
-}
-
-/* ── Payment validation & confirmation ────────────────────── */
-
-function confirmPayment() {
-  if (currentMethod === 'card' && !validateCard()) return;
-
-  const btn = document.getElementById('confirmBtn');
-  btn.textContent   = 'PROCESSANDO...';
-  btn.disabled      = true;
-  btn.style.opacity = '.7';
-
-  /* persist order context for the confirmation page */
-  const rand = Math.floor(Math.random() * 90000) + 10000;
-  sessionStorage.setItem('of_last_order', JSON.stringify({
-    orderId: '#OF-2026-' + rand,
-    method:  currentMethod,
-    date:    new Date().toLocaleDateString('pt-BR'),
-  }));
-  sessionStorage.removeItem('of_payment_done');
-
-  setTimeout(() => {
-    clearInterval(pixInterval);
-    window.location.href = 'orderConfirmation.html';
-  }, 1800);
-}
-
-function validateCard() {
-  const num  = document.getElementById('cardNumber').value.replace(/\s/g, '');
-  const name = document.getElementById('cardName').value.trim();
-  const exp  = document.getElementById('cardExpiry').value;
-  const cvv  = document.getElementById('cardCvv').value;
-
-  if (num.length < 16)  { showToast('Número do cartão inválido.'); return false; }
-  if (!name)            { showToast('Informe o nome impresso no cartão.'); return false; }
-  if (exp.length < 5)   { showToast('Informe a validade do cartão.'); return false; }
-  if (cvv.length < 3)   { showToast('Informe o CVV.'); return false; }
-  return true;
+  } catch (e) {
+    console.error('confirmPayment:', e);
+    showToast('Erro de conexão ao realizar pedido.');
+    btn.textContent   = originalText;
+    btn.disabled      = false;
+    btn.style.opacity = '1';
+  }
 }
 
 /* ── Init ─────────────────────────────────────────────────── */
 
-startPixTimer();
 initNotifPanel();
+loadCartSummary();

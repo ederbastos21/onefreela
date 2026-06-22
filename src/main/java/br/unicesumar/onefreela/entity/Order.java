@@ -1,69 +1,109 @@
 package br.unicesumar.onefreela.entity;
 
+import br.unicesumar.onefreela.enums.OrderStatus;
+import br.unicesumar.onefreela.enums.PaymentMethod;
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.engine.internal.Cascade;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.lang.reflect.Method;
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
 @Table(name = "orders")
 public class Order {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "client_id", nullable = false)
-    private User client;
+    @ManyToOne
+    private User user;
 
-    @Column(precision = 12, scale = 2, nullable = false)
-    private BigDecimal totalAmount;
+    Double totalPrice;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderStatus status = OrderStatus.PENDING_PAYMENT;
+    OrderStatus status;
 
-    @Enumerated(EnumType.STRING)
+    LocalDate createdAt;
+
+    LocalDate finishedAt;
+
+    @OneToMany (mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItemlist;
+
     private PaymentMethod paymentMethod;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> items = new ArrayList<>();
+    @OneToOne (mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Payment payment;
 
-    @CreationTimestamp
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
+    public Long getId() {
+        return id;
+    }
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Order() {}
+    public User getUser() {
+        return user;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setUser(User user) {
+        this.user = user;
+    }
 
-    public User getClient() { return client; }
-    public void setClient(User client) { this.client = client; }
+    public Double getTotalPrice() {
+        return totalPrice;
+    }
 
-    public BigDecimal getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+    public void setTotalPrice(Double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
 
-    public OrderStatus getStatus() { return status; }
-    public void setStatus(OrderStatus status) { this.status = status; }
+    public OrderStatus getStatus() {
+        return status;
+    }
 
-    public PaymentMethod getPaymentMethod() { return paymentMethod; }
-    public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
 
-    public List<OrderItem> getItems() { return items; }
-    public void setItems(List<OrderItem> items) { this.items = items; }
+    public LocalDate getCreatedAt() {
+        return createdAt;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setCreatedAt(LocalDate createdAt) {
+        this.createdAt = createdAt;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public LocalDate getFinishedAt() {
+        return finishedAt;
+    }
+
+    public void setFinishedAt(LocalDate finishedAt) {
+        this.finishedAt = finishedAt;
+    }
+
+    public List<OrderItem> getOrderItemlist() {
+        return orderItemlist;
+    }
+
+    public void setOrderItemlist(List<OrderItem> orderItemlist) {
+        this.orderItemlist = orderItemlist;
+    }
+
+    public Payment getPayment() {
+        return payment;
+    }
+
+    public void setPayment(Payment payment) {
+        this.payment = payment;
+    }
+
+    public PaymentMethod getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
 }
