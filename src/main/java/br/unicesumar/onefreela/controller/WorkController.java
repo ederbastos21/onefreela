@@ -57,20 +57,4 @@ public class WorkController {
         List<WorkResponse> response = workService.search(q, category, minPrice, maxPrice, ownerId);
         return ResponseEntity.ok(response);
     }
-
-    @GetMapping("/admin/status")
-    public ResponseEntity<List<WorkResponse>> findByStatusForAdmin(HttpServletRequest httpServletRequest, @RequestParam String status) {
-        User admin = authService.getAuthenticatedUser(httpServletRequest);
-        authService.checkAdmin(httpServletRequest, admin);
-        List<WorkResponse> response = workService.findByStatusForAdmin(status);
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/admin/reviewWork/{id}")
-    public ResponseEntity<WorkResponse> reviewWork(HttpServletRequest httpServletRequest, @PathVariable Long id, @Valid @RequestBody WorkReviewDTO workReviewDTO) {
-        User admin = authService.getAuthenticatedUser(httpServletRequest);
-        authService.checkAdmin(httpServletRequest, admin);
-        WorkResponse response = workService.reviewWork(admin, id, workReviewDTO);
-        return ResponseEntity.ok(response);
-    }
 }

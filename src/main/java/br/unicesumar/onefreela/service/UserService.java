@@ -59,6 +59,18 @@ public class UserService {
         return repository.existsByEmail(email);
     }
 
+    public User makeAdmin(Long userId){
+        User user = findById(userId).orElseThrow();
+        user.setAdmin(true);
+        return save(user);
+    }
+
+    public User removeAdmin(Long userId){
+        User user = findById(userId).orElseThrow();
+        user.setAdmin(false);
+        return save(user);
+    }
+
     @Transactional
     public void registerUser(UserRegisterDTO userRegisterDTO){
 

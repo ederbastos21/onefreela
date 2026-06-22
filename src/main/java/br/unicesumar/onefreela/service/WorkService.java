@@ -33,6 +33,10 @@ public class WorkService {
         this.workMapper = workMapper;
     }
 
+    public Work save (Work work){
+        return repository.save(work);
+    }
+
     public Work findById(Long id){
         return repository.findById(id).orElse(null);
     }
@@ -101,7 +105,7 @@ public class WorkService {
             throw new ValidationException(errors);
         }
 
-        if (work.getOwner() == null || !work.getOwner().getId().equals(authenticatedUser.getId())) {
+        if (work.getOwner() == null || !work.getOwner().getId().equals(authenticatedUser.getId()) && !authenticatedUser.isAdmin()) {
             errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "work", "voce nao tem permissao para excluir este serviço"));
             throw new ValidationException(errors);
         }
@@ -117,6 +121,10 @@ public class WorkService {
     public List<WorkResponse> findMyWorks(User authenticatedUser) {
         List<Work> works = repository.findByOwnerId(authenticatedUser.getId());
         return works.stream().map(WorkResponse::fromEntity).toList();
+    }
+
+    public List<Work> findByStatus(WorkStatus status){
+        return repository.findByStatus(status);
     }
 
     @Transactional(readOnly = true)
