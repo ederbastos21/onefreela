@@ -2,8 +2,8 @@ package br.unicesumar.onefreela.service.mapper;
 
 import br.unicesumar.onefreela.dto.ReportRegisterDTO;
 import br.unicesumar.onefreela.entity.Report;
-import br.unicesumar.onefreela.entity.ReportNature;
-import br.unicesumar.onefreela.entity.ReportStatus;
+import br.unicesumar.onefreela.enums.ReportNature;
+import br.unicesumar.onefreela.enums.ReportStatus;
 import org.springframework.stereotype.Component;
 
 @Component

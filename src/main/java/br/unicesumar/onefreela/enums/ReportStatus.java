@@ -1,4 +1,4 @@
-package br.unicesumar.onefreela.entity;
+package br.unicesumar.onefreela.enums;
 
 public enum ReportStatus {
     PENDING,

@@ -1,11 +1,11 @@
 package br.unicesumar.onefreela.service.validator;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.ReportRegisterDTO;
 import br.unicesumar.onefreela.dto.ReportReviewDTO;
-import br.unicesumar.onefreela.entity.ReportNature;
-import br.unicesumar.onefreela.entity.ReportStatus;
+import br.unicesumar.onefreela.enums.ReportNature;
+import br.unicesumar.onefreela.enums.ReportStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;

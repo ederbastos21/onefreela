@@ -40,6 +40,7 @@ function initProfile() {
   // Sidebar items
   if (isFreelancer) show('sidebarServicos'); else hide('sidebarServicos');
   if (!isFreelancer) show('sidebarExplorar'); else hide('sidebarExplorar');
+  if (!isFreelancer) show('sidebarFavoritos'); else hide('sidebarFavoritos');
 
   // Main sections
   if (isFreelancer) show('servicos'); else hide('servicos');

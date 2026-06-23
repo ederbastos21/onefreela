@@ -1,5 +1,7 @@
 package br.unicesumar.onefreela.dto;
 
+import br.unicesumar.onefreela.enums.ErrorCode;
+
 public class ErrorDetail {
     private ErrorCode code;
     private String field;

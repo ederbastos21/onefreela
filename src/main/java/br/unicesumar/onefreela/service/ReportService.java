@@ -1,13 +1,13 @@
 package br.unicesumar.onefreela.service;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.ReportRegisterDTO;
 import br.unicesumar.onefreela.dto.ReportResponse;
 import br.unicesumar.onefreela.dto.ReportReviewDTO;
 import br.unicesumar.onefreela.entity.Report;
 import br.unicesumar.onefreela.entity.ReportAttachment;
-import br.unicesumar.onefreela.entity.ReportStatus;
+import br.unicesumar.onefreela.enums.ReportStatus;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.ReportRepository;
@@ -101,6 +101,11 @@ public class ReportService {
 
         if (report == null) {
             errors.add(new ErrorDetail(ErrorCode.REPORT_NOT_FOUND, "report", "Denúncia não encontrada"));
+            throw new ValidationException(errors);
+        }
+
+        if (report.getStatus() == ReportStatus.RESOLVED || report.getStatus() == ReportStatus.REJECTED) {
+            errors.add(new ErrorDetail(ErrorCode.REPORT_ALREADY_CLOSED, "report", "Esta denúncia já foi encerrada e não pode ser alterada"));
             throw new ValidationException(errors);
         }
 

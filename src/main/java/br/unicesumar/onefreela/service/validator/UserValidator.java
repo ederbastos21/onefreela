@@ -1,6 +1,6 @@
 package br.unicesumar.onefreela.service.validator;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.dto.UserUpdateDTO;

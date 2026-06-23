@@ -1,6 +1,6 @@
 package br.unicesumar.onefreela.service;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.entity.User;
@@ -8,7 +8,6 @@ import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.UserRepository;
 import br.unicesumar.onefreela.service.mapper.UserMapper;
 import br.unicesumar.onefreela.service.validator.UserValidator;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,8 +51,24 @@ public class UserService {
         return repository.findByEmail(email);
     }
 
+    public void deleteById(Long id){
+        repository.deleteById(id);
+    }
+
     public Boolean existsByEmail (String email){
         return repository.existsByEmail(email);
+    }
+
+    public User makeAdmin(Long userId){
+        User user = findById(userId).orElseThrow();
+        user.setAdmin(true);
+        return save(user);
+    }
+
+    public User removeAdmin(Long userId){
+        User user = findById(userId).orElseThrow();
+        user.setAdmin(false);
+        return save(user);
     }
 
     @Transactional

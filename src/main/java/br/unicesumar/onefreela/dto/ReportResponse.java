@@ -1,8 +1,8 @@
 package br.unicesumar.onefreela.dto;
 
 import br.unicesumar.onefreela.entity.Report;
-import br.unicesumar.onefreela.entity.ReportNature;
-import br.unicesumar.onefreela.entity.ReportStatus;
+import br.unicesumar.onefreela.enums.ReportNature;
+import br.unicesumar.onefreela.enums.ReportStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 

@@ -66,7 +66,7 @@ async function handleLogin() {
       return;
     }
 
-    const token = await res.text();
+    const { token, expiresAt } = await res.json();
 
     const userRes = await fetch(API + '/users/loginToken', {
       method: 'POST',
@@ -75,9 +75,10 @@ async function handleLogin() {
     const userData = await userRes.json();
 
     const userType = userData.freelancer ? 'freelancer' : 'cliente';
-    localStorage.setItem('of_token',     token);
-    localStorage.setItem('of_user_type', userType);
-    localStorage.setItem('of_email',     email);
+    localStorage.setItem('of_token',        token);
+    localStorage.setItem('of_token_expiry', String(expiresAt));
+    localStorage.setItem('of_user_type',    userType);
+    localStorage.setItem('of_email',        email);
     if (userData.name) localStorage.setItem('of_name', userData.name);
     localStorage.setItem('of_is_admin', userData.admin ? 'true' : 'false');
 
