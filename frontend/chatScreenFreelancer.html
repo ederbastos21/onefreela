@@ -58,7 +58,7 @@
         <button class="filter-chip">Ativos</button>
         <button class="filter-chip">Novos</button>
       </div>
-      <div class="conv-list">
+      <div class="conv-list" id="convList">
 
         <div class="conv-item active">
           <div class="conv-avatar" style="background:#60a5fa">CA<div class="conv-online"></div></div>
@@ -107,10 +107,10 @@
     <div class="chat-area">
       <div class="chat-header">
         <div class="chat-header-left">
-          <div class="chat-header-avatar" style="background:#60a5fa">CA</div>
+          <div class="chat-header-avatar" id="chatHeaderAvatar" style="background:#60a5fa">CA</div>
           <div class="chat-header-info">
-            <div class="chat-header-name">Carlos Andrade</div>
-            <div class="chat-header-status"><span class="chat-header-status-dot"></span>Online agora</div>
+            <div class="chat-header-name" id="chatHeaderName">Carlos Andrade</div>
+            <div class="chat-header-status"><span class="chat-header-status-dot"></span><span id="chatHeaderStatus">Selecione uma conversa</span></div>
           </div>
         </div>
         <div class="chat-header-right">
@@ -123,14 +123,14 @@
         </div>
       </div>
 
-      <div class="service-bar">
-        <span class="service-bar-icon">🎨</span>
+      <div class="service-bar" id="serviceBar" style="display:none">
+        <span class="service-bar-icon" id="svcBarIcon">📦</span>
         <div class="service-bar-info">
-          <div class="service-bar-title">Design System completo no Figma — Pacote Padrão</div>
-          <div class="service-bar-sub">Entrega: 24 de Maio de 2026 · 7 dias restantes</div>
+          <div class="service-bar-title" id="svcBarTitle">—</div>
+          <div class="service-bar-sub" id="svcBarSub">—</div>
         </div>
-        <div class="service-bar-price">R$1.200</div>
-        <span class="service-bar-status">EM ANDAMENTO</span>
+        <div class="service-bar-price" id="svcBarPrice">—</div>
+        <span class="service-bar-status" id="svcBarStatus">—</span>
       </div>
 
       <div class="chat-messages" id="chatMessages">
@@ -255,22 +255,20 @@
 
     <!-- INFO PANEL -->
     <div class="info-panel">
-      <div class="info-section">
+      <div class="info-section" id="infoPanelClientSection" style="display:none">
         <div class="info-section-title">Cliente</div>
         <div class="client-mini">
-          <div class="client-avatar">CA</div>
-          <div class="client-name">Carlos Andrade</div>
-          <div class="client-meta">CEO · TechStartup SP</div>
-          <div class="client-rating">★ 4.9 como cliente</div>
-          <button class="btn-view-profile">Ver perfil →</button>
+          <div class="client-avatar" id="infoPanelClientAvatar">?</div>
+          <div class="client-name" id="infoPanelClientName">—</div>
+          <div class="client-meta" id="infoPanelClientMeta"></div>
         </div>
       </div>
 
-      <div class="info-section">
+      <div class="info-section" id="infoPanelEarningSection" style="display:none">
         <div class="info-section-title">Meu Ganho</div>
         <div class="earning-card">
-          <div class="earning-val">R$1.200</div>
-          <div class="earning-label">Valor do projeto</div>
+          <div class="earning-val" id="earningVal">—</div>
+          <div class="earning-label">Valor do pedido</div>
           <div class="earning-sub">Liberado após aprovação</div>
         </div>
       </div>
@@ -291,10 +289,9 @@
         </div>
       </div>
 
-      <div class="info-section">
+      <div class="info-section" id="actionsSection" style="display:none">
         <div class="info-section-title">Ações do Projeto</div>
-        <button class="btn-deliver">FAZER ENTREGA</button>
-        <button class="btn-extend">Solicitar mais prazo</button>
+        <div id="actionButtons"></div>
       </div>
 
       <div class="info-section">
@@ -316,6 +313,31 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Delivery modal -->
+  <div class="auth-overlay" id="deliveryModal" style="z-index:1100">
+    <div class="auth-modal" style="max-width:480px">
+      <button class="btn-auth-close" onclick="closeDeliveryModal()">×</button>
+      <h2 class="auth-modal-title">📦 FAZER ENTREGA</h2>
+      <div style="margin-bottom:12px">
+        <label class="setting-label">Mensagem de entrega</label>
+        <textarea id="deliveryMsg" class="setting-input" rows="4"
+          placeholder="Descreva o que foi entregue..."
+          style="margin-top:6px;resize:vertical;min-height:90px"></textarea>
+      </div>
+      <div style="margin-bottom:16px">
+        <label class="setting-label">Arquivos (opcional)</label>
+        <label class="attach-label" for="deliveryFiles" style="margin-top:6px;display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--input);border:1px dashed var(--border);border-radius:var(--radius);color:var(--muted2);font-size:12px;cursor:pointer;transition:border-color .15s">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          Clique para anexar arquivos
+        </label>
+        <input id="deliveryFiles" type="file" multiple style="display:none" />
+        <div id="deliveryFilesPreview" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+      </div>
+      <div class="admin-form-msg" id="deliveryMsg2"></div>
+      <button class="btn-save" id="deliverySubmitBtn" onclick="submitDelivery()">ENVIAR ENTREGA</button>
+    </div>
   </div>
 
   <script src="auth.js"></script>

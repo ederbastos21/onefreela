@@ -175,6 +175,11 @@
         Denúncias
         <span class="nav-item-badge" id="reportsBadge" style="display:none">0</span>
       </a>
+      <a href="#disputas" class="nav-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        Disputas
+        <span class="nav-item-badge" id="disputesBadge" style="display:none">0</span>
+      </a>
 
       <span class="sidebar-label">Conta</span>
       <a href="profile.html" class="nav-item">
@@ -256,6 +261,15 @@
             </div>
             <div class="stat-card-value" id="statReportsPending">—</div>
           </div>
+          <div class="stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-label">Disputas Abertas</span>
+              <div class="stat-card-icon" style="background:rgba(251,146,60,.1);color:#fb923c;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statDisputes">—</div>
+          </div>
         </div>
       </div>
 
@@ -292,6 +306,7 @@
               <button class="filter-btn active" id="filterWorksAll"      onclick="setWorksFilter('all')">Todos</button>
               <button class="filter-btn"         id="filterWorksActive"  onclick="setWorksFilter('active')">Ativos</button>
               <button class="filter-btn"         id="filterWorksInactive" onclick="setWorksFilter('inactive')">Inativos</button>
+              <button class="filter-btn"         id="filterWorksPending"  onclick="setWorksFilter('pending_review')">Pendentes<span id="filterWorksPendingCount"></span></button>
             </div>
           </div>
           <div class="admin-count" id="adminWorksCount"></div>
@@ -349,6 +364,20 @@
         </div>
       </div>
 
+      <!-- Disputes -->
+      <div id="disputas" class="section-block reveal">
+        <div class="block-title">Gestão de Disputas</div>
+        <div class="card-box">
+          <div class="admin-toolbar">
+            <input type="text" class="admin-search" id="searchDisputesInput"
+              placeholder="Buscar por pedido..."
+              oninput="filterDisputes()" />
+          </div>
+          <div class="admin-count" id="adminDisputesCount"></div>
+          <div id="adminDisputeList"></div>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -384,6 +413,7 @@
       </div>
       <div class="detail-action-row">
         <button class="btn-detail-edit"   onclick="openEditFromDetail()">Editar</button>
+        <button class="btn-detail-edit"   id="detailToggleAdminBtn" onclick="toggleUserAdmin()">Tornar Admin</button>
         <button class="btn-detail-delete" onclick="deleteFromDetail()">Excluir</button>
       </div>
     </div>
@@ -431,6 +461,25 @@
     </div>
   </div>
 
+  <!-- Work review modal -->
+  <div class="auth-overlay" id="workReviewModal">
+    <div class="auth-modal admin-modal" style="max-width:480px;">
+      <button class="btn-auth-close" onclick="closeWorkReviewModal()">×</button>
+      <h2 class="auth-modal-title">REVISAR SERVIÇO</h2>
+      <p style="font-size:13px;color:var(--muted2);margin:0 0 16px" id="wrWorkTitle"></p>
+      <div class="setting-item" style="margin-bottom:16px">
+        <label class="setting-label">Notas do administrador <span style="font-weight:400;text-transform:none">(opcional)</span></label>
+        <textarea id="wrNotes" class="setting-input" rows="3"
+          placeholder="Justifique a decisão caso necessário..."></textarea>
+      </div>
+      <div class="admin-form-msg" id="wrMsg"></div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn-save" style="flex:1;background:var(--green);color:#000;" id="wrApproveBtn" onclick="submitWorkReview('ACTIVE')">✓ Aprovar</button>
+        <button class="btn-save" style="flex:1;background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3);" id="wrRejectBtn" onclick="submitWorkReview('REJECTED')">✗ Rejeitar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Report review modal -->
   <div class="auth-overlay" id="reportModal">
     <div class="auth-modal admin-modal" style="max-width:560px;">
@@ -455,6 +504,23 @@
       </div>
       <div class="admin-form-msg" id="rmMsg"></div>
       <button class="btn-save" id="rmSubmitBtn" onclick="submitReportReview()">SALVAR REVISÃO</button>
+    </div>
+  </div>
+
+  <!-- Dispute resolution modal -->
+  <div class="auth-overlay" id="disputeModal">
+    <div class="auth-modal admin-modal" style="max-width:640px;">
+      <button class="btn-auth-close" onclick="closeDisputeModal()">×</button>
+      <h2 class="auth-modal-title">⚖️ RESOLVER DISPUTA</h2>
+      <div class="detail-grid" id="disputeDetailGrid" style="margin-bottom:16px;"></div>
+      <hr class="divider" />
+      <div class="block-title" style="font-size:13px;margin:12px 0 8px">Histórico do Chat</div>
+      <div id="disputeMessages" style="max-height:280px;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:16px;font-size:12px;color:var(--muted2);line-height:1.6;"></div>
+      <div class="admin-form-msg" id="dmMsg"></div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn-save" style="flex:1;background:var(--green);color:#000;" id="dmFreelancerBtn" onclick="resolveDispute('freelancer')">✓ Favor Freelancer</button>
+        <button class="btn-save" style="flex:1;background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3);" id="dmClientBtn" onclick="resolveDispute('client')">↩ Reembolsar Cliente</button>
+      </div>
     </div>
   </div>
 

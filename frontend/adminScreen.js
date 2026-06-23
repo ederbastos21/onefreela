@@ -17,6 +17,9 @@ let allReports         = [];
 let currentReportsFilter = 'all';
 let reviewingReportId    = null;
 
+let allDisputes        = [];
+let reviewingDisputeId = null;
+
 function authHeader() {
   return { 'Authorization': OFAuth.getToken() };
 }
@@ -34,6 +37,7 @@ function initAdmin() {
   loadCarts();
   loadOrders();
   loadReports();
+  loadDisputes();
 }
 
 /* ── Load & render users ──────────────────────────────────────────── */
@@ -88,6 +92,15 @@ function updateStats() {
     var pendingCount = allReports.filter(function (r) { return r.status === 'PENDING' || r.status === 'UNDER_REVIEW'; }).length;
     reportsBadge.textContent = pendingCount;
     reportsBadge.style.display = pendingCount > 0 ? '' : 'none';
+  }
+
+  var statDisputes = document.getElementById('statDisputes');
+  if (statDisputes) statDisputes.textContent = allDisputes.length || '0';
+
+  var disputesBadge = document.getElementById('disputesBadge');
+  if (disputesBadge) {
+    disputesBadge.textContent = allDisputes.length;
+    disputesBadge.style.display = allDisputes.length > 0 ? '' : 'none';
   }
 }
 
@@ -197,8 +210,15 @@ function openDetailModal(userId) {
   var badgesEl = document.getElementById('detailBadges');
   badgesEl.innerHTML =
     '<span class="admin-badge admin-badge-' + roleKey + '">' + roleLabel + '</span>' +
-    (u.verified ? '<span class="admin-badge admin-badge-verified">Verificado</span>' : '') +
-    (u.admin && !isAdminU ? '' : '');
+    (u.verified ? '<span class="admin-badge admin-badge-verified">Verificado</span>' : '');
+
+  var toggleBtn = document.getElementById('detailToggleAdminBtn');
+  if (toggleBtn) {
+    toggleBtn.textContent = isAdminU ? 'Remover Admin' : 'Tornar Admin';
+    toggleBtn.className   = isAdminU
+      ? 'btn-detail-delete'
+      : 'btn-detail-edit';
+  }
 
   document.getElementById('detailModal').classList.add('show');
 }
@@ -218,6 +238,40 @@ function deleteFromDetail() {
   var id = detailUserId;
   closeDetailModal();
   confirmDeleteUser(id);
+}
+
+async function toggleUserAdmin() {
+  var u = allUsers.find(function (x) { return x.id === detailUserId; });
+  if (!u) return;
+
+  var isAdmin  = !!u.admin;
+  var endpoint = isAdmin
+    ? '/admin/removeUserAdmin/' + detailUserId
+    : '/admin/makeUserAdmin/'   + detailUserId;
+
+  var btn = document.getElementById('detailToggleAdminBtn');
+  btn.disabled    = true;
+  btn.textContent = '...';
+
+  try {
+    var res = await fetch(API_BASE + endpoint, { method: 'POST', headers: authHeader() });
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var msg  = (Array.isArray(data.errors) && data.errors.length)
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao alterar permissão.';
+      alert(msg);
+      btn.disabled    = false;
+      btn.textContent = isAdmin ? 'Remover Admin' : 'Tornar Admin';
+      return;
+    }
+    closeDetailModal();
+    await loadUsers();
+  } catch (_) {
+    alert('Erro de conexão.');
+    btn.disabled    = false;
+    btn.textContent = isAdmin ? 'Remover Admin' : 'Tornar Admin';
+  }
 }
 
 document.getElementById('detailModal').addEventListener('click', function (e) {
@@ -298,15 +352,18 @@ async function submitUserForm() {
   btn.disabled    = true;
   btn.textContent = 'SALVANDO...';
 
-  var payload = { name: name, email: email, freelancer: type === 'freelancer', admin: isAdminF };
-  if (!isEdit) payload.password = password;
+  if (isEdit) {
+    setUserFormMsg('Edição de usuários pelo admin não está disponível nesta versão da API.', 'error');
+    btn.disabled    = false;
+    btn.textContent = 'SALVAR ALTERAÇÕES';
+    return;
+  }
 
-  var url    = isEdit ? `${API_BASE}/admin/users/${editingUserId}` : `${API_BASE}/admin/users`;
-  var method = isEdit ? 'PUT' : 'POST';
+  var payload = { name, email, password, cpf: '00000000000', birthday: '2000-01-01', phoneNumber: '00000000000', freelancer: type === 'freelancer' };
 
   try {
-    var res = await fetch(url, {
-      method: method,
+    var res = await fetch(API_BASE + '/users/register', {
+      method: 'POST',
       headers: { ...authHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
@@ -315,7 +372,7 @@ async function submitUserForm() {
       var data = await res.json().catch(function () { return {}; });
       var msg  = Array.isArray(data.errors) && data.errors.length
         ? data.errors.map(function (e) { return e.message; }).join(' • ')
-        : 'Erro ao salvar usuário.';
+        : 'Erro ao cadastrar usuário.';
       setUserFormMsg(msg, 'error');
       return;
     }
@@ -326,7 +383,7 @@ async function submitUserForm() {
     setUserFormMsg('Erro de conexão.', 'error');
   } finally {
     btn.disabled    = false;
-    btn.textContent = isEdit ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR';
+    btn.textContent = 'CADASTRAR';
   }
 }
 
@@ -339,8 +396,8 @@ async function confirmDeleteUser(userId) {
   if (!confirm('Excluir ' + name + '? Esta ação não pode ser desfeita.')) return;
 
   try {
-    var res = await fetch(`${API_BASE}/admin/users/${userId}`, {
-      method: 'DELETE',
+    var res = await fetch(API_BASE + '/admin/removeUser/' + userId, {
+      method: 'POST',
       headers: authHeader()
     });
 
@@ -381,10 +438,29 @@ async function loadWorks() {
   }
 }
 
+var WORK_STATUS_LABELS = {
+  ACTIVE:         'Ativo',
+  INACTIVE:       'Inativo',
+  PENDING_REVIEW: 'Pendente',
+  REJECTED:       'Rejeitado'
+};
+
+var WORK_STATUS_BADGE = {
+  ACTIVE:         'admin-badge-order-paid',
+  INACTIVE:       'admin-badge-work-inactive',
+  PENDING_REVIEW: 'admin-badge-order-not_paid',
+  REJECTED:       'admin-badge-order-refunded'
+};
+
 function setWorksFilter(filter) {
   currentWorksFilter = filter;
   document.querySelectorAll('#servicos .filter-btn').forEach(function (b) { b.classList.remove('active'); });
-  var map = { all: 'filterWorksAll', active: 'filterWorksActive', inactive: 'filterWorksInactive' };
+  var map = {
+    all:            'filterWorksAll',
+    active:         'filterWorksActive',
+    inactive:       'filterWorksInactive',
+    pending_review: 'filterWorksPending'
+  };
   var btn = document.getElementById(map[filter]);
   if (btn) btn.classList.add('active');
   renderWorks();
@@ -396,9 +472,10 @@ function getFilteredWorks() {
   var query = (document.getElementById('searchWorksInput').value || '').toLowerCase().trim();
   return allWorks.filter(function (w) {
     var matchFilter =
-      currentWorksFilter === 'all'      ? true :
-      currentWorksFilter === 'active'   ? (w.status === 'ACTIVE') :
-      currentWorksFilter === 'inactive' ? (w.status === 'INACTIVE') : true;
+      currentWorksFilter === 'all'            ? true :
+      currentWorksFilter === 'active'         ? (w.status === 'ACTIVE') :
+      currentWorksFilter === 'inactive'       ? (w.status === 'INACTIVE') :
+      currentWorksFilter === 'pending_review' ? (w.status === 'PENDING_REVIEW') : true;
 
     var matchSearch = !query ||
       (w.title    && w.title.toLowerCase().includes(query)) ||
@@ -414,6 +491,9 @@ function renderWorks() {
   var filtered = getFilteredWorks();
 
   if (countEl) {
+    var pendingCount = allWorks.filter(function (w) { return w.status === 'PENDING_REVIEW'; }).length;
+    var pendingBadge = document.getElementById('filterWorksPendingCount');
+    if (pendingBadge) pendingBadge.textContent = pendingCount > 0 ? ' (' + pendingCount + ')' : '';
     countEl.textContent = filtered.length + ' serviço' + (filtered.length !== 1 ? 's' : '') + ' encontrado' + (filtered.length !== 1 ? 's' : '');
   }
 
@@ -425,52 +505,135 @@ function renderWorks() {
   }
 
   filtered.forEach(function (w) {
-    var isActive  = w.status === 'ACTIVE';
-    var statusKey = isActive ? 'active' : 'inactive';
-    var statusLabel = isActive ? 'Ativo' : 'Inativo';
-    var ownerName = (w.owner && w.owner.name) ? w.owner.name : '—';
-    var price     = w.price != null ? 'R$ ' + Number(w.price).toFixed(2).replace('.', ',') : '—';
-    var date      = w.createdAt ? w.createdAt.split('T')[0] : '—';
+    var statusLbl  = WORK_STATUS_LABELS[w.status] || w.status;
+    var badgeCls   = WORK_STATUS_BADGE[w.status]  || 'admin-badge';
+    var isPending  = w.status === 'PENDING_REVIEW';
+    var ownerName  = (w.owner && w.owner.name) ? w.owner.name : '—';
+    var price      = w.price != null ? 'R$ ' + Number(w.price).toFixed(2).replace('.', ',') : '—';
+    var date       = w.createdAt ? w.createdAt.split('T')[0] : '—';
 
     var row = document.createElement('div');
-    row.className = 'admin-work-row';
+    row.className = 'admin-user-row';
     row.innerHTML =
-      '<div class="admin-work-icon status-' + statusKey + '">' +
+      '<div class="admin-work-icon">' +
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>' +
       '</div>' +
-      '<div class="admin-work-info">' +
-        '<div class="admin-work-title">' + (w.title || 'Sem título') + '</div>' +
-        '<div class="admin-work-meta">' + (w.category || '—') + ' · ' + ownerName + '</div>' +
+      '<div class="admin-user-info">' +
+        '<div class="admin-user-name">' + escHtmlAdmin(w.title || 'Sem título') + '</div>' +
+        '<div class="admin-user-email">' + escHtmlAdmin(w.category || '—') + ' · ' + escHtmlAdmin(ownerName) + '</div>' +
       '</div>' +
       '<div class="admin-user-meta">' +
-        '<span class="admin-badge admin-badge-work-' + statusKey + '">' + statusLabel + '</span>' +
+        '<span class="admin-badge ' + badgeCls + '">' + statusLbl + '</span>' +
         '<span class="admin-user-date">' + price + '</span>' +
         '<span class="admin-user-date">' + date + '</span>' +
+        '<div class="admin-user-actions">' +
+          (isPending ? '<button class="btn-row" onclick="openWorkReviewModal(' + w.id + ')">Revisar</button>' : '') +
+          (!isPending ? '<button class="btn-row" onclick="pauseWork(' + w.id + ')">Pausar</button>' : '') +
+          '<button class="btn-row btn-row-danger" onclick="deleteWork(' + w.id + ')">Excluir</button>' +
+        '</div>' +
       '</div>';
 
     list.appendChild(row);
   });
 }
 
+/* ── Work review modal ───────────────────────────────────────────── */
+
+var reviewingWorkId = null;
+
+function openWorkReviewModal(workId) {
+  var w = allWorks.find(function (x) { return x.id === workId; });
+  if (!w) return;
+  reviewingWorkId = workId;
+
+  document.getElementById('wrWorkTitle').textContent = w.title || 'Sem título';
+  document.getElementById('wrNotes').value           = '';
+  document.getElementById('wrMsg').textContent       = '';
+  document.getElementById('wrMsg').className         = 'admin-form-msg';
+  document.getElementById('workReviewModal').classList.add('show');
+}
+
+function closeWorkReviewModal() {
+  document.getElementById('workReviewModal').classList.remove('show');
+  reviewingWorkId = null;
+}
+
+async function submitWorkReview(status) {
+  if (!reviewingWorkId) return;
+
+  var notes = document.getElementById('wrNotes').value.trim();
+  var msg   = document.getElementById('wrMsg');
+  var btnA  = document.getElementById('wrApproveBtn');
+  var btnR  = document.getElementById('wrRejectBtn');
+
+  btnA.disabled = true;
+  btnR.disabled = true;
+  msg.textContent = 'Processando...';
+  msg.className   = 'admin-form-msg';
+
+  try {
+    var res = await fetch(API_BASE + '/admin/works/reviewWork/' + reviewingWorkId, {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ status: status, adminNotes: notes || null })
+    });
+
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var errMsg = (Array.isArray(data.errors) && data.errors.length)
+        ? data.errors.map(function (e) { return e.message; }).join(' | ')
+        : 'Erro ao revisar serviço.';
+      msg.textContent = errMsg;
+      msg.className   = 'admin-form-msg admin-form-msg-error';
+      btnA.disabled   = false;
+      btnR.disabled   = false;
+      return;
+    }
+
+    msg.textContent = status === 'ACTIVE' ? '✓ Serviço aprovado.' : '✓ Serviço rejeitado.';
+    msg.className   = 'admin-form-msg admin-form-msg-success';
+    await loadWorks();
+    setTimeout(closeWorkReviewModal, 700);
+
+  } catch (_) {
+    msg.textContent = 'Erro de conexão.';
+    msg.className   = 'admin-form-msg admin-form-msg-error';
+    btnA.disabled   = false;
+    btnR.disabled   = false;
+  }
+}
+
+async function pauseWork(workId) {
+  if (!confirm('Pausar este serviço?')) return;
+  try {
+    var res = await fetch(API_BASE + '/admin/works/pauseWork/' + workId, {
+      method: 'POST', headers: authHeader()
+    });
+    if (!res.ok) { alert('Erro ao pausar serviço.'); return; }
+    await loadWorks();
+  } catch (_) { alert('Erro de conexão.'); }
+}
+
+async function deleteWork(workId) {
+  if (!confirm('Excluir este serviço? Esta ação não pode ser desfeita.')) return;
+  try {
+    var res = await fetch(API_BASE + '/admin/removeWork/' + workId, {
+      method: 'POST', headers: authHeader()
+    });
+    if (!res.ok) { alert('Erro ao excluir serviço.'); return; }
+    await loadWorks();
+  } catch (_) { alert('Erro de conexão.'); }
+}
+
+document.getElementById('workReviewModal').addEventListener('click', function (e) {
+  if (e.target === this) closeWorkReviewModal();
+});
+
 /* ── Carts ───────────────────────────────────────────────────────── */
 
 async function loadCarts() {
   var list = document.getElementById('adminCartList');
-  list.innerHTML = '<p class="admin-list-loading">Carregando carrinhos...</p>';
-
-  try {
-    var res = await fetch(API_BASE + '/admin/carts', { headers: authHeader() });
-    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-
-    allCarts = await res.json();
-    var badge = document.getElementById('cartsBadge');
-    if (badge) { badge.textContent = allCarts.length; badge.style.display = allCarts.length > 0 ? '' : 'none'; }
-    renderCarts();
-  } catch (e) {
-    console.error('loadCarts:', e);
-    list.innerHTML = '<p class="admin-list-error">Erro ao carregar carrinhos.</p>';
-  }
+  if (list) list.innerHTML = '<p class="admin-list-empty" style="padding:24px;text-align:center;color:var(--muted2)">Gestão de carrinhos não disponível via API.</p>';
 }
 
 function renderCarts() {
@@ -514,22 +677,7 @@ function renderCarts() {
 
 async function loadOrders() {
   var list = document.getElementById('adminOrderList');
-  list.innerHTML = '<p class="admin-list-loading">Carregando pedidos...</p>';
-
-  try {
-    var res = await fetch(API_BASE + '/admin/orders', { headers: authHeader() });
-    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-
-    allOrders = await res.json();
-    var badge = document.getElementById('ordersBadge');
-    if (badge) { badge.textContent = allOrders.length; badge.style.display = allOrders.length > 0 ? '' : 'none'; }
-    updateStats();
-    renderOrders();
-  } catch (e) {
-    console.error('loadOrders:', e);
-    list.innerHTML = '<p class="admin-list-error">Erro ao carregar pedidos.</p>';
-  }
+  if (list) list.innerHTML = '<p class="admin-list-empty" style="padding:24px;text-align:center;color:var(--muted2)">Gestão de pedidos não disponível via API.</p>';
 }
 
 function setOrdersFilter(filter) {
@@ -826,6 +974,209 @@ function escHtmlAdmin(s) {
 
 document.getElementById('reportModal').addEventListener('click', function (e) {
   if (e.target === this) closeReportModal();
+});
+
+/* ── Disputes ────────────────────────────────────────────────────── */
+
+async function loadDisputes() {
+  var list = document.getElementById('adminDisputeList');
+  if (list) list.innerHTML = '<p class="admin-list-loading">Carregando disputas...</p>';
+
+  try {
+    var res = await fetch(API_BASE + '/admin/disputes', { headers: authHeader() });
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    allDisputes = await res.json();
+    updateStats();
+    renderDisputes();
+  } catch (e) {
+    if (list) list.innerHTML = '<p class="admin-list-error">Erro ao carregar disputas.</p>';
+  }
+}
+
+function filterDisputes() {
+  renderDisputes();
+}
+
+function renderDisputes() {
+  var search = (document.getElementById('searchDisputesInput') || {}).value || '';
+  var q      = search.toLowerCase().trim();
+  var list   = document.getElementById('adminDisputeList');
+
+  var visible = allDisputes.filter(function (item) {
+    return !q || String(item.id).includes(q);
+  });
+
+  var count = document.getElementById('adminDisputesCount');
+  if (count) count.textContent = visible.length + ' disputa' + (visible.length !== 1 ? 's' : '');
+
+  if (!visible.length) {
+    list.innerHTML = '<p class="admin-list-empty">Nenhuma disputa em aberto. 🎉</p>';
+    return;
+  }
+
+  list.innerHTML = '';
+  visible.forEach(function (item) {
+    var row = document.createElement('div');
+    row.className = 'admin-user-row';
+    row.style.cursor = 'pointer';
+
+    var price     = item.totalPrice != null ? ('R$ ' + Number(item.totalPrice).toLocaleString('pt-BR', {minimumFractionDigits:2})) : '—';
+    var tries     = item.deliveryTries != null ? item.deliveryTries + ' tentativa(s)' : '—';
+    var createdAt = item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : '—';
+
+    row.innerHTML =
+      '<div class="admin-user-avatar" style="background:rgba(251,146,60,.15);color:#fb923c;">⚖️</div>' +
+      '<div class="admin-user-info">' +
+        '<div class="admin-user-name">Pedido Item #' + item.id + '</div>' +
+        '<div class="admin-user-email">Valor: ' + escHtmlAdmin(price) + ' · ' + escHtmlAdmin(tries) + ' de entrega</div>' +
+      '</div>' +
+      '<div class="admin-user-meta">' +
+        '<span class="admin-badge" style="background:rgba(251,146,60,.12);color:#fb923c;border:1px solid rgba(251,146,60,.3)">EM DISPUTA</span>' +
+        '<span class="admin-user-date">' + createdAt + '</span>' +
+        '<div class="admin-user-actions">' +
+          '<button class="btn-row" onclick="openDisputeModal(' + item.id + ');event.stopPropagation()">Resolver</button>' +
+        '</div>' +
+      '</div>';
+
+    row.addEventListener('click', function () { openDisputeModal(item.id); });
+    list.appendChild(row);
+  });
+}
+
+async function openDisputeModal(orderItemId) {
+  var item = allDisputes.find(function (x) { return x.id === orderItemId; });
+  if (!item) return;
+
+  reviewingDisputeId = orderItemId;
+
+  var price     = item.totalPrice != null ? ('R$ ' + Number(item.totalPrice).toLocaleString('pt-BR', {minimumFractionDigits:2})) : '—';
+  var createdAt = item.createdAt ? new Date(item.createdAt).toLocaleString('pt-BR') : '—';
+
+  document.getElementById('disputeDetailGrid').innerHTML =
+    '<div>' +
+      '<div class="detail-label">Item ID</div>' +
+      '<div class="detail-value">#' + item.id + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Valor em disputa</div>' +
+      '<div class="detail-value">' + escHtmlAdmin(price) + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Tentativas de entrega</div>' +
+      '<div class="detail-value">' + (item.deliveryTries || 0) + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Criado em</div>' +
+      '<div class="detail-value">' + createdAt + '</div>' +
+    '</div>';
+
+  var msgBox = document.getElementById('disputeMessages');
+  msgBox.innerHTML = '<em style="color:var(--muted)">Carregando mensagens...</em>';
+
+  document.getElementById('dmMsg').textContent = '';
+  document.getElementById('dmMsg').className   = 'admin-form-msg';
+  document.getElementById('dmFreelancerBtn').disabled = false;
+  document.getElementById('dmClientBtn').disabled     = false;
+
+  document.getElementById('disputeModal').classList.add('show');
+
+  try {
+    var res = await fetch(API_BASE + '/admin/disputes/' + orderItemId + '/messages', { headers: authHeader() });
+    if (!res.ok) throw new Error();
+    var messages = await res.json();
+
+    if (!messages || !messages.length) {
+      msgBox.innerHTML = '<em style="color:var(--muted)">Nenhuma mensagem ainda.</em>';
+    } else {
+      msgBox.innerHTML = messages.map(function (m) {
+        var TYPE_ICONS = {
+          TEXT:                          '💬',
+          ATTACHMENT:                    '📎',
+          DELIVERY:                      '📦',
+          DELIVERY_ACCEPTED:             '✅',
+          DELIVERY_REFUSED:              '❌',
+          ADJUSTMENT_ACCEPTED:           '🔄',
+          ADJUSTMENT_REFUSED:            '🚫',
+          DISPUTE_OPENED:                '⚖️',
+          DISPUTE_RESOLVED_FREELANCER:   '✓ Freelancer',
+          DISPUTE_RESOLVED_CLIENT:       '↩ Cliente',
+          DELIVERY_ACCEPTED_AFTER_FREEZE:'✅'
+        };
+        var icon = TYPE_ICONS[m.type] || '•';
+        var time = m.sentAt ? new Date(m.sentAt).toLocaleString('pt-BR') : '';
+        return '<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">' +
+          '<span style="color:var(--text);font-weight:600">' + escHtmlAdmin(icon + ' ' + (m.senderName || 'Sistema')) + '</span>' +
+          '<span style="color:var(--muted);margin-left:8px;font-size:11px">' + time + '</span>' +
+          '<div style="margin-top:4px">' + escHtmlAdmin(m.content || '') + '</div>' +
+          (m.attachments && m.attachments.length ? '<div style="color:var(--muted);margin-top:2px">📎 ' + m.attachments.length + ' anexo(s)</div>' : '') +
+        '</div>';
+      }).join('');
+      msgBox.scrollTop = msgBox.scrollHeight;
+    }
+  } catch (_) {
+    msgBox.innerHTML = '<em style="color:#ef4444">Erro ao carregar mensagens.</em>';
+  }
+}
+
+function closeDisputeModal() {
+  document.getElementById('disputeModal').classList.remove('show');
+  reviewingDisputeId = null;
+}
+
+async function resolveDispute(side) {
+  if (!reviewingDisputeId) return;
+
+  var endpoint = side === 'freelancer'
+    ? '/admin/disputes/' + reviewingDisputeId + '/resolveForFreelancer'
+    : '/admin/disputes/' + reviewingDisputeId + '/resolveForClient';
+
+  var msg = document.getElementById('dmMsg');
+  var btnF = document.getElementById('dmFreelancerBtn');
+  var btnC = document.getElementById('dmClientBtn');
+
+  btnF.disabled = true;
+  btnC.disabled = true;
+  msg.textContent = 'Processando...';
+  msg.className   = 'admin-form-msg';
+
+  try {
+    var res = await fetch(API_BASE + endpoint, {
+      method:  'POST',
+      headers: authHeader()
+    });
+
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var errMsg = (Array.isArray(data.errors) && data.errors.length)
+        ? data.errors.map(function (e) { return e.message; }).join(' | ')
+        : 'Erro ao resolver disputa.';
+      msg.textContent = errMsg;
+      msg.className   = 'admin-form-msg admin-form-msg-error';
+      btnF.disabled = false;
+      btnC.disabled = false;
+      return;
+    }
+
+    msg.textContent = side === 'freelancer'
+      ? '✓ Disputa resolvida em favor do freelancer. Pagamento liberado.'
+      : '✓ Disputa resolvida em favor do cliente. Reembolso processado.';
+    msg.className = 'admin-form-msg admin-form-msg-success';
+
+    await loadDisputes();
+    setTimeout(closeDisputeModal, 1200);
+
+  } catch (_) {
+    msg.textContent = 'Erro de conexão.';
+    msg.className   = 'admin-form-msg admin-form-msg-error';
+    btnF.disabled = false;
+    btnC.disabled = false;
+  }
+}
+
+document.getElementById('disputeModal').addEventListener('click', function (e) {
+  if (e.target === this) closeDisputeModal();
 });
 
 /* ── Boot ────────────────────────────────────────────────────────── */

@@ -393,18 +393,26 @@ function openPaymentModal(orderIdx) {
   if (!order) return;
   payingOrderIdx = orderIdx;
 
-  const isPix = (order.paymentMethod || '').toUpperCase() !== 'CARTAO';
+  var method = (order.paymentMethod || '').toUpperCase();
+  var isPix      = method === 'PIX';
+  var isCard     = method === 'CARTAO';
+  var isBalance  = method === 'BALANCE';
+
+  var pillClass   = isPix ? 'pix' : isCard ? 'card' : 'balance';
+  var pillLabel   = isPix ? '⚡ PIX' : isCard ? '💳 Cartão de Crédito' : '💰 Saldo OneFreela';
 
   const pill = document.getElementById('pmMethodPill');
   if (pill) {
-    pill.className   = 'pm-method-pill ' + (isPix ? 'pix' : 'card');
-    pill.textContent = isPix ? '⚡ PIX' : '💳 Cartão de Crédito';
+    pill.className   = 'pm-method-pill ' + pillClass;
+    pill.textContent = pillLabel;
   }
 
-  const pixForm  = document.getElementById('pmPixForm');
-  const cardForm = document.getElementById('pmCardForm');
-  if (pixForm)  pixForm.style.display  = isPix ? '' : 'none';
-  if (cardForm) cardForm.style.display = isPix ? 'none' : '';
+  const pixForm     = document.getElementById('pmPixForm');
+  const cardForm    = document.getElementById('pmCardForm');
+  const balanceForm = document.getElementById('pmBalanceForm');
+  if (pixForm)     pixForm.style.display     = isPix     ? '' : 'none';
+  if (cardForm)    cardForm.style.display     = isCard    ? '' : 'none';
+  if (balanceForm) balanceForm.style.display  = isBalance ? '' : 'none';
 
   const totalRow = document.getElementById('pmTotalRow');
   const totalVal = document.getElementById('pmTotalVal');
@@ -451,10 +459,21 @@ async function submitPayment() {
   btn.textContent = 'PROCESSANDO...';
   clearPmMsg();
 
-  const isPix = (order.paymentMethod || '').toUpperCase() !== 'CARTAO';
+  const method    = (order.paymentMethod || '').toUpperCase();
+  const isPix     = method === 'PIX';
+  const isBalance = method === 'BALANCE';
   let endpoint, body;
 
-  if (isPix) {
+  if (isBalance) {
+    if (!order.backendOrderId) {
+      showPmMsg('Pedido sem ID de backend — o pagamento com saldo não pode ser processado.', 'error');
+      btn.disabled    = false;
+      btn.textContent = 'CONFIRMAR PAGAMENTO';
+      return;
+    }
+    endpoint = '/payment/makePaymentBalance/' + order.backendOrderId;
+    body     = null;
+  } else if (isPix) {
     const cpf = document.getElementById('pmPixCpf').value.trim();
     if (!cpf) {
       showPmMsg('Informe o CPF do pagador.', 'error');
@@ -491,7 +510,7 @@ async function submitPayment() {
     body = { orderId: order.backendOrderId || null, cardNumber, name: cardName, expirationDate, cvv, cpf };
   }
 
-  if (!body.orderId) {
+  if (!isBalance && !body.orderId) {
     showPmMsg('Pedido sem ID de backend — o endpoint POST /order/createOrder precisa retornar o objeto do pedido com o campo "id" para que o pagamento possa ser processado.', 'error');
     btn.disabled    = false;
     btn.textContent = 'CONFIRMAR PAGAMENTO';
@@ -499,11 +518,13 @@ async function submitPayment() {
   }
 
   try {
-    const res = await fetch(API_BASE + endpoint, {
+    var fetchOpts = {
       method:  'POST',
-      headers: { ...authHeader(), 'Content-Type': 'application/json' },
-      body:    JSON.stringify(body)
-    });
+      headers: isBalance ? authHeader() : Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+    };
+    if (!isBalance) fetchOpts.body = JSON.stringify(body);
+
+    const res = await fetch(API_BASE + endpoint, fetchOpts);
 
     if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
 

@@ -115,14 +115,14 @@
         </div>
       </div>
 
-      <div class="service-bar">
-        <span class="service-bar-icon">🎨</span>
+      <div class="service-bar" id="serviceBar" style="display:none">
+        <span class="service-bar-icon" id="svcBarIcon">📦</span>
         <div class="service-bar-info">
-          <div class="service-bar-title">Design System completo no Figma — Pacote Padrão</div>
-          <div class="service-bar-sub">Entrega prevista: 24 de Maio de 2026</div>
+          <div class="service-bar-title" id="svcBarTitle">—</div>
+          <div class="service-bar-sub" id="svcBarSub">—</div>
         </div>
-        <div class="service-bar-price">R$1.200</div>
-        <button class="service-bar-btn" onclick="window.location='onefreela-servico.html'">Ver serviço</button>
+        <div class="service-bar-price" id="svcBarPrice">—</div>
+        <span class="service-bar-status" id="svcBarStatus">—</span>
       </div>
 
       <div class="chat-messages" id="chatMessages">
@@ -278,10 +278,9 @@
         </div>
       </div>
 
-      <div class="info-section">
+      <div class="info-section" id="actionsSection" style="display:none">
         <div class="info-section-title">Ações</div>
-        <button class="btn-approve">APROVAR ENTREGA</button>
-        <button class="btn-dispute">Abrir disputa</button>
+        <div id="actionButtons"></div>
       </div>
     </div>
 
