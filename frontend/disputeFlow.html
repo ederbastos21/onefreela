@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela · Fluxo de Disputas</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #e0e7ff;
+      --success: #10b981; --success-light: #d1fae5;
+      --warning: #f59e0b; --warning-light: #fef3c7;
+      --danger: #ef4444;  --danger-light: #fee2e2;
+      --info: #3b82f6;    --info-light: #dbeafe;
+      --bg: #f1f5f9; --surface: #fff; --border: #e2e8f0;
+      --text: #0f172a; --text-muted: #64748b;
+      --sidebar: #0f172a; --sidebar-hover: #1e293b;
+      --shadow: 0 1px 3px rgba(0,0,0,.08); --shadow-md: 0 4px 6px rgba(0,0,0,.07);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,.1);
+      --radius: 12px; --radius-sm: 8px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── App layout ── */
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px; min-height: 100vh; background: var(--sidebar);
+      display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 100; transition: transform .25s ease; overflow-y: auto;
+    }
+    .sidebar-logo { padding: 20px 20px 14px; border-bottom: 1px solid rgba(255,255,255,.06); flex-shrink: 0; }
+    .sidebar-logo span { font-size: 18px; font-weight: 700; color: #fff; }
+    .sidebar-logo small { display: block; font-size: 10px; color: #475569; margin-top: 2px; text-transform: uppercase; letter-spacing: .05em; }
+    .sidebar-section { padding: 14px 12px 6px; }
+    .sidebar-section-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #475569; padding: 0 8px; margin-bottom: 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+      border-radius: var(--radius-sm); cursor: pointer; color: #94a3b8;
+      font-size: 13px; font-weight: 500; transition: all .15s; margin-bottom: 2px;
+      border: none; background: none; width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: var(--sidebar-hover); color: #e2e8f0; }
+    .nav-item.active { background: var(--primary); color: #fff; }
+    .nav-item-sub { font-size: 10px; color: #64748b; margin-left: auto; flex-shrink: 0; }
+    .nav-item.active .nav-item-sub { color: #a5b4fc; }
+
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 99; }
+
+    /* ── Main ── */
+    .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow); flex-shrink: 0;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .topbar-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar-sub { font-size: 12px; color: var(--text-muted); }
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .hamburger { display: none; flex-direction: column; gap: 4px; cursor: pointer; padding: 4px; background: none; border: none; }
+    .hamburger span { display: block; width: 18px; height: 2px; background: var(--text-muted); border-radius: 2px; }
+
+    /* ── Content layout ── */
+    .content-wrap { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 56px); }
+
+    /* ── Chat panel ── */
+    .chat-panel {
+      flex: 1; display: flex; flex-direction: column; min-width: 0;
+      border-right: 1px solid var(--border); background: var(--surface);
+    }
+    .messages-list {
+      flex: 1; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .messages-list::-webkit-scrollbar { width: 4px; }
+    .messages-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Message bubbles */
+    .msg { display: flex; gap: 8px; max-width: 78%; }
+    .msg.own { align-self: flex-end; flex-direction: row-reverse; }
+    .msg.other { align-self: flex-start; }
+    .msg.system { align-self: center; max-width: 90%; }
+    .msg-avatar {
+      width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+    }
+    .msg-body { display: flex; flex-direction: column; gap: 2px; }
+    .msg.own .msg-body { align-items: flex-end; }
+    .msg.other .msg-body { align-items: flex-start; }
+    .msg.system .msg-body { align-items: center; }
+    .msg-sender { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 2px; }
+    .msg-bubble {
+      padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5;
+      word-break: break-word; max-width: 100%;
+    }
+    .msg.own   .msg-bubble { background: var(--primary); color: #fff; border-radius: 16px 4px 16px 16px; }
+    .msg.other .msg-bubble { background: #f1f5f9; color: var(--text); border-radius: 4px 16px 16px 16px; }
+    .msg.system .msg-bubble {
+      background: #f8fafc; color: var(--text-muted); border: 1px dashed var(--border);
+      border-radius: 8px; font-size: 13px; text-align: center; padding: 8px 16px;
+    }
+    .msg-ts { font-size: 10px; color: var(--text-muted); }
+
+    /* Chat footer */
+    .chat-footer { padding: 12px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .chat-input-wrap { display: flex; gap: 8px; align-items: flex-end; }
+    .chat-input {
+      flex: 1; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 14px; font-family: inherit; resize: none; outline: none;
+      max-height: 120px; transition: border-color .15s; background: var(--surface);
+    }
+    .chat-input:focus { border-color: var(--primary); }
+    .chat-locked {
+      display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+      background: #f8fafc; border: 1px dashed var(--border); border-radius: var(--radius-sm);
+      color: var(--text-muted); font-size: 13px;
+    }
+
+    /* ── Info panel ── */
+    .info-panel {
+      width: 320px; flex-shrink: 0; display: flex; flex-direction: column;
+      background: var(--bg); overflow-y: auto;
+    }
+    .info-panel::-webkit-scrollbar { width: 4px; }
+    .info-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Tabs */
+    .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .tab-btn {
+      flex: 1; padding: 10px 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+      border: none; background: none; color: var(--text-muted); border-bottom: 2px solid transparent;
+      transition: all .15s; text-align: center;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-panel { display: none; padding: 16px; }
+    .tab-panel.active { display: block; }
+
+    /* Status card */
+    .status-card {
+      background: var(--surface); border-radius: var(--radius); padding: 16px;
+      box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 12px;
+    }
+    .status-card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .status-card-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.5; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
+      border-radius: 99px; font-size: 12px; font-weight: 700;
+    }
+    .status-pill::before { content: '●'; font-size: 7px; }
+
+    /* Actions */
+    .actions-section { background: var(--surface); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 12px; }
+    .actions-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px; }
+    .actions-empty { font-size: 13px; color: var(--text-muted); text-align: center; padding: 8px 0; }
+    .action-btn-wrap { margin-bottom: 8px; }
+    .action-btn-wrap:last-child { margin-bottom: 0; }
+
+    /* Timeline */
+    .timeline { position: relative; padding-left: 22px; }
+    .timeline::before { content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: var(--border); }
+    .timeline-item { position: relative; margin-bottom: 18px; }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot {
+      position: absolute; left: -18px; top: 4px;
+      width: 10px; height: 10px; border-radius: 50%;
+      border: 2px solid #fff; box-shadow: 0 0 0 2px currentColor;
+    }
+    .timeline-state { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+    .timeline-note { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+    .timeline-ts { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+    /* Admin dispute consolidation */
+    .dispute-section { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 12px; }
+    .dispute-section-header { padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; background: #f8fafc; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+    .dispute-section-body { padding: 12px 14px; }
+    .dispute-msg-item { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+    .dispute-msg-item:last-child { border-bottom: none; }
+    .dispute-msg-sender { font-weight: 600; font-size: 11px; color: var(--text-muted); }
+    .dispute-msg-text { margin-top: 2px; line-height: 1.4; }
+
+    /* Badges */
+    .badge {
+      display: inline-flex; align-items: center; gap: 3px; padding: 3px 9px;
+      border-radius: 99px; font-size: 11px; font-weight: 600;
+    }
+    .badge::before { content: '●'; font-size: 7px; }
+    .badge-admin      { background: #fef3c7; color: #92400e; }
+    .badge-freelancer { background: #dbeafe; color: #1e40af; }
+    .badge-client     { background: #d1fae5; color: #065f46; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+      border: none; cursor: pointer; transition: all .15s; width: 100%;
+    }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover:not(:disabled) { background: #059669; }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-warning:hover:not(:disabled) { background: #d97706; }
+    .btn-danger  { background: var(--danger);  color: #fff; }
+    .btn-danger:hover:not(:disabled)  { background: #dc2626; }
+    .btn-ghost   { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover:not(:disabled)   { background: var(--bg); color: var(--text); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; width: auto; }
+
+    /* Modal */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,.55); z-index: 200;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .overlay.show { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface); border-radius: var(--radius); padding: 28px;
+      max-width: 420px; width: 100%; box-shadow: var(--shadow-lg);
+      transform: translateY(20px) scale(.97); transition: transform .25s ease;
+    }
+    .overlay.show .modal { transform: none; }
+    .modal-icon { font-size: 32px; margin-bottom: 10px; }
+    .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+    .modal-actions .btn { width: auto; }
+    .form-input {
+      width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); font-size: 13px; font-family: inherit;
+      color: var(--text); background: var(--surface); transition: border-color .15s;
+      outline: none; resize: vertical;
+    }
+    .form-input:focus { border-color: var(--primary); }
+    .form-input.error { border-color: var(--danger); }
+    .form-error { font-size: 11px; color: var(--danger); margin-top: 4px; }
+
+    /* Toast */
+    .toast-stack { position: fixed; bottom: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast {
+      display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px;
+      border-radius: var(--radius-sm); box-shadow: var(--shadow-lg);
+      min-width: 260px; max-width: 340px; pointer-events: all;
+      animation: slideUp .3s ease; background: var(--surface); border: 1px solid var(--border);
+    }
+    .toast.removing { animation: slideDown .3s ease forwards; }
+    .toast-success { border-left: 4px solid var(--success); }
+    .toast-error   { border-left: 4px solid var(--danger); }
+    .toast-info    { border-left: 4px solid var(--info); }
+    .toast-warning { border-left: 4px solid var(--warning); }
+    .toast-icon { font-size: 16px; flex-shrink: 0; line-height: 1.2; }
+    .toast-body { flex: 1; }
+    .toast-title { font-size: 13px; font-weight: 700; }
+    .toast-msg   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .toast-close { cursor: pointer; color: var(--text-muted); font-size: 14px; background: none; border: none; padding: 0; }
+    @keyframes slideUp   { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: none; } }
+    @keyframes slideDown { from { opacity:1; transform: none; } to { opacity:0; transform: translateY(12px); } }
+
+    /* Responsive */
+    @media (max-width: 900px) { .info-panel { width: 280px; } }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: none; }
+      .sidebar-overlay.show { display: block; }
+      .main { margin-left: 0; }
+      .hamburger { display: flex; }
+      .info-panel { display: none; }
+      .info-panel.show { display: flex; position: fixed; right: 0; top: 56px; bottom: 0; z-index: 80; width: 85%; max-width: 320px; box-shadow: var(--shadow-lg); }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span>OneFreela</span>
+      <small>Fluxo de Disputas · Mock</small>
+    </div>
+    <div id="sidebar-content"></div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+        <div style="min-width:0;">
+          <div class="topbar-title" id="topbar-title"></div>
+          <div class="topbar-sub"   id="topbar-sub"></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span id="topbar-role-badge" class="badge"></span>
+        <span id="topbar-state-badge" class="status-pill" style="font-size:11px;"></span>
+      </div>
+    </header>
+
+    <div class="content-wrap">
+      <!-- Chat -->
+      <div class="chat-panel">
+        <div class="messages-list" id="messages-list"></div>
+        <div class="chat-footer">
+          <div class="chat-input-wrap" id="chat-input-wrap">
+            <textarea class="chat-input" id="chat-input" placeholder="Digite uma mensagem..." rows="1"></textarea>
+            <button class="btn btn-primary btn-sm" id="send-btn" style="flex-shrink:0;width:auto;">Enviar</button>
+          </div>
+          <div class="chat-locked" id="chat-locked" style="display:none;">
+            🔒 Chat encerrado — pedido finalizado
+          </div>
+        </div>
+      </div>
+
+      <!-- Info panel -->
+      <div class="info-panel" id="info-panel">
+        <div class="tabs" id="info-tabs"></div>
+        <div id="tab-acoes"   class="tab-panel active" style="overflow-y:auto;flex:1;"></div>
+        <div id="tab-history" class="tab-panel"        style="overflow-y:auto;flex:1;"></div>
+        <div id="tab-admin"   class="tab-panel"        style="overflow-y:auto;flex:1;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Action modal ── -->
+<div class="overlay" id="action-overlay">
+  <div class="modal">
+    <div class="modal-icon" id="modal-icon"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-sub"   id="modal-sub"></div>
+    <div id="modal-note-wrap" style="display:none;">
+      <textarea class="form-input" id="modal-note" rows="3" style="margin-bottom:4px;"></textarea>
+      <div class="form-error" id="modal-note-error" style="display:none;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-cancel-btn">Cancelar</button>
+      <button class="btn" id="modal-confirm-btn"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast stack ── -->
+<div class="toast-stack" id="toast-stack"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  CONFIG — single source of truth for the state machine
+// ═══════════════════════════════════════════════════════════════════
+
+const ORDER_STATE_FLOW = {
+  IN_PROGRESS: {
+    label: 'Em Andamento', color: '#3b82f6', bg: '#dbeafe', locked: false,
+    description: 'O freelancer está desenvolvendo o pedido.',
+    actions: [{
+      id: 'deliver', label: 'Marcar como Entregue', confirmLabel: 'Confirmar Entrega',
+      icon: '📦', role: 'freelancer', style: 'success', nextState: 'DELIVERED',
+      historyNote: n => `${n} marcou o pedido como entregue`,
+      chatMessage: (n, _) => `📦 ${n} marcou o pedido como entregue. Aguardando aprovação do cliente.`,
+      requiresNote: false
+    }]
+  },
+  DELIVERED: {
+    label: 'Aguard. Aprovação', color: '#8b5cf6', bg: '#ede9fe', locked: false,
+    description: 'Pedido entregue. O cliente deve aceitar ou solicitar revisão.',
+    actions: [
+      {
+        id: 'accept_delivery', label: 'Aceitar Entrega', confirmLabel: 'Confirmar',
+        icon: '✅', role: 'client', style: 'success', nextState: 'COMPLETED',
+        historyNote: n => `${n} aceitou a entrega`,
+        chatMessage: (n, _) => `✅ ${n} aceitou a entrega. Pedido concluído e pagamento liberado ao freelancer!`,
+        requiresNote: false
+      },
+      {
+        id: 'request_revision', label: 'Solicitar Revisão', confirmLabel: 'Enviar Solicitação',
+        icon: '🔄', role: 'client', style: 'warning', nextState: 'REVISION_REQUESTED',
+        historyNote: n => `${n} solicitou revisão`,
+        chatMessage: (n, note) => `🔄 ${n} solicitou uma revisão: "${note}"`,
+        requiresNote: true, noteMinLength: 10,
+        notePlaceholder: 'Descreva o que precisa ser revisado ou corrigido...'
+      }
+    ]
+  },
+  REVISION_REQUESTED: {
+    label: 'Revisão Solicitada', color: '#f59e0b', bg: '#fef3c7', locked: false,
+    description: 'O cliente solicitou revisões. O freelancer deve aceitar ou recusar.',
+    actions: [
+      {
+        id: 'accept_revision', label: 'Aceitar Revisão', confirmLabel: 'Confirmar',
+        icon: '✔', role: 'freelancer', style: 'primary', nextState: 'IN_PROGRESS',
+        historyNote: n => `${n} aceitou a revisão`,
+        chatMessage: (n, _) => `✔ ${n} aceitou fazer a revisão. Pedido voltou para desenvolvimento.`,
+        requiresNote: false
+      },
+      {
+        id: 'refuse_revision', label: 'Recusar Revisão', confirmLabel: 'Confirmar Recusa',
+        icon: '❌', role: 'freelancer', style: 'danger', nextState: 'REVISION_REFUSED',
+        historyNote: n => `${n} recusou a revisão`,
+        chatMessage: (n, note) => `❌ ${n} recusou a revisão. Justificativa: "${note}"`,
+        requiresNote: true, noteMinLength: 10,
+        notePlaceholder: 'Justifique por que não pode fazer esta revisão...'
+      }
+    ]
+  },
+  REVISION_REFUSED: {
+    label: 'Revisão Recusada', color: '#ef4444', bg: '#fee2e2', locked: false,
+    description: 'O freelancer recusou a revisão. O cliente pode aceitar ou abrir disputa.',
+    actions: [
+      {
+        id: 'accept_anyway', label: 'Aceitar Assim Mesmo', confirmLabel: 'Confirmar',
+        icon: '✅', role: 'client', style: 'success', nextState: 'COMPLETED',
+        historyNote: n => `${n} aceitou o pedido sem revisão`,
+        chatMessage: (n, _) => `✅ ${n} aceitou o pedido sem revisão. Pagamento liberado ao freelancer.`,
+        requiresNote: false
+      },
+      {
+        id: 'open_dispute', label: 'Abrir Disputa', confirmLabel: 'Confirmar Abertura',
+        icon: '⚖️', role: 'client', style: 'danger', nextState: 'DISPUTE_OPEN',
+        historyNote: n => `${n} abriu uma disputa`,
+        chatMessage: (n, note) => `⚖️ ${n} abriu uma disputa: "${note}". O administrador irá analisar o caso.`,
+        requiresNote: true, noteMinLength: 20,
+        notePlaceholder: 'Descreva detalhadamente o motivo da disputa...'
+      }
+    ]
+  },
+  DISPUTE_OPEN: {
+    label: 'Disputa Aberta', color: '#dc2626', bg: '#fee2e2', locked: false,
+    description: 'A disputa está em análise pelo administrador.',
+    actions: [
+      {
+        id: 'resolve_freelancer', label: 'Favor do Freelancer', confirmLabel: 'Confirmar Decisão',
+        icon: '⚖️', role: 'admin', style: 'success', nextState: 'COMPLETED',
+        historyNote: _ => 'Admin decidiu em favor do freelancer',
+        chatMessage: (n, note) => `⚖️ Decisão administrativa: favor do freelancer.${note ? ` Justificativa: "${note}".` : ''} Pagamento liberado.`,
+        requiresNote: true, noteMinLength: 0,
+        notePlaceholder: 'Justificativa da decisão (opcional)...'
+      },
+      {
+        id: 'resolve_client', label: 'Favor do Cliente', confirmLabel: 'Confirmar Decisão',
+        icon: '⚖️', role: 'admin', style: 'danger', nextState: 'REFUNDED',
+        historyNote: _ => 'Admin decidiu em favor do cliente',
+        chatMessage: (n, note) => `⚖️ Decisão administrativa: favor do cliente.${note ? ` Justificativa: "${note}".` : ''} Reembolso processado.`,
+        requiresNote: true, noteMinLength: 0,
+        notePlaceholder: 'Justificativa da decisão (opcional)...'
+      }
+    ]
+  },
+  COMPLETED: {
+    label: 'Concluído', color: '#10b981', bg: '#d1fae5', locked: true,
+    description: 'Pedido concluído. Chat permanentemente encerrado.', actions: []
+  },
+  REFUNDED: {
+    label: 'Reembolsado', color: '#9d174d', bg: '#fce7f3', locked: true,
+    description: 'Pedido reembolsado ao cliente. Chat permanentemente encerrado.', actions: []
+  }
+};
+
+const ROLES_CONFIG = {
+  client:     { id: 'client',     label: 'Cliente',     icon: '🏢', badgeClass: 'badge-client',     userId: 'u-client'     },
+  freelancer: { id: 'freelancer', label: 'Freelancer',  icon: '👤', badgeClass: 'badge-freelancer',  userId: 'u-freelancer' },
+  admin:      { id: 'admin',      label: 'Admin',       icon: '⚙️', badgeClass: 'badge-admin',       userId: 'u-admin'      }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  MOCK DATA
+// ═══════════════════════════════════════════════════════════════════
+
+const USERS = {
+  'u-client':     { id: 'u-client',     name: 'Empresa Alfa',  role: 'client',     initials: 'EA', color: '#f59e0b' },
+  'u-freelancer': { id: 'u-freelancer', name: 'João Silva',    role: 'freelancer', initials: 'JS', color: '#6366f1' },
+  'u-admin':      { id: 'u-admin',      name: 'Admin',         role: 'admin',      initials: 'AD', color: '#64748b' },
+  'system':       { id: 'system',       name: 'Sistema',       role: 'system',     initials: '⚙', color: '#94a3b8' }
+};
+
+const ORDERS = [
+  {
+    id: 'ord-d001', description: 'Sistema Web – Landing + API',
+    clientId: 'u-client', freelancerId: 'u-freelancer',
+    status: 'IN_PROGRESS', total: 900.00, createdAt: '2026-06-15T08:00:00'
+  },
+  {
+    id: 'ord-d002', description: 'Design de Identidade Visual',
+    clientId: 'u-client', freelancerId: 'u-freelancer',
+    status: 'DELIVERED', total: 500.00, createdAt: '2026-06-10T09:00:00'
+  },
+  {
+    id: 'ord-d003', description: 'Consultoria de Marketing',
+    clientId: 'u-client', freelancerId: 'u-freelancer',
+    status: 'REVISION_REFUSED', total: 350.00, createdAt: '2026-06-08T10:00:00'
+  },
+  {
+    id: 'ord-d004', description: 'Aplicativo Mobile – MVP',
+    clientId: 'u-client', freelancerId: 'u-freelancer',
+    status: 'DISPUTE_OPEN', total: 2400.00, createdAt: '2026-06-01T08:00:00'
+  }
+];
+
+const CHAT = {
+  'ord-d001': [
+    { id: 'm1', senderId: 'u-freelancer', text: 'Olá! Recebi o pedido e já comecei o desenvolvimento.', ts: '2026-06-15T09:00:00' },
+    { id: 'm2', senderId: 'u-client',     text: 'Ótimo! Qualquer dúvida pode chamar.', ts: '2026-06-15T09:10:00' },
+    { id: 'm3', senderId: 'u-freelancer', text: 'Estou finalizando o layout da landing. Entrego em breve.', ts: '2026-06-18T14:00:00' }
+  ],
+  'ord-d002': [
+    { id: 'm4', senderId: 'u-freelancer', text: 'Segue o trabalho completo: logo, paleta e tipografia.', ts: '2026-06-12T10:00:00' },
+    { id: 'm5', senderId: 'system',       text: '📦 João Silva marcou o pedido como entregue. Aguardando aprovação do cliente.', ts: '2026-06-12T10:01:00', isEvent: true }
+  ],
+  'ord-d003': [
+    { id: 'm6', senderId: 'u-freelancer', text: 'A consultoria foi entregue conforme o escopo acordado.', ts: '2026-06-09T11:00:00' },
+    { id: 'm7', senderId: 'system',       text: '📦 João Silva marcou o pedido como entregue.', ts: '2026-06-09T11:01:00', isEvent: true },
+    { id: 'm8', senderId: 'u-client',     text: 'Precisamos ajustar o plano de mídias sociais — está muito genérico.', ts: '2026-06-09T14:00:00' },
+    { id: 'm9', senderId: 'system',       text: '🔄 Empresa Alfa solicitou uma revisão: "O plano de mídias sociais está muito genérico e não atende ao nosso setor específico."', ts: '2026-06-09T14:01:00', isEvent: true },
+    { id: 'm10', senderId: 'u-freelancer', text: 'Entendo sua preocupação, mas o que foi entregue está dentro do escopo contratado.', ts: '2026-06-10T09:00:00' },
+    { id: 'm11', senderId: 'system',       text: '❌ João Silva recusou a revisão. Justificativa: "O plano de mídias está dentro do escopo contratado conforme briefing assinado."', ts: '2026-06-10T09:01:00', isEvent: true }
+  ],
+  'ord-d004': [
+    { id: 'm12', senderId: 'u-freelancer', text: 'MVP entregue com todas as funcionalidades do escopo v1.', ts: '2026-06-10T10:00:00' },
+    { id: 'm13', senderId: 'system',       text: '📦 João Silva marcou o pedido como entregue.', ts: '2026-06-10T10:01:00', isEvent: true },
+    { id: 'm14', senderId: 'u-client',     text: 'O app está crashando na tela de login em iOS. Isso é um bug crítico.', ts: '2026-06-10T15:00:00' },
+    { id: 'm15', senderId: 'system',       text: '🔄 Empresa Alfa solicitou uma revisão: "O app apresenta crash crítico na tela de login em dispositivos iOS 17+."', ts: '2026-06-10T15:01:00', isEvent: true },
+    { id: 'm16', senderId: 'u-freelancer', text: 'Testei em iOS 17 e não consigo reproduzir o problema. Precisa de mais detalhes.', ts: '2026-06-11T09:00:00' },
+    { id: 'm17', senderId: 'u-client',     text: 'Enviei vídeo do erro. Todos do time conseguem reproduzir.', ts: '2026-06-11T10:00:00' },
+    { id: 'm18', senderId: 'system',       text: '❌ João Silva recusou a revisão. Justificativa: "Não consegui reproduzir o erro no meu ambiente de teste."', ts: '2026-06-11T11:00:00', isEvent: true },
+    { id: 'm19', senderId: 'system',       text: '⚖️ Empresa Alfa abriu uma disputa: "O aplicativo entregue possui bug crítico em iOS 17 que impede o uso do app. Temos evidência em vídeo do problema afetando todos os nossos testadores." O administrador irá analisar o caso.', ts: '2026-06-11T11:30:00', isEvent: true }
+  ]
+};
+
+const HISTORY = {
+  'ord-d001': [
+    { id: 'h1', toState: 'IN_PROGRESS', actorId: 'system', note: 'Pedido criado e pagamento confirmado.', ts: '2026-06-15T08:00:00' }
+  ],
+  'ord-d002': [
+    { id: 'h2', toState: 'IN_PROGRESS',  actorId: 'system',       note: 'Pedido criado e pagamento confirmado.',              ts: '2026-06-10T09:00:00' },
+    { id: 'h3', toState: 'DELIVERED',    actorId: 'u-freelancer', note: 'João Silva marcou o pedido como entregue.',          ts: '2026-06-12T10:01:00' }
+  ],
+  'ord-d003': [
+    { id: 'h4', toState: 'IN_PROGRESS',        actorId: 'system',       note: 'Pedido criado.',                                    ts: '2026-06-08T10:00:00' },
+    { id: 'h5', toState: 'DELIVERED',           actorId: 'u-freelancer', note: 'João Silva marcou o pedido como entregue.',         ts: '2026-06-09T11:01:00' },
+    { id: 'h6', toState: 'REVISION_REQUESTED', actorId: 'u-client',     note: 'Empresa Alfa solicitou revisão do plano de mídias.', ts: '2026-06-09T14:01:00' },
+    { id: 'h7', toState: 'REVISION_REFUSED',   actorId: 'u-freelancer', note: 'João Silva recusou — trabalho dentro do escopo.',    ts: '2026-06-10T09:01:00' }
+  ],
+  'ord-d004': [
+    { id: 'h8',  toState: 'IN_PROGRESS',        actorId: 'system',       note: 'Pedido criado.',                                  ts: '2026-06-01T08:00:00' },
+    { id: 'h9',  toState: 'DELIVERED',           actorId: 'u-freelancer', note: 'João Silva marcou o pedido como entregue.',       ts: '2026-06-10T10:01:00' },
+    { id: 'h10', toState: 'REVISION_REQUESTED', actorId: 'u-client',     note: 'Empresa Alfa solicitou revisão — crash em iOS 17.', ts: '2026-06-10T15:01:00' },
+    { id: 'h11', toState: 'REVISION_REFUSED',   actorId: 'u-freelancer', note: 'João Silva recusou — não conseguiu reproduzir.',   ts: '2026-06-11T11:00:00' },
+    { id: 'h12', toState: 'DISPUTE_OPEN',        actorId: 'u-client',     note: 'Empresa Alfa abriu disputa — evidência em vídeo.', ts: '2026-06-11T11:30:00' }
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  APP STATE
+// ═══════════════════════════════════════════════════════════════════
+
+const app = {
+  role: 'client',
+  orderId: 'ord-d001',
+  activeTab: 'acoes',
+  pendingAction: null
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  DATA FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════
+
+function getOrder(id)          { return ORDERS.find(o => o.id === id) || null; }
+function getUser(id)           { return USERS[id] || USERS['system']; }
+function getChatMessages(oid)  { return CHAT[oid] || []; }
+function getOrderHistory(oid)  { return HISTORY[oid] || []; }
+function getCurrentUserId()    { return ROLES_CONFIG[app.role].userId; }
+
+function sendChatMessage(orderId, senderId, text) {
+  if (!CHAT[orderId]) CHAT[orderId] = [];
+  const msg = { id: 'msg-' + Date.now(), senderId, text, ts: new Date().toISOString() };
+  CHAT[orderId].push(msg);
+  return msg;
+}
+
+function pushHistory(orderId, toState, actorId, note) {
+  if (!HISTORY[orderId]) HISTORY[orderId] = [];
+  HISTORY[orderId].push({ id: 'h-' + Date.now(), toState, actorId, note, ts: new Date().toISOString() });
+}
+
+function performAction(orderId, actionId, note) {
+  const order = getOrder(orderId);
+  if (!order) return null;
+  const stateConf = ORDER_STATE_FLOW[order.status];
+  const action    = stateConf?.actions.find(a => a.id === actionId);
+  if (!action) return null;
+
+  const actorId   = getCurrentUserId();
+  const actor     = getUser(actorId);
+  const prevState = order.status;
+
+  order.status = action.nextState;
+
+  const eventText = action.chatMessage(actor.name, note);
+  sendChatMessage(orderId, 'system', eventText);
+  pushHistory(orderId, action.nextState, actorId, action.historyNote(actor.name));
+
+  return { action, prevState, nextState: action.nextState, eventText };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  TEMPLATES (pure functions → HTML strings)
+// ═══════════════════════════════════════════════════════════════════
+
+function tplMessage(msg) {
+  const sender    = getUser(msg.senderId);
+  const isSystem  = msg.senderId === 'system' || msg.isEvent;
+  const isOwn     = msg.senderId === getCurrentUserId();
+  const cls       = isSystem ? 'system' : isOwn ? 'own' : 'other';
+  const ts        = new Date(msg.ts).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+
+  if (isSystem) {
+    return `<div class="msg system">
+      <div class="msg-body">
+        <div class="msg-bubble">${escHtml(msg.text)}</div>
+        <div class="msg-ts">${ts}</div>
+      </div>
+    </div>`;
+  }
+
+  const avatarBg  = sender.color || '#64748b';
+  const avatar    = `<div class="msg-avatar" style="background:${avatarBg};color:#fff;">${sender.initials}</div>`;
+
+  return `<div class="msg ${cls}">
+    ${!isOwn ? avatar : ''}
+    <div class="msg-body">
+      ${!isOwn ? `<div class="msg-sender">${escHtml(sender.name)}</div>` : ''}
+      <div class="msg-bubble">${escHtml(msg.text)}</div>
+      <div class="msg-ts">${ts}</div>
+    </div>
+    ${isOwn ? avatar : ''}
+  </div>`;
+}
+
+function tplTimelineItem(item) {
+  const stateConf = ORDER_STATE_FLOW[item.toState];
+  const actor     = getUser(item.actorId);
+  const ts        = new Date(item.ts).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  const color     = stateConf?.color || '#64748b';
+  return `<div class="timeline-item">
+    <div class="timeline-dot" style="color:${color};background:${color};"></div>
+    <div class="timeline-state" style="color:${color};">${stateConf?.label || item.toState}</div>
+    <div class="timeline-note">${escHtml(item.note)}</div>
+    <div class="timeline-ts">${ts} · ${escHtml(actor.name)}</div>
+  </div>`;
+}
+
+function tplActionBtn(action) {
+  return `<div class="action-btn-wrap">
+    <button class="btn btn-${action.style}" data-action-id="${action.id}">
+      ${action.icon} ${action.label}
+    </button>
+  </div>`;
+}
+
+function tplStatusCard(order) {
+  const stateConf = ORDER_STATE_FLOW[order.status];
+  return `<div class="status-card">
+    <div class="status-card-title">${escHtml(order.description)}</div>
+    <div class="status-card-desc">${stateConf.description}</div>
+    <span class="status-pill" style="background:${stateConf.bg};color:${stateConf.color};">${stateConf.label}</span>
+  </div>`;
+}
+
+function tplDisputeMessage(msg) {
+  const sender = getUser(msg.senderId);
+  const ts = new Date(msg.ts).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+  return `<div class="dispute-msg-item">
+    <div class="dispute-msg-sender">${escHtml(sender.name)} · ${ts}</div>
+    <div class="dispute-msg-text">${escHtml(msg.text)}</div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════════
+
+function renderSidebar() {
+  const content = document.getElementById('sidebar-content');
+
+  const roleSection = `
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Visualizar como</div>
+      ${Object.values(ROLES_CONFIG).map(r => `
+        <button class="nav-item ${app.role === r.id ? 'active' : ''}" data-role="${r.id}">
+          <span>${r.icon}</span> ${r.label}
+        </button>
+      `).join('')}
+    </div>`;
+
+  const orderSection = `
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Pedidos</div>
+      ${ORDERS.map(o => {
+        const stateConf = ORDER_STATE_FLOW[o.status];
+        return `<button class="nav-item ${app.orderId === o.id ? 'active' : ''}" data-order-id="${o.id}">
+          <span style="font-size:10px;">📋</span>
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(o.description)}</span>
+          <span class="nav-item-sub" style="font-size:9px;padding:2px 5px;border-radius:4px;background:${stateConf.bg};color:${stateConf.color};">${stateConf.label}</span>
+        </button>`;
+      }).join('')}
+    </div>`;
+
+  content.innerHTML = roleSection + orderSection;
+}
+
+function renderTopbar() {
+  const order     = getOrder(app.orderId);
+  const roleConf  = ROLES_CONFIG[app.role];
+  const stateConf = ORDER_STATE_FLOW[order.status];
+
+  document.getElementById('topbar-title').textContent = escHtml(order.description);
+  document.getElementById('topbar-sub').textContent   = `Pedido ${order.id.replace('ord-d', '#')} · Total: R$ ${order.total.toFixed(2).replace('.',',')}`;
+
+  const roleBadge  = document.getElementById('topbar-role-badge');
+  roleBadge.textContent = `${roleConf.icon} ${roleConf.label}`;
+  roleBadge.className   = `badge ${roleConf.badgeClass}`;
+
+  const stateBadge = document.getElementById('topbar-state-badge');
+  stateBadge.textContent       = stateConf.label;
+  stateBadge.style.background  = stateConf.bg;
+  stateBadge.style.color       = stateConf.color;
+}
+
+function renderChat() {
+  const order    = getOrder(app.orderId);
+  const stateConf = ORDER_STATE_FLOW[order.status];
+  const messages = getChatMessages(app.orderId);
+  const list     = document.getElementById('messages-list');
+
+  list.innerHTML = messages.length
+    ? messages.map(tplMessage).join('')
+    : `<div style="text-align:center;color:var(--text-muted);margin-top:40px;font-size:14px;">Nenhuma mensagem ainda.</div>`;
+
+  list.scrollTop = list.scrollHeight;
+
+  const inputWrap  = document.getElementById('chat-input-wrap');
+  const lockedNote = document.getElementById('chat-locked');
+  if (stateConf.locked) {
+    inputWrap.style.display  = 'none';
+    lockedNote.style.display = 'flex';
+  } else {
+    inputWrap.style.display  = 'flex';
+    lockedNote.style.display = 'none';
+  }
+}
+
+function renderInfoTabs() {
+  const order    = getOrder(app.orderId);
+  const stateConf = ORDER_STATE_FLOW[order.status];
+  const roleConf  = ROLES_CONFIG[app.role];
+
+  const myActions = stateConf.actions.filter(a => a.role === app.role);
+  const showAdmin = app.role === 'admin' && order.status === 'DISPUTE_OPEN';
+
+  const tabs = [
+    { id: 'acoes',   label: `Ações ${myActions.length ? `(${myActions.length})` : ''}` },
+    { id: 'history', label: 'Histórico' },
+    ...(showAdmin ? [{ id: 'admin', label: '⚖️ Disputa' }] : [])
+  ];
+
+  document.getElementById('info-tabs').innerHTML = tabs.map(t =>
+    `<button class="tab-btn ${app.activeTab === t.id ? 'active' : ''}" data-tab="${t.id}">${t.label}</button>`
+  ).join('');
+
+  ['acoes','history','admin'].forEach(id => {
+    const el = document.getElementById(`tab-${id}`);
+    el.classList.toggle('active', app.activeTab === id);
+  });
+}
+
+function renderTabAcoes() {
+  const order     = getOrder(app.orderId);
+  const stateConf = ORDER_STATE_FLOW[order.status];
+  const myActions = stateConf.actions.filter(a => a.role === app.role);
+  const el        = document.getElementById('tab-acoes');
+
+  el.innerHTML = tplStatusCard(order) + `
+    <div class="actions-section">
+      <div class="actions-section-title">Ações Disponíveis</div>
+      ${myActions.length
+        ? myActions.map(tplActionBtn).join('')
+        : `<div class="actions-empty">${stateConf.locked ? '🔒 Pedido encerrado' : 'Nenhuma ação disponível para seu papel agora.'}</div>`}
+    </div>`;
+}
+
+function renderTabHistory() {
+  const history = getOrderHistory(app.orderId);
+  const el      = document.getElementById('tab-history');
+  el.innerHTML  = history.length
+    ? `<div class="timeline">${history.map(tplTimelineItem).join('')}</div>`
+    : `<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Nenhum histórico ainda.</div>`;
+}
+
+function renderTabAdmin() {
+  const order    = getOrder(app.orderId);
+  const messages = getChatMessages(app.orderId);
+  const history  = getOrderHistory(app.orderId);
+  const stateConf = ORDER_STATE_FLOW[order.status];
+  const myActions = stateConf.actions.filter(a => a.role === 'admin');
+  const el        = document.getElementById('tab-admin');
+
+  el.innerHTML = `
+    <div class="dispute-section">
+      <div class="dispute-section-header">Chat Consolidado</div>
+      <div class="dispute-section-body">${messages.map(tplDisputeMessage).join('')}</div>
+    </div>
+    <div class="dispute-section">
+      <div class="dispute-section-header">Histórico do Pedido</div>
+      <div class="dispute-section-body">
+        <div class="timeline">${history.map(tplTimelineItem).join('')}</div>
+      </div>
+    </div>
+    <div class="actions-section">
+      <div class="actions-section-title">Decisão Administrativa</div>
+      ${myActions.map(tplActionBtn).join('')}
+    </div>`;
+}
+
+function renderAll() {
+  renderSidebar();
+  renderTopbar();
+  renderChat();
+  renderInfoTabs();
+  renderTabAcoes();
+  renderTabHistory();
+  if (app.role === 'admin' && getOrder(app.orderId)?.status === 'DISPUTE_OPEN') {
+    renderTabAdmin();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ACTION MODAL
+// ═══════════════════════════════════════════════════════════════════
+
+function showActionModal(actionId) {
+  const order     = getOrder(app.orderId);
+  const stateConf = ORDER_STATE_FLOW[order.status];
+  const action    = stateConf?.actions.find(a => a.id === actionId);
+  if (!action) return;
+
+  app.pendingAction = actionId;
+
+  document.getElementById('modal-icon').textContent  = action.icon;
+  document.getElementById('modal-title').textContent = action.confirmLabel;
+  document.getElementById('modal-sub').textContent   = `Confirmar: "${action.label}" — esta ação não pode ser desfeita.`;
+
+  const noteWrap  = document.getElementById('modal-note-wrap');
+  const noteInput = document.getElementById('modal-note');
+  const noteErr   = document.getElementById('modal-note-error');
+
+  if (action.requiresNote) {
+    noteWrap.style.display  = 'block';
+    noteInput.placeholder   = action.notePlaceholder || '';
+    noteInput.value         = '';
+    noteErr.style.display   = 'none';
+    noteErr.textContent     = '';
+  } else {
+    noteWrap.style.display  = 'none';
+    noteInput.value         = '';
+  }
+
+  const confirmBtn = document.getElementById('modal-confirm-btn');
+  confirmBtn.textContent = action.confirmLabel;
+  confirmBtn.className   = `btn btn-${action.style}`;
+
+  document.getElementById('action-overlay').classList.add('show');
+  if (action.requiresNote) noteInput.focus();
+}
+
+function hideActionModal() {
+  document.getElementById('action-overlay').classList.remove('show');
+  app.pendingAction = null;
+}
+
+function confirmAction() {
+  const actionId  = app.pendingAction;
+  if (!actionId) return;
+
+  const order     = getOrder(app.orderId);
+  const stateConf = ORDER_STATE_FLOW[order.status];
+  const action    = stateConf?.actions.find(a => a.id === actionId);
+  if (!action) return;
+
+  const noteInput = document.getElementById('modal-note');
+  const noteErr   = document.getElementById('modal-note-error');
+  const note      = noteInput.value.trim();
+
+  if (action.requiresNote && (action.noteMinLength || 0) > 0 && note.length < action.noteMinLength) {
+    noteErr.textContent   = `Mínimo de ${action.noteMinLength} caracteres. Você escreveu ${note.length}.`;
+    noteErr.style.display = 'block';
+    noteInput.classList.add('error');
+    noteInput.focus();
+    return;
+  }
+
+  hideActionModal();
+
+  const result = performAction(app.orderId, actionId, note || null);
+  if (!result) return;
+
+  const nextConf = ORDER_STATE_FLOW[result.nextState];
+  toast('success', action.label, `Pedido agora: ${nextConf.label}`);
+
+  renderAll();
+  document.getElementById('messages-list').scrollTop = 9999;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════════
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function toast(type, title, msg) {
+  const icons = { success:'✅', error:'❌', info:'ℹ️', warning:'⚠️' };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `
+    <span class="toast-icon">${icons[type]||'💬'}</span>
+    <div class="toast-body">
+      <div class="toast-title">${escHtml(title)}</div>
+      ${msg ? `<div class="toast-msg">${escHtml(msg)}</div>` : ''}
+    </div>
+    <button class="toast-close" onclick="removeToast(this.parentElement)">×</button>`;
+  document.getElementById('toast-stack').appendChild(el);
+  setTimeout(() => removeToast(el), 5000);
+}
+function removeToast(el) {
+  if (!el?.parentElement) return;
+  el.classList.add('removing');
+  setTimeout(() => el.remove(), 300);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  EVENT LISTENERS
+// ═══════════════════════════════════════════════════════════════════
+
+// Sidebar delegation
+document.getElementById('sidebar').addEventListener('click', e => {
+  const roleBtn  = e.target.closest('[data-role]');
+  const orderBtn = e.target.closest('[data-order-id]');
+  if (roleBtn) {
+    app.role      = roleBtn.dataset.role;
+    app.activeTab = 'acoes';
+    renderAll();
+    toast('info', `Visualizando como ${ROLES_CONFIG[app.role].label}`, '');
+  }
+  if (orderBtn) {
+    app.orderId   = orderBtn.dataset.orderId;
+    app.activeTab = 'acoes';
+    renderAll();
+    closeSidebar();
+  }
+});
+
+// Tab delegation
+document.getElementById('info-tabs').addEventListener('click', e => {
+  const tab = e.target.closest('[data-tab]');
+  if (!tab) return;
+  app.activeTab = tab.dataset.tab;
+  renderInfoTabs();
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`tab-${app.activeTab}`)?.classList.add('active');
+});
+
+// Action buttons delegation (covers acoes + admin tabs)
+document.getElementById('info-panel').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action-id]');
+  if (btn) showActionModal(btn.dataset.actionId);
+});
+
+// Send message
+function handleSend() {
+  const order  = getOrder(app.orderId);
+  if (ORDER_STATE_FLOW[order.status].locked) return;
+  const input  = document.getElementById('chat-input');
+  const text   = input.value.trim();
+  if (!text) return;
+  sendChatMessage(app.orderId, getCurrentUserId(), text);
+  input.value  = '';
+  input.style.height = 'auto';
+  renderChat();
+  document.getElementById('messages-list').scrollTop = 9999;
+}
+
+document.getElementById('send-btn').addEventListener('click', handleSend);
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+});
+document.getElementById('chat-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+// Modal confirm/cancel
+document.getElementById('modal-confirm-btn').addEventListener('click', confirmAction);
+document.getElementById('modal-cancel-btn').addEventListener('click', hideActionModal);
+document.getElementById('action-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) hideActionModal();
+});
+document.getElementById('modal-note').addEventListener('input', function() {
+  this.classList.remove('error');
+  document.getElementById('modal-note-error').style.display = 'none';
+});
+
+// Hamburger
+document.getElementById('hamburger').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('show');
+});
+document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════════
+renderAll();
+</script>
+</body>
+</html>
