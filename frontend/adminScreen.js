@@ -13,6 +13,10 @@ let allCarts = [];
 let allOrders         = [];
 let currentOrdersFilter = 'all';
 
+let allReports         = [];
+let currentReportsFilter = 'all';
+let reviewingReportId    = null;
+
 function authHeader() {
   return { 'Authorization': OFAuth.getToken() };
 }
@@ -29,6 +33,7 @@ function initAdmin() {
   loadWorks();
   loadCarts();
   loadOrders();
+  loadReports();
 }
 
 /* ── Load & render users ──────────────────────────────────────────── */
@@ -71,6 +76,19 @@ function updateStats() {
 
   var statOrders = document.getElementById('statOrders');
   if (statOrders) statOrders.textContent = allOrders.length || '—';
+
+  var statReportsPending = document.getElementById('statReportsPending');
+  if (statReportsPending) {
+    var pending = allReports.filter(function (r) { return r.status === 'PENDING'; }).length;
+    statReportsPending.textContent = pending || '0';
+  }
+
+  var reportsBadge = document.getElementById('reportsBadge');
+  if (reportsBadge) {
+    var pendingCount = allReports.filter(function (r) { return r.status === 'PENDING' || r.status === 'UNDER_REVIEW'; }).length;
+    reportsBadge.textContent = pendingCount;
+    reportsBadge.style.display = pendingCount > 0 ? '' : 'none';
+  }
 }
 
 function setFilter(filter) {
@@ -582,6 +600,233 @@ function renderOrders() {
     list.appendChild(row);
   });
 }
+
+/* ── Reports ─────────────────────────────────────────────────────── */
+
+var REPORT_NATURE_LABELS = {
+  USER_BEHAVIOR:         'Comportamento de usuário',
+  FRAUD:                 'Fraude',
+  INAPPROPRIATE_CONTENT: 'Conteúdo inadequado',
+  PAYMENT:               'Problema de pagamento',
+  SERVICE:               'Problema com serviço',
+  SECURITY:              'Segurança',
+  OTHER:                 'Outro'
+};
+
+var REPORT_STATUS_LABELS = {
+  PENDING:      'Pendente',
+  UNDER_REVIEW: 'Em análise',
+  RESOLVED:     'Resolvida',
+  REJECTED:     'Rejeitada'
+};
+
+var REPORT_STATUS_BADGE = {
+  PENDING:      'admin-badge-order-not_paid',
+  UNDER_REVIEW: 'admin-badge',
+  RESOLVED:     'admin-badge-order-paid',
+  REJECTED:     'admin-badge-order-refunded'
+};
+
+async function loadReports() {
+  var list = document.getElementById('adminReportList');
+  list.innerHTML = '<p class="admin-list-loading">Carregando denúncias...</p>';
+
+  try {
+    var res = await fetch(API_BASE + '/reports/admin/all', { headers: authHeader() });
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    allReports = await res.json();
+    updateStats();
+    renderReports();
+  } catch (e) {
+    list.innerHTML = '<p class="admin-list-error">Erro ao carregar denúncias.</p>';
+  }
+}
+
+function setReportsFilter(filter) {
+  currentReportsFilter = filter;
+  document.querySelectorAll('#denuncias .filter-btn').forEach(function (b) { b.classList.remove('active'); });
+  var idMap = {
+    all:          'filterReportsAll',
+    PENDING:      'filterReportsPending',
+    UNDER_REVIEW: 'filterReportsUnder',
+    RESOLVED:     'filterReportsResolved',
+    REJECTED:     'filterReportsRejected'
+  };
+  var btn = document.getElementById(idMap[filter]);
+  if (btn) btn.classList.add('active');
+  renderReports();
+}
+
+function filterReports() {
+  renderReports();
+}
+
+function renderReports() {
+  var search  = (document.getElementById('searchReportsInput') || {}).value || '';
+  var q       = search.toLowerCase().trim();
+  var list    = document.getElementById('adminReportList');
+
+  var visible = allReports.filter(function (r) {
+    var matchFilter = currentReportsFilter === 'all' || r.status === currentReportsFilter;
+    var matchSearch = !q ||
+      (r.title         && r.title.toLowerCase().includes(q)) ||
+      (r.reporterName  && r.reporterName.toLowerCase().includes(q)) ||
+      (r.description   && r.description.toLowerCase().includes(q));
+    return matchFilter && matchSearch;
+  });
+
+  var count = document.getElementById('adminReportsCount');
+  if (count) count.textContent = visible.length + ' denúncia' + (visible.length !== 1 ? 's' : '');
+
+  if (!visible.length) {
+    list.innerHTML = '<p class="admin-list-empty">Nenhuma denúncia encontrada.</p>';
+    return;
+  }
+
+  list.innerHTML = '';
+  visible
+    .slice()
+    .sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); })
+    .forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'admin-user-row';
+      row.style.cursor = 'pointer';
+
+      var natureLbl = REPORT_NATURE_LABELS[r.nature]  || r.nature  || '—';
+      var statusLbl = REPORT_STATUS_LABELS[r.status]  || r.status  || '—';
+      var badgeCls  = REPORT_STATUS_BADGE[r.status]   || 'admin-badge';
+      var reporter  = r.reporterName || 'Usuário #' + r.reporterId;
+      var createdAt = r.createdAt ? new Date(r.createdAt).toLocaleDateString('pt-BR') : '—';
+      var initials  = OFAuth.getInitials(reporter);
+
+      var attachBadge = (r.attachments && r.attachments.length)
+        ? '<span class="admin-badge" style="background:rgba(255,255,255,.06);color:var(--muted2);border:1px solid var(--border)">📎 ' + r.attachments.length + '</span>'
+        : '';
+
+      row.innerHTML =
+        '<div class="admin-user-avatar">' + initials + '</div>' +
+        '<div class="admin-user-info">' +
+          '<div class="admin-user-name">' + escHtmlAdmin(r.title) + '</div>' +
+          '<div class="admin-user-email">' + natureLbl + ' · Denunciante: ' + escHtmlAdmin(reporter) + '</div>' +
+        '</div>' +
+        '<div class="admin-user-meta">' +
+          attachBadge +
+          '<span class="admin-badge ' + badgeCls + '">' + statusLbl + '</span>' +
+          '<span class="admin-user-date">' + createdAt + '</span>' +
+          '<div class="admin-user-actions">' +
+            '<button class="btn-row" onclick="openReportModal(' + r.id + ');event.stopPropagation()">Revisar</button>' +
+          '</div>' +
+        '</div>';
+
+      row.addEventListener('click', function () { openReportModal(r.id); });
+      list.appendChild(row);
+    });
+}
+
+function openReportModal(reportId) {
+  var r = allReports.find(function (x) { return x.id === reportId; });
+  if (!r) return;
+
+  reviewingReportId = reportId;
+
+  var natureLbl = REPORT_NATURE_LABELS[r.nature] || r.nature || '—';
+  var reporter  = r.reporterName || 'Usuário #' + r.reporterId;
+  var createdAt = r.createdAt ? new Date(r.createdAt).toLocaleString('pt-BR') : '—';
+  var reviewedAt = r.reviewedAt ? new Date(r.reviewedAt).toLocaleString('pt-BR') : '—';
+
+  document.getElementById('reportDetailGrid').innerHTML =
+    '<div>' +
+      '<div class="detail-label">Título</div>' +
+      '<div class="detail-value">' + escHtmlAdmin(r.title) + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Natureza</div>' +
+      '<div class="detail-value">' + natureLbl + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Denunciante</div>' +
+      '<div class="detail-value">' + escHtmlAdmin(reporter) + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Registrada em</div>' +
+      '<div class="detail-value">' + createdAt + '</div>' +
+    '</div>' +
+    '<div class="detail-full">' +
+      '<div class="detail-label">Descrição</div>' +
+      '<div class="detail-value" style="white-space:pre-wrap;line-height:1.6">' + escHtmlAdmin(r.description) + '</div>' +
+    '</div>' +
+    (r.reviewedByName ? '<div class="detail-full"><div class="detail-label">Última análise por</div><div class="detail-value">' + escHtmlAdmin(r.reviewedByName) + ' em ' + reviewedAt + '</div></div>' : '') +
+    (r.attachments && r.attachments.length ? '<div class="detail-full"><div class="detail-label">Anexos</div><div class="detail-value" style="color:var(--muted2)">' + r.attachments.length + ' arquivo(s) em anexo</div></div>' : '');
+
+  document.getElementById('rmStatus').value = r.status;
+  document.getElementById('rmNotes').value  = r.adminNotes || '';
+  document.getElementById('rmMsg').textContent = '';
+  document.getElementById('rmMsg').className   = 'admin-form-msg';
+
+  document.getElementById('reportModal').classList.add('show');
+}
+
+function closeReportModal() {
+  document.getElementById('reportModal').classList.remove('show');
+  reviewingReportId = null;
+}
+
+async function submitReportReview() {
+  if (!reviewingReportId) return;
+
+  var status = document.getElementById('rmStatus').value;
+  var notes  = document.getElementById('rmNotes').value.trim();
+  var msg    = document.getElementById('rmMsg');
+  var btn    = document.getElementById('rmSubmitBtn');
+
+  btn.disabled    = true;
+  btn.textContent = 'Salvando...';
+  msg.textContent = '';
+  msg.className   = 'admin-form-msg';
+
+  try {
+    var res = await fetch(API_BASE + '/reports/admin/updateStatus/' + reviewingReportId, {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ status: status, adminNotes: notes || null })
+    });
+
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var errMsg = (Array.isArray(data.errors) && data.errors.length)
+        ? data.errors.map(function (e) { return e.message; }).join(' | ')
+        : 'Erro ao salvar revisão.';
+      msg.textContent = errMsg;
+      msg.className   = 'admin-form-msg admin-form-msg-error';
+      return;
+    }
+
+    msg.textContent = '✓ Denúncia atualizada com sucesso.';
+    msg.className   = 'admin-form-msg admin-form-msg-success';
+
+    await loadReports();
+    setTimeout(closeReportModal, 800);
+
+  } catch (_) {
+    msg.textContent = 'Erro de conexão.';
+    msg.className   = 'admin-form-msg admin-form-msg-error';
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'SALVAR REVISÃO';
+  }
+}
+
+function escHtmlAdmin(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+document.getElementById('reportModal').addEventListener('click', function (e) {
+  if (e.target === this) closeReportModal();
+});
 
 /* ── Boot ────────────────────────────────────────────────────────── */
 

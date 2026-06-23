@@ -170,6 +170,11 @@
         Pedidos
         <span class="nav-item-badge" id="ordersBadge" style="display:none">0</span>
       </a>
+      <a href="#denuncias" class="nav-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Denúncias
+        <span class="nav-item-badge" id="reportsBadge" style="display:none">0</span>
+      </a>
 
       <span class="sidebar-label">Conta</span>
       <a href="profile.html" class="nav-item">
@@ -242,6 +247,15 @@
             </div>
             <div class="stat-card-value" id="statOrders">—</div>
           </div>
+          <div class="stat-card">
+            <div class="stat-card-top">
+              <span class="stat-card-label">Denúncias Pendentes</span>
+              <div class="stat-card-icon" style="background:rgba(239,68,68,.1);color:#ef4444;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statReportsPending">—</div>
+          </div>
         </div>
       </div>
 
@@ -311,6 +325,27 @@
           </div>
           <div class="admin-count" id="adminOrdersCount"></div>
           <div id="adminOrderList"></div>
+        </div>
+      </div>
+
+      <!-- Reports management -->
+      <div id="denuncias" class="section-block reveal">
+        <div class="block-title">Gerenciamento de Denúncias</div>
+        <div class="card-box">
+          <div class="admin-toolbar">
+            <input type="text" class="admin-search" id="searchReportsInput"
+              placeholder="Buscar por título ou denunciante..."
+              oninput="filterReports()" />
+            <div class="admin-filter-wrap">
+              <button class="filter-btn active" id="filterReportsAll"         onclick="setReportsFilter('all')">Todas</button>
+              <button class="filter-btn"         id="filterReportsPending"     onclick="setReportsFilter('PENDING')">Pendentes</button>
+              <button class="filter-btn"         id="filterReportsUnder"       onclick="setReportsFilter('UNDER_REVIEW')">Em análise</button>
+              <button class="filter-btn"         id="filterReportsResolved"    onclick="setReportsFilter('RESOLVED')">Resolvidas</button>
+              <button class="filter-btn"         id="filterReportsRejected"    onclick="setReportsFilter('REJECTED')">Rejeitadas</button>
+            </div>
+          </div>
+          <div class="admin-count" id="adminReportsCount"></div>
+          <div id="adminReportList"></div>
         </div>
       </div>
 
@@ -393,6 +428,33 @@
       </div>
       <div class="admin-form-msg" id="ufMsg"></div>
       <button class="btn-save" id="ufSubmitBtn" onclick="submitUserForm()">CADASTRAR</button>
+    </div>
+  </div>
+
+  <!-- Report review modal -->
+  <div class="auth-overlay" id="reportModal">
+    <div class="auth-modal admin-modal" style="max-width:560px;">
+      <button class="btn-auth-close" onclick="closeReportModal()">×</button>
+      <h2 class="auth-modal-title">REVISAR DENÚNCIA</h2>
+      <div class="detail-grid" id="reportDetailGrid"></div>
+      <hr class="divider" />
+      <div style="margin-bottom:12px;">
+        <label class="setting-label">Novo Status</label>
+        <select id="rmStatus" class="setting-input" style="cursor:pointer;margin-top:6px;">
+          <option value="PENDING">Pendente</option>
+          <option value="UNDER_REVIEW">Em análise</option>
+          <option value="RESOLVED">Resolvida</option>
+          <option value="REJECTED">Rejeitada</option>
+        </select>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label class="setting-label">Notas do Administrador</label>
+        <textarea id="rmNotes" class="setting-input" rows="4"
+          placeholder="Descreva a decisão ou providências tomadas..."
+          style="margin-top:6px;resize:vertical;"></textarea>
+      </div>
+      <div class="admin-form-msg" id="rmMsg"></div>
+      <button class="btn-save" id="rmSubmitBtn" onclick="submitReportReview()">SALVAR REVISÃO</button>
     </div>
   </div>
 

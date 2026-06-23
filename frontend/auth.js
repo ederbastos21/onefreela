@@ -128,4 +128,17 @@
       window.OFAuth.logout();
     }
   })();
+
+  /* ── Verificação periódica de sessão ──────────────────────────────
+     Enquanto o usuário permanece na página, verifica a cada 60 segundos
+     se o token ainda é válido. Encerra a sessão assim que expirar.
+     ────────────────────────────────────────────────────────────────── */
+  (function startSessionWatcher() {
+    if (onAuthPage()) return;
+    setInterval(function () {
+      if (window.OFAuth.getToken() && window.OFAuth.isTokenExpired()) {
+        window.OFAuth.logout();
+      }
+    }, 60000);
+  })();
 })();
