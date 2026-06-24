@@ -146,10 +146,6 @@ function render(data) {
         <div class="fl-footer">
           <div class="fl-price">${price}</div>
         </div>
-        <button class="btn-chat-fl" onclick="tryChat(event,${w.id})">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Falar com ${name.split(' ')[0]}
-        </button>
       </div>`;
     grid.appendChild(gc);
 
@@ -173,10 +169,6 @@ function render(data) {
       <div class="fl-list-price-col">
         <div class="fl-list-price">${price}</div>
         <button class="fl-list-heart${lk ? ' liked' : ''}" data-wid="${w.id}" onclick="toggleLike(event,${w.id},this)">♥</button>
-        <button class="btn-chat-fl" style="margin-top:4px" onclick="tryChat(event,${w.id})">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Falar
-        </button>
       </div>`;
     list.appendChild(lc);
   });

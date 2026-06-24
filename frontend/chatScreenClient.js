@@ -6,62 +6,139 @@ initNotifPanel();
 
 /* ── State ─────────────────────────────────────────────────────────── */
 
-var currentItemId  = null;
-var lastMessages   = [];
-var pollTimer      = null;
+var currentItemId = null;
+var lastMessages  = [];
+var sidebarItems  = [];
+var pollTimer     = null;
 
-function authHdr() {
-  return { Authorization: OFAuth.getToken() };
-}
+function authHdr() { return { Authorization: OFAuth.getToken() }; }
 
 /* ── Config ─────────────────────────────────────────────────────────── */
 
 var STATUS_LABELS = {
-  PENDING_DELIVERY:          'Aguardando Entrega',
-  PENDING_DELIVERY_REVISION: 'Aguardando Revisão',
-  ADJUSTMENT_REQUEST:        'Revisão Solicitada',
-  ON_DISPUTE:                'Em Disputa',
-  FROZEN:                    'Congelado',
-  COMPLETED:                 'Concluído',
-  REFUNDED:                  'Reembolsado'
+  PENDING_DELIVERY:           'Aguardando Entrega',
+  PENDING_DELIVERY_REVISION:  'Aguardando Revisão',
+  ADJUSTMENT_REQUEST:         'Revisão Solicitada',
+  ON_DISPUTE:                 'Em Disputa',
+  FROZEN:                     'Congelado',
+  COMPLETED:                  'Concluído',
+  REFUNDED:                   'Reembolsado'
 };
 
 var MESSAGE_TYPE_LABELS = {
-  TEXT:                          null,
-  ATTACHMENT:                    null,
-  DELIVERY:                      '📦 Entrega realizada — aguardando sua aprovação',
-  DELIVERY_ACCEPTED:             '✅ Entrega aprovada',
-  DELIVERY_REFUSED:              '❌ Revisão solicitada',
-  ADJUSTMENT_ACCEPTED:           '🔄 Revisão aceita pelo freelancer',
-  ADJUSTMENT_REFUSED:            '🚫 Revisão recusada — aguardando sua decisão',
-  DISPUTE_OPENED:                '⚖️ Disputa aberta',
-  DISPUTE_RESOLVED_FREELANCER:   '✓ Disputa resolvida — favor freelancer',
-  DISPUTE_RESOLVED_CLIENT:       '↩ Disputa resolvida — reembolso processado',
-  DELIVERY_ACCEPTED_AFTER_FREEZE:'✅ Entrega aceita após revisão recusada'
+  TEXT:                           null,
+  ATTACHMENT:                     null,
+  DELIVERY:                       '📦 Entrega realizada — aguardando sua aprovação',
+  DELIVERY_ACCEPTED:              '✅ Entrega aprovada',
+  DELIVERY_REFUSED:               '❌ Revisão solicitada',
+  ADJUSTMENT_ACCEPTED:            '🔄 Revisão aceita pelo freelancer',
+  ADJUSTMENT_REFUSED:             '🚫 Revisão recusada — aguardando sua decisão',
+  DISPUTE_OPENED:                 '⚖️ Disputa aberta',
+  DISPUTE_RESOLVED_FREELANCER:    '✓ Disputa resolvida — favor freelancer',
+  DISPUTE_RESOLVED_CLIENT:        '↩ Disputa resolvida — reembolso processado',
+  DELIVERY_ACCEPTED_AFTER_FREEZE: '✅ Entrega aceita após revisão recusada'
 };
 
-/* ── Boot — check URL param ─────────────────────────────────────────── */
+/* ── Boot ───────────────────────────────────────────────────────────── */
 
-(function init() {
-  var params = new URLSearchParams(window.location.search);
-  var itemId = params.get('orderItemId');
-  if (itemId) {
-    loadConversation(Number(itemId));
-  } else {
-    showEmptySidebar();
-  }
-})();
+loadAllConversations();
 
-function showEmptySidebar() {
+/* ── Sidebar: load all conversations ─────────────────────────────── */
+
+async function loadAllConversations() {
   var list = document.getElementById('convList');
   if (list) {
     list.innerHTML =
-      '<div class="conv-item" style="display:block;padding:20px 16px;text-align:center;color:var(--muted2);font-size:12px;line-height:1.6">' +
-        '<div style="font-size:28px;margin-bottom:8px">💬</div>' +
-        '<div style="font-weight:600;color:var(--text);margin-bottom:4px">Acesse um pedido</div>' +
-        'Suas conversas aparecem aqui quando você acessa um pedido ativo.' +
+      '<div style="padding:20px 16px;text-align:center;color:var(--muted2);font-size:12px">' +
+        'Carregando conversas...' +
       '</div>';
   }
+
+  try {
+    var res = await fetch(API_BASE + '/order/myOrders', { headers: authHdr() });
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    var orders = res.ok ? await res.json() : [];
+
+    sidebarItems = [];
+    orders.forEach(function (order) {
+      if (order.status === 'PAID') {
+        (order.items || []).forEach(function (item) {
+          sidebarItems.push(item);
+        });
+      }
+    });
+
+    renderSidebarItems();
+
+    var params = new URLSearchParams(window.location.search);
+    var itemId = Number(params.get('orderItemId'));
+    if (itemId && sidebarItems.find(function (x) { return x.id === itemId; })) {
+      loadConversation(itemId);
+    }
+  } catch (e) {
+    if (list) {
+      list.innerHTML =
+        '<div style="padding:20px 16px;text-align:center;color:#ef4444;font-size:12px">' +
+          'Erro ao carregar conversas.' +
+        '</div>';
+    }
+  }
+}
+
+async function refreshSidebarItems() {
+  try {
+    var res = await fetch(API_BASE + '/order/myOrders', { headers: authHdr() });
+    if (!res.ok) return;
+    var orders = await res.json();
+    sidebarItems = [];
+    orders.forEach(function (order) {
+      if (order.status === 'PAID') {
+        (order.items || []).forEach(function (item) { sidebarItems.push(item); });
+      }
+    });
+    renderSidebarItems();
+  } catch (_) {}
+}
+
+function renderSidebarItems() {
+  var list = document.getElementById('convList');
+  if (!list) return;
+  list.innerHTML = '';
+
+  if (!sidebarItems.length) {
+    list.innerHTML =
+      '<div style="display:block;padding:28px 16px;text-align:center;color:var(--muted2);font-size:12px;line-height:1.6">' +
+        '<div style="font-size:28px;margin-bottom:8px">💬</div>' +
+        '<div style="font-weight:600;color:var(--text);margin-bottom:4px">Nenhuma conversa</div>' +
+        'Suas conversas aparecem aqui quando você faz um pedido.' +
+      '</div>';
+    return;
+  }
+
+  sidebarItems.forEach(function (item) {
+    var div = document.createElement('div');
+    div.className = 'conv-item' + (item.id === currentItemId ? ' active' : '');
+    div.dataset.itemId    = item.id;
+    div.dataset.searchText = ((item.freelancerName || '') + ' ' + (item.workTitle || '')).toLowerCase();
+
+    var inits   = OFAuth.getInitials(item.freelancerName || '?');
+    var stLabel = STATUS_LABELS[item.status] || item.status || '—';
+    var price   = formatPrice(item.totalPrice);
+
+    div.innerHTML =
+      '<div class="conv-avatar" style="background:var(--gdim);color:var(--green)">' + escHtml(inits) + '</div>' +
+      '<div class="conv-info">' +
+        '<div class="conv-name">' +
+          '<span class="conv-name-text">' + escHtml(item.freelancerName || 'Freelancer') + '</span>' +
+          '<span class="conv-time">' + escHtml(price) + '</span>' +
+        '</div>' +
+        '<div class="conv-service-tag">' + escHtml(item.workTitle || 'Pedido #' + item.id) + '</div>' +
+        '<div class="conv-preview"><span>' + escHtml(stLabel) + '</span></div>' +
+      '</div>';
+
+    div.addEventListener('click', function () { loadConversation(item.id); });
+    list.appendChild(div);
+  });
 }
 
 /* ── Load conversation ──────────────────────────────────────────────── */
@@ -69,33 +146,40 @@ function showEmptySidebar() {
 async function loadConversation(itemId) {
   currentItemId = itemId;
 
+  document.querySelectorAll('#convList .conv-item').forEach(function (el) {
+    el.classList.toggle('active', Number(el.dataset.itemId) === itemId);
+  });
+
   var msgs = document.getElementById('chatMessages');
   if (msgs) msgs.innerHTML = '<div class="msg-date">Carregando conversa...</div>';
+
+  updateHeaderFromItem(itemId);
 
   try {
     var res = await fetch(API_BASE + '/chat/orderItem/' + itemId, { headers: authHdr() });
 
     if (res.status === 403 || res.status === 401) {
-      if (msgs) msgs.innerHTML = '<div class="msg-date" style="color:#ef4444">Sem permissão para visualizar esta conversa.</div>';
+      if (msgs) msgs.innerHTML =
+        '<div class="msg-date" style="color:#ef4444">Sem permissão para visualizar esta conversa.</div>';
       return;
     }
     if (!res.ok) {
-      if (msgs) msgs.innerHTML = '<div class="msg-date" style="color:#ef4444">Conversa não encontrada.</div>';
+      if (msgs) msgs.innerHTML =
+        '<div class="msg-date" style="color:#ef4444">Conversa não encontrada.</div>';
       return;
     }
 
     lastMessages = await res.json();
-
-    updateSidebarItem(itemId, lastMessages);
-    updateServiceBar(itemId, lastMessages);
+    updateServiceBar(itemId);
     renderMessages(lastMessages);
-    updateActionButtons(lastMessages);
+    updateActionButtons();
 
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(function () { pollMessages(itemId); }, 6000);
 
   } catch (e) {
-    if (msgs) msgs.innerHTML = '<div class="msg-date" style="color:#ef4444">Erro ao carregar conversa.</div>';
+    if (msgs) msgs.innerHTML =
+      '<div class="msg-date" style="color:#ef4444">Erro ao carregar conversa.</div>';
   }
 }
 
@@ -106,70 +190,55 @@ async function pollMessages(itemId) {
     if (!res.ok) return;
     lastMessages = await res.json();
     renderMessages(lastMessages);
-    updateActionButtons(lastMessages);
+    await refreshSidebarItems();
+    updateActionButtons();
+    updateServiceBar(itemId);
   } catch (_) {}
 }
 
-/* ── Sidebar ────────────────────────────────────────────────────────── */
+/* ── Header / info panel ────────────────────────────────────────────── */
 
-function updateSidebarItem(itemId, messages) {
-  var list = document.getElementById('convList');
-  if (!list) return;
+function updateHeaderFromItem(itemId) {
+  var item = sidebarItems.find(function (x) { return x.id === itemId; });
+  if (!item) return;
 
-  var freelancerName = '—';
-  var myName = OFAuth.getName();
-  var other = messages.find(function (m) { return m.senderName && m.senderName !== myName; });
-  if (other) freelancerName = other.senderName;
+  var name  = item.freelancerName || '—';
+  var inits = OFAuth.getInitials(name);
 
-  var lastMsg = messages.length ? messages[messages.length - 1] : null;
-  var preview = lastMsg ? (lastMsg.content || '📎 Arquivo') : 'Sem mensagens';
-  var time    = lastMsg && lastMsg.sentAt
-    ? new Date(lastMsg.sentAt).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})
-    : '';
-
-  list.innerHTML =
-    '<div class="conv-item active">' +
-      '<div class="conv-avatar" style="background:var(--gdim);color:var(--green)">' + escHtml(OFAuth.getInitials(freelancerName)) + '</div>' +
-      '<div class="conv-info">' +
-        '<div class="conv-name"><span class="conv-name-text">' + escHtml(freelancerName) + '</span><span class="conv-time">' + time + '</span></div>' +
-        '<div class="conv-service-tag">Pedido #' + itemId + '</div>' +
-        '<div class="conv-preview"><span>' + escHtml(preview.substring(0, 40)) + '</span></div>' +
-      '</div>' +
-    '</div>';
-
-  var headerName   = document.getElementById('chatHeaderName');
-  var headerAvatar = document.getElementById('chatHeaderAvatar');
+  var headerName    = document.getElementById('chatHeaderName');
+  var headerAvatar  = document.getElementById('chatHeaderAvatar');
   var infoPanelAvatar = document.getElementById('infoPanelAvatar');
   var infoPanelName   = document.getElementById('infoPanelName');
   var infoPanelRole   = document.getElementById('infoPanelRole');
 
-  if (headerName)     headerName.textContent     = freelancerName;
-  if (headerAvatar)   headerAvatar.textContent   = OFAuth.getInitials(freelancerName);
-  if (infoPanelAvatar) infoPanelAvatar.textContent = OFAuth.getInitials(freelancerName);
-  if (infoPanelName)  infoPanelName.textContent  = freelancerName;
-  if (infoPanelRole)  infoPanelRole.textContent  = 'Freelancer · Pedido #' + itemId;
+  if (headerName)      headerName.textContent      = name;
+  if (headerAvatar)    headerAvatar.textContent    = inits;
+  if (infoPanelAvatar) infoPanelAvatar.textContent = inits;
+  if (infoPanelName)   infoPanelName.textContent   = name;
+  if (infoPanelRole)   infoPanelRole.textContent   = item.workTitle || 'Pedido #' + itemId;
 }
 
 /* ── Service bar ────────────────────────────────────────────────────── */
 
-function updateServiceBar(itemId, messages) {
+function updateServiceBar(itemId) {
   var bar = document.getElementById('serviceBar');
   if (!bar) return;
   bar.style.display = '';
 
-  document.getElementById('svcBarTitle').textContent = 'Pedido Item #' + itemId;
-  document.getElementById('svcBarSub').textContent   = messages.length + ' mensagem(ns) na conversa';
-  document.getElementById('svcBarPrice').textContent = '—';
-  document.getElementById('svcBarStatus').textContent = '—';
+  var item = sidebarItems.find(function (x) { return x.id === itemId; });
+  document.getElementById('svcBarTitle').textContent  = item ? (item.workTitle || 'Pedido #' + itemId) : 'Pedido #' + itemId;
+  document.getElementById('svcBarSub').textContent    = lastMessages.length + ' mensagem(ns)';
+  document.getElementById('svcBarPrice').textContent  = item ? formatPrice(item.totalPrice) : '—';
+  document.getElementById('svcBarStatus').textContent = item ? (STATUS_LABELS[item.status] || item.status) : '—';
 }
 
 /* ── Messages ─────────────────────────────────────────────────────── */
 
 function renderMessages(messages) {
-  var msgs    = document.getElementById('chatMessages');
+  var msgs = document.getElementById('chatMessages');
   if (!msgs) return;
   var wasBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 80;
-  var myName  = OFAuth.getName();
+  var myName    = OFAuth.getName();
 
   msgs.innerHTML = '';
 
@@ -181,7 +250,7 @@ function renderMessages(messages) {
   messages.forEach(function (m) {
     var isMine     = m.senderName === myName;
     var inits      = OFAuth.getInitials(m.senderName || '?');
-    var time       = m.sentAt ? new Date(m.sentAt).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
+    var time       = m.sentAt ? new Date(m.sentAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
     var eventLabel = MESSAGE_TYPE_LABELS[m.type];
 
     if (eventLabel) {
@@ -210,7 +279,7 @@ function renderMessages(messages) {
       }).join('');
     }
 
-    var avatarColor = isMine ? '#60a5fa' : 'var(--gdim)';
+    var avatarColor     = isMine ? '#60a5fa' : 'var(--gdim)';
     var avatarTextColor = isMine ? '' : ';color:var(--green)';
 
     div.innerHTML =
@@ -227,31 +296,23 @@ function renderMessages(messages) {
   if (wasBottom) msgs.scrollTop = msgs.scrollHeight;
 }
 
-/* ── Action buttons ───────────────────────────────────────────────── */
+/* ── Action buttons (based on item STATUS, not last message type) ──── */
 
-function updateActionButtons(messages) {
+function updateActionButtons() {
   var section = document.getElementById('actionsSection');
   var btns    = document.getElementById('actionButtons');
   if (!section || !btns) return;
 
+  var item   = sidebarItems.find(function (x) { return x.id === currentItemId; });
+  var status = item ? item.status : null;
+
   var html = '';
 
-  if (!messages || !messages.length) {
-    section.style.display = 'none';
-    return;
-  }
-
-  var lastMsg = messages[messages.length - 1];
-  var lastType = lastMsg ? lastMsg.type : null;
-
-  var hasDelivery        = lastType === 'DELIVERY';
-  var hasRefusalFreeze   = lastType === 'ADJUSTMENT_REFUSED';
-
-  if (hasDelivery) {
+  if (status === 'PENDING_DELIVERY_REVISION') {
     html =
       '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDelivery\')">✅ APROVAR ENTREGA</button>' +
       '<button class="btn-dispute" style="margin-bottom:8px" onclick="doAction(\'refuseDelivery\')">↩ Solicitar Revisão</button>';
-  } else if (hasRefusalFreeze) {
+  } else if (status === 'FROZEN') {
     html =
       '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDeliveryAfterFreeze\')">✅ Aceitar mesmo assim</button>' +
       '<button class="btn-dispute" onclick="doAction(\'openDispute\')">⚖️ Abrir Disputa</button>';
@@ -286,21 +347,21 @@ async function sendMsg() {
       body:    form
     });
     if (res.ok) {
-      await pollMessages(currentItemId);
+      var msgRes = await fetch(API_BASE + '/chat/orderItem/' + currentItemId, { headers: authHdr() });
+      if (msgRes.ok) { lastMessages = await msgRes.json(); renderMessages(lastMessages); }
     }
   } catch (_) {}
 }
 
-function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
-function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+function handleKey(e)    { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+function autoResize(el)  { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
 
 /* ── Action dispatcher ────────────────────────────────────────────── */
 
 async function doAction(action) {
   if (!currentItemId) return;
 
-  var section = document.getElementById('actionsSection');
-  var btns    = document.querySelectorAll('#actionButtons button');
+  var btns = document.querySelectorAll('#actionButtons button');
   btns.forEach(function (b) { b.disabled = true; });
 
   try {
@@ -319,9 +380,11 @@ async function doAction(action) {
       return;
     }
 
-    lastMessages = await loadMessagesQuiet();
-    renderMessages(lastMessages);
-    updateActionButtons(lastMessages);
+    await refreshSidebarItems();
+    var msgRes = await fetch(API_BASE + '/chat/orderItem/' + currentItemId, { headers: authHdr() });
+    if (msgRes.ok) { lastMessages = await msgRes.json(); renderMessages(lastMessages); }
+    updateActionButtons();
+    updateServiceBar(currentItemId);
 
   } catch (_) {
     alert('Erro de conexão.');
@@ -329,39 +392,25 @@ async function doAction(action) {
   }
 }
 
-async function loadMessagesQuiet() {
-  try {
-    var res = await fetch(API_BASE + '/chat/orderItem/' + currentItemId, { headers: authHdr() });
-    if (res.ok) return await res.json();
-  } catch (_) {}
-  return lastMessages;
-}
-
-/* ── Legacy / sidebar stubs ─────────────────────────────────────── */
-
-function selectConv(el, initials, color, name, role) {
-  document.querySelectorAll('.conv-item').forEach(function (i) { i.classList.remove('active'); });
-  el.classList.add('active');
-  var headerName   = document.getElementById('chatHeaderName');
-  var headerAvatar = document.getElementById('chatHeaderAvatar');
-  if (headerName)   headerName.textContent   = name;
-  if (headerAvatar) headerAvatar.textContent  = initials;
-}
+/* ── Sidebar search ──────────────────────────────────────────────── */
 
 function filterConvs() {
-  var q = (document.getElementById('convSearch') || {}).value || '';
-  q = q.toLowerCase();
-  document.querySelectorAll('.conv-item').forEach(function (item) {
-    var nameEl = item.querySelector('.conv-name-text');
-    var name   = nameEl ? nameEl.textContent.toLowerCase() : '';
-    item.style.display = name.includes(q) ? 'flex' : 'none';
+  var q = ((document.getElementById('convSearch') || {}).value || '').toLowerCase();
+  document.querySelectorAll('#convList .conv-item').forEach(function (el) {
+    el.style.display = (el.dataset.searchText || '').includes(q) ? '' : 'none';
   });
 }
 
 /* ── Utils ──────────────────────────────────────────────────────────── */
 
 function escHtml(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatPrice(price) {
+  if (price == null) return '—';
+  var n = Number(price);
+  return 'R$' + (Number.isInteger(n) ? n : n.toFixed(2).replace('.', ','));
 }
 
 function formatFileSize(bytes) {
