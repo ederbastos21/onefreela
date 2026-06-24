@@ -45,6 +45,10 @@ function initProfile() {
   // Main sections
   if (isFreelancer) show('servicos'); else hide('servicos');
 
+  // Chat nav link — correct target per role
+  var chatLink = document.getElementById('navChatLink');
+  if (chatLink) chatLink.href = isFreelancer ? 'chatScreenFreelancer.html' : 'chatScreenClient.html';
+
   // Client only: orders
   if (!isFreelancer) {
     show('sidebarPedidos');
@@ -53,6 +57,9 @@ function initProfile() {
   } else {
     hide('sidebarPedidos');
     hide('pedidos');
+    show('sidebarPedidosAtivos');
+    show('pedidosAtivos');
+    loadFreelancerOrders();
   }
 
   // Client-only settings fields
@@ -289,46 +296,153 @@ document.getElementById('workModal').addEventListener('click', function (e) {
   if (e.target === this) closeWorkModal();
 });
 
+/* ── Freelancer: active orders ────────────────────────────────────── */
+
+var ITEM_FL_STATUS_LABELS = {
+  PENDING_DELIVERY:          '📦 Aguardando Entrega',
+  PENDING_DELIVERY_REVISION: '🔍 Aguardando Revisão',
+  ADJUSTMENT_REQUEST:        '🔄 Revisão Solicitada',
+  ON_DISPUTE:                '⚖️ Em Disputa',
+  FROZEN:                    '⏸️ Congelado',
+  COMPLETED:                 '✅ Concluído',
+  REFUNDED:                  '↩ Reembolsado'
+};
+
+var ITEM_FL_STATUS_CSS = {
+  PENDING_DELIVERY:          'item-status-pending',
+  PENDING_DELIVERY_REVISION: 'item-status-review',
+  ADJUSTMENT_REQUEST:        'item-status-adjust',
+  ON_DISPUTE:                'item-status-dispute',
+  FROZEN:                    'item-status-frozen',
+  COMPLETED:                 'item-status-done',
+  REFUNDED:                  'item-status-refunded'
+};
+
+async function loadFreelancerOrders() {
+  var list = document.getElementById('activeOrdersList');
+  if (list) list.innerHTML = '<div class="works-loading">Carregando pedidos ativos...</div>';
+
+  try {
+    var res = await fetch(API_BASE + '/delivery/myActiveItems', { headers: authHeader() });
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    var items = await res.json();
+    renderFreelancerOrders(items);
+  } catch (e) {
+    if (list) list.innerHTML = '<div class="works-error">Erro ao carregar pedidos ativos.</div>';
+  }
+}
+
+function renderFreelancerOrders(items) {
+  var list  = document.getElementById('activeOrdersList');
+  var badge = document.getElementById('activeOrdersBadge');
+
+  var active = items.filter(function (i) { return i.status !== 'COMPLETED' && i.status !== 'REFUNDED'; });
+
+  if (badge) {
+    badge.textContent   = active.length;
+    badge.style.display = active.length > 0 ? '' : 'none';
+  }
+
+  if (!items.length) {
+    list.innerHTML = '<div class="active-orders-empty">Nenhum pedido encontrado. Quando clientes comprarem seus serviços, eles aparecem aqui.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+
+  items.forEach(function (item) {
+    var stLabel  = ITEM_FL_STATUS_LABELS[item.status] || item.status;
+    var stClass  = ITEM_FL_STATUS_CSS[item.status]    || 'item-status-pending';
+    var price    = formatPrice(item.totalPrice);
+    var initials = item.clientName
+      ? item.clientName.trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase()
+      : '?';
+
+    var card = document.createElement('div');
+    card.className = 'active-order-card';
+    card.innerHTML =
+      '<div class="active-order-client-avatar">' + escHtml(initials) + '</div>' +
+      '<div class="active-order-body">' +
+        '<div class="active-order-title">' + escHtml(item.workTitle || 'Serviço') + '</div>' +
+        '<div class="active-order-client">Cliente: ' + escHtml(item.clientName || '—') + '</div>' +
+      '</div>' +
+      '<div class="active-order-right">' +
+        '<span class="order-item-status ' + stClass + '">' + escHtml(stLabel) + '</span>' +
+        '<div class="active-order-price">' + price + '</div>' +
+        '<a href="chatScreenFreelancer.html?orderItemId=' + item.id + '" class="btn-chat-item">💬 Chat</a>' +
+      '</div>';
+
+    list.appendChild(card);
+  });
+}
+
 /* ── Client: orders ───────────────────────────────────────────────── */
 
 var METHOD_LABELS = {
-  pix:    '⚡ PIX',
-  card:   '💳 Cartão de Crédito',
-  boleto: '📄 Boleto Bancário'
+  PIX:     '⚡ PIX',
+  CARTAO:  '💳 Cartão de Crédito',
+  BALANCE: '💰 Saldo OneFreela'
 };
 
-var STATUS_LABELS = {
-  NOT_PAID:  'Aguardando',
-  PAID:      'Pago',
-  REFUNDED:  'Reembolsado',
-  FAILED:    'Pagamento falhou'
+var ORDER_STATUS_LABELS = {
+  NOT_PAID: 'Aguardando Pagamento',
+  PAID:     'Pago',
+  REFUNDED: 'Reembolsado',
+  FAILED:   'Pagamento falhou'
 };
 
-var STATUS_CLASSES = {
-  NOT_PAID:  'order-status-not-paid',
-  PAID:      'order-status-paid',
-  REFUNDED:  'order-status-refunded',
-  FAILED:    'order-status-failed'
+var ORDER_STATUS_CLASSES = {
+  NOT_PAID: 'order-status-not-paid',
+  PAID:     'order-status-paid',
+  REFUNDED: 'order-status-refunded',
+  FAILED:   'order-status-failed'
 };
 
-function loadOrders() {
-  var orders = [];
+var ITEM_STATUS_LABELS = {
+  PENDING_DELIVERY:          'Aguardando Entrega',
+  PENDING_DELIVERY_REVISION: 'Aguardando Revisão',
+  ADJUSTMENT_REQUEST:        'Revisão Solicitada',
+  ON_DISPUTE:                'Em Disputa',
+  FROZEN:                    'Congelado',
+  COMPLETED:                 'Concluído',
+  REFUNDED:                  'Reembolsado'
+};
+
+var ITEM_STATUS_CLASSES = {
+  PENDING_DELIVERY:          'item-status-pending',
+  PENDING_DELIVERY_REVISION: 'item-status-review',
+  ADJUSTMENT_REQUEST:        'item-status-adjust',
+  ON_DISPUTE:                'item-status-dispute',
+  FROZEN:                    'item-status-frozen',
+  COMPLETED:                 'item-status-done',
+  REFUNDED:                  'item-status-refunded'
+};
+
+async function loadOrders() {
+  var list = document.getElementById('ordersList');
+  if (list) list.innerHTML = '<div class="works-loading">Carregando pedidos...</div>';
+
   try {
-    orders = JSON.parse(localStorage.getItem('of_orders') || '[]');
+    var res = await fetch(API_BASE + '/order/myOrders', { headers: authHeader() });
+
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    ordersData = await res.json();
+    renderOrders(ordersData);
   } catch (e) {
-    orders = [];
+    if (list) list.innerHTML = '<div class="works-error">Erro ao carregar pedidos.</div>';
   }
-  renderOrders(orders);
 }
 
 function renderOrders(orders) {
-  ordersData = orders;
-
   var list  = document.getElementById('ordersList');
   var badge = document.getElementById('ordersBadge');
 
   if (badge) {
-    badge.textContent = orders.length;
+    badge.textContent   = orders.length;
     badge.style.display = orders.length > 0 ? '' : 'none';
   }
 
@@ -340,50 +454,72 @@ function renderOrders(orders) {
   list.innerHTML = '';
 
   orders.forEach(function (order, idx) {
-    var statusClass = STATUS_CLASSES[order.status] || 'order-status-not-paid';
-    var statusLabel = STATUS_LABELS[order.status]  || order.status;
-    var methodLabel = METHOD_LABELS[order.method]  || order.method;
+    var statusClass = ORDER_STATUS_CLASSES[order.status] || 'order-status-not-paid';
+    var statusLabel = ORDER_STATUS_LABELS[order.status]  || order.status;
+    var methodLabel = METHOD_LABELS[order.paymentMethod] || order.paymentMethod || '—';
+    var isPaid      = order.status === 'PAID';
 
     var itemsHtml = '';
     if (order.items && order.items.length) {
       itemsHtml = '<div class="order-items-list">';
       order.items.forEach(function (item) {
-        var amt   = item.amount > 1 ? ' × ' + item.amount : '';
-        var price = item.price != null ? formatPrice(item.price * (item.amount || 1)) : '—';
-        itemsHtml += '<div class="order-item-row">' +
-          '<span class="order-item-title">' + (item.title || 'Serviço') + amt + '</span>' +
-          '<span class="order-item-price">' + price + '</span>' +
-        '</div>';
+        var amt        = item.amount > 1 ? ' × ' + item.amount : '';
+        var price      = formatPrice(item.totalPrice);
+        var stClass    = ITEM_STATUS_CLASSES[item.status] || 'item-status-pending';
+        var stLabel    = ITEM_STATUS_LABELS[item.status]  || item.status;
+        var chatBtn    = isPaid
+          ? '<a href="chatScreenClient.html?orderItemId=' + item.id + '" class="btn-chat-item">💬 Chat</a>'
+          : '';
+        var freelancer = item.freelancerName
+          ? '<div class="order-freelancer">Freelancer: ' + escHtml(item.freelancerName) + '</div>'
+          : '';
+
+        itemsHtml +=
+          '<div class="order-item-row">' +
+            '<div style="flex:1;min-width:0">' +
+              '<div class="order-item-title">' + escHtml(item.workTitle || 'Serviço') + amt + '</div>' +
+              freelancer +
+            '</div>' +
+            '<span class="order-item-status ' + stClass + '">' + stLabel + '</span>' +
+            '<span class="order-item-price">' + price + '</span>' +
+            chatBtn +
+          '</div>';
       });
       itemsHtml += '</div>';
     }
-
-    var totalHtml = order.total != null ? formatPrice(order.total) : '—';
 
     var canPay     = order.status === 'NOT_PAID' || order.status === 'FAILED';
     var payBtnHtml = canPay
       ? '<div class="order-pay-action"><button class="btn-pay-order" onclick="openPaymentModal(' + idx + ')">Realizar Pagamento</button></div>'
       : '';
 
+    var dateStr = order.createdAt
+      ? new Date(order.createdAt).toLocaleDateString('pt-BR')
+      : '—';
+
     var card = document.createElement('div');
     card.className = 'order-card';
     card.innerHTML =
       '<div class="order-card-header">' +
         '<div class="order-card-meta">' +
-          '<div class="order-id">' + order.orderId + '</div>' +
-          '<div class="order-date">' + order.date + '</div>' +
+          '<div class="order-id">Pedido #' + order.id + '</div>' +
+          '<div class="order-date">' + dateStr + '</div>' +
         '</div>' +
         '<span class="order-status-badge ' + statusClass + '">' + statusLabel + '</span>' +
       '</div>' +
       itemsHtml +
       '<div class="order-footer">' +
         '<span class="order-method-tag">' + methodLabel + '</span>' +
-        '<span class="order-total-val">Total: ' + totalHtml + '</span>' +
+        '<span class="order-total-val">Total: ' + formatPrice(order.totalPrice) + '</span>' +
       '</div>' +
       payBtnHtml;
 
     list.appendChild(card);
   });
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 /* ── Client: payment modal ───────────────────────────────────────────── */
@@ -417,7 +553,7 @@ function openPaymentModal(orderIdx) {
   const totalRow = document.getElementById('pmTotalRow');
   const totalVal = document.getElementById('pmTotalVal');
   if (totalRow) totalRow.style.display = '';
-  if (totalVal && order.total != null) totalVal.textContent = formatPrice(order.total);
+  if (totalVal && order.totalPrice != null) totalVal.textContent = formatPrice(order.totalPrice);
 
   ['pmPixCpf', 'pmCardNumber', 'pmCardName', 'pmCardExpiry', 'pmCardCvv', 'pmCardCpf'].forEach(function (id) {
     const el = document.getElementById(id);
@@ -465,13 +601,7 @@ async function submitPayment() {
   let endpoint, body;
 
   if (isBalance) {
-    if (!order.backendOrderId) {
-      showPmMsg('Pedido sem ID de backend — o pagamento com saldo não pode ser processado.', 'error');
-      btn.disabled    = false;
-      btn.textContent = 'CONFIRMAR PAGAMENTO';
-      return;
-    }
-    endpoint = '/payment/makePaymentBalance/' + order.backendOrderId;
+    endpoint = '/payment/makePaymentBalance/' + order.id;
     body     = null;
   } else if (isPix) {
     const cpf = document.getElementById('pmPixCpf').value.trim();
@@ -482,7 +612,7 @@ async function submitPayment() {
       return;
     }
     endpoint = '/payment/makePaymentPix';
-    body = { orderId: order.backendOrderId ?? null, cpf };
+    body = { orderId: order.id, cpf };
   } else {
     const cardNumber = document.getElementById('pmCardNumber').value.trim().replace(/\s/g, '');
     const cardName   = document.getElementById('pmCardName').value.trim();
@@ -507,14 +637,7 @@ async function submitPayment() {
     const expirationDate = parts[1] + '-' + parts[0].padStart(2, '0') + '-01';
 
     endpoint = '/payment/makePaymentCard';
-    body = { orderId: order.backendOrderId || null, cardNumber, name: cardName, expirationDate, cvv, cpf };
-  }
-
-  if (!isBalance && !body.orderId) {
-    showPmMsg('Pedido sem ID de backend — o endpoint POST /order/createOrder precisa retornar o objeto do pedido com o campo "id" para que o pagamento possa ser processado.', 'error');
-    btn.disabled    = false;
-    btn.textContent = 'CONFIRMAR PAGAMENTO';
-    return;
+    body = { orderId: order.id, cardNumber, name: cardName, expirationDate, cvv, cpf };
   }
 
   try {
@@ -539,20 +662,8 @@ async function submitPayment() {
       return;
     }
 
-    const payment  = await res.json().catch(function () { return {}; });
-    let   newStatus = 'NOT_PAID';
-    if (payment.status === 'SUCCESS') newStatus = 'PAID';
-    if (payment.status === 'FAILED')  newStatus = 'FAILED';
-
-    const stored = JSON.parse(localStorage.getItem('of_orders') || '[]');
-    const oidx   = stored.findIndex(function (o) { return o.orderId === order.orderId; });
-    if (oidx !== -1) {
-      stored[oidx].status = newStatus;
-      localStorage.setItem('of_orders', JSON.stringify(stored));
-    }
-
     closePaymentModal();
-    loadOrders();
+    await loadOrders();
   } catch (e) {
     console.error('submitPayment:', e);
     showPmMsg('Erro de conexão ao processar pagamento.', 'error');

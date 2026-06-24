@@ -6,10 +6,10 @@ initNotifPanel();
 
 /* ── State ─────────────────────────────────────────────────────────── */
 
-var allOrderItems     = [];
-var currentItemId     = null;
+var allOrderItems      = [];
+var currentItemId      = null;
 var selectedDelivFiles = [];
-var pollTimer         = null;
+var pollTimer          = null;
 
 function authHdr() {
   return { Authorization: OFAuth.getToken() };
@@ -41,47 +41,26 @@ var MESSAGE_TYPE_LABELS = {
   TEXT:                          null,
   ATTACHMENT:                    null,
   DELIVERY:                      '📦 Entrega realizada',
-  DELIVERY_ACCEPTED:             '✅ Entrega aceita',
-  DELIVERY_REFUSED:              '❌ Revisão solicitada',
-  ADJUSTMENT_ACCEPTED:           '🔄 Revisão aceita',
-  ADJUSTMENT_REFUSED:            '🚫 Revisão recusada',
+  DELIVERY_ACCEPTED:             '✅ Entrega aceita pelo cliente',
+  DELIVERY_REFUSED:              '❌ Revisão solicitada pelo cliente',
+  ADJUSTMENT_ACCEPTED:           '🔄 Revisão aceita — pode reenviar',
+  ADJUSTMENT_REFUSED:            '🚫 Revisão recusada — pedido congelado',
   DISPUTE_OPENED:                '⚖️ Disputa aberta',
-  DISPUTE_RESOLVED_FREELANCER:   '✓ Disputa resolvida — Freelancer',
-  DISPUTE_RESOLVED_CLIENT:       '↩ Disputa resolvida — Cliente',
-  DELIVERY_ACCEPTED_AFTER_FREEZE:'✅ Entrega aceita (pós-revisão)'
+  DISPUTE_RESOLVED_FREELANCER:   '✓ Disputa resolvida — favor freelancer',
+  DISPUTE_RESOLVED_CLIENT:       '↩ Disputa resolvida — reembolso processado',
+  DELIVERY_ACCEPTED_AFTER_FREEZE:'✅ Entrega aceita pelo cliente (pós-revisão)'
 };
 
-/* ── Load sidebar ─────────────────────────────────────────────────── */
+/* ── Sidebar ──────────────────────────────────────────────────────── */
 
 async function loadSidebar() {
   var list = document.getElementById('convList');
   list.innerHTML = '<div class="conv-item" style="justify-content:center;color:var(--muted2);font-size:12px;padding:12px">Carregando...</div>';
 
   try {
-    var endpoints = [
-      '/delivery/findPending',
-      '/delivery/findPendingAdjustments',
-      '/delivery/findOnDispute',
-      '/delivery/findCompleted'
-    ];
-
-    var results = await Promise.all(endpoints.map(function (ep) {
-      return fetch(API_BASE + ep, { headers: authHdr() })
-        .then(function (r) { return r.ok ? r.json() : []; })
-        .catch(function () { return []; });
-    }));
-
-    var seen = {};
-    allOrderItems = [];
-    results.forEach(function (arr) {
-      (arr || []).forEach(function (item) {
-        if (!seen[item.id]) {
-          seen[item.id] = true;
-          allOrderItems.push(item);
-        }
-      });
-    });
-
+    var res = await fetch(API_BASE + '/delivery/myActiveItems', { headers: authHdr() });
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    allOrderItems = res.ok ? await res.json() : [];
     renderSidebar(allOrderItems);
   } catch (e) {
     list.innerHTML = '<div class="conv-item" style="color:#ef4444;font-size:12px;padding:12px">Erro ao carregar pedidos.</div>';
@@ -93,32 +72,44 @@ function renderSidebar(items) {
   list.innerHTML = '';
 
   if (!items.length) {
-    list.innerHTML = '<div class="conv-item" style="justify-content:center;color:var(--muted2);font-size:12px;padding:20px;text-align:center">Nenhum pedido ativo encontrado.</div>';
+    list.innerHTML =
+      '<div class="conv-item" style="display:block;padding:20px 16px;text-align:center;color:var(--muted2);font-size:12px;line-height:1.6">' +
+        '<div style="font-size:28px;margin-bottom:8px">📦</div>' +
+        '<div style="font-weight:600;color:var(--text);margin-bottom:4px">Nenhum pedido ativo</div>' +
+        'Quando clientes comprarem seus serviços, os pedidos aparecem aqui.' +
+      '</div>';
     return;
   }
 
   items.forEach(function (item) {
-    var statusLabel = STATUS_LABELS[item.status]  || item.status || '—';
+    var statusLabel = STATUS_LABELS[item.status]      || item.status || '—';
     var statusClass = STATUS_BADGE_CLASSES[item.status] || 'status-pending';
     var price = item.totalPrice != null
       ? 'R$ ' + Number(item.totalPrice).toLocaleString('pt-BR', {minimumFractionDigits:2})
       : '—';
-    var date = item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : '';
+    var clientInitials = OFAuth.getInitials(item.clientName || '?');
 
     var div = document.createElement('div');
     div.className = 'conv-item' + (item.id === currentItemId ? ' active' : '');
     div.dataset.itemId = item.id;
+    div.dataset.searchText = ((item.workTitle || '') + ' ' + (item.clientName || '')).toLowerCase();
     div.innerHTML =
-      '<div class="conv-avatar" style="background:var(--gdim);color:var(--green)">📦</div>' +
+      '<div class="conv-avatar" style="background:var(--gdim);color:var(--green)">' + escHtml(clientInitials) + '</div>' +
       '<div class="conv-info">' +
-        '<div class="conv-name"><span class="conv-name-text">Pedido #' + item.id + '</span><span class="conv-time">' + date + '</span></div>' +
-        '<div class="conv-service-tag">' + escHtml(price) + '</div>' +
-        '<div class="conv-preview"><span>' + escHtml(statusLabel) + '</span></div>' +
-        '<span class="status-badge ' + statusClass + '">' + escHtml(statusLabel.toUpperCase()) + '</span>' +
+        '<div class="conv-name"><span class="conv-name-text">' + escHtml(item.clientName || 'Cliente') + '</span><span class="conv-time">' + price + '</span></div>' +
+        '<div class="conv-service-tag">' + escHtml(item.workTitle || 'Pedido #' + item.id) + '</div>' +
+        '<div class="conv-preview"><span class="status-badge ' + statusClass + '" style="font-size:9px">' + escHtml(statusLabel.toUpperCase()) + '</span></div>' +
       '</div>';
 
     div.addEventListener('click', function () { selectConversation(item.id); });
     list.appendChild(div);
+  });
+}
+
+function filterConvs() {
+  var q = (document.getElementById('convSearch').value || '').toLowerCase();
+  document.querySelectorAll('#convList .conv-item[data-item-id]').forEach(function (el) {
+    el.style.display = (el.dataset.searchText || '').includes(q) ? '' : 'none';
   });
 }
 
@@ -127,9 +118,12 @@ function renderSidebar(items) {
 function selectConversation(itemId) {
   currentItemId = itemId;
 
-  document.querySelectorAll('.conv-item').forEach(function (el) {
+  document.querySelectorAll('#convList .conv-item').forEach(function (el) {
     el.classList.toggle('active', Number(el.dataset.itemId) === itemId);
   });
+
+  var input = document.getElementById('msgInput');
+  if (input) { input.disabled = false; input.placeholder = 'Digite sua mensagem...'; }
 
   var item = allOrderItems.find(function (x) { return x.id === itemId; });
   updateServiceBar(item);
@@ -148,16 +142,16 @@ function updateServiceBar(item) {
   if (!bar || !item) return;
   bar.style.display = '';
 
-  var status  = STATUS_LABELS[item.status] || item.status || '—';
-  var price   = item.totalPrice != null
+  var status   = STATUS_LABELS[item.status] || item.status || '—';
+  var price    = item.totalPrice != null
     ? 'R$ ' + Number(item.totalPrice).toLocaleString('pt-BR', {minimumFractionDigits:2})
     : '—';
   var deadline = item.deadlineDate
-    ? 'Entrega: ' + new Date(item.deadlineDate).toLocaleDateString('pt-BR')
+    ? 'Entrega até: ' + new Date(item.deadlineDate).toLocaleDateString('pt-BR')
     : '';
 
-  document.getElementById('svcBarTitle').textContent = 'Pedido Item #' + item.id;
-  document.getElementById('svcBarSub').textContent   = deadline || ('Criado em: ' + (item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : '—'));
+  document.getElementById('svcBarTitle').textContent = item.workTitle || 'Pedido #' + item.id;
+  document.getElementById('svcBarSub').textContent   = deadline || (item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : '');
   document.getElementById('svcBarPrice').textContent  = price;
   document.getElementById('svcBarStatus').textContent = status;
 }
@@ -170,37 +164,25 @@ function updateInfoPanel(item) {
   if (clientSection)  clientSection.style.display  = '';
   if (earningSection) earningSection.style.display  = '';
 
-  var price = item.totalPrice != null
+  var nameEl   = document.getElementById('infoPanelClientName');
+  var avatarEl = document.getElementById('infoPanelClientAvatar');
+  var metaEl   = document.getElementById('infoPanelClientMeta');
+  if (nameEl)   nameEl.textContent   = item.clientName || '—';
+  if (avatarEl) avatarEl.textContent = OFAuth.getInitials(item.clientName || '?');
+  if (metaEl)   metaEl.textContent   = item.workTitle  || '';
+
+  var headerName   = document.getElementById('chatHeaderName');
+  var headerAvatar = document.getElementById('chatHeaderAvatar');
+  var headerStatus = document.getElementById('chatHeaderStatus');
+  if (headerName)   headerName.textContent   = item.clientName || '—';
+  if (headerAvatar) headerAvatar.textContent = OFAuth.getInitials(item.clientName || '?');
+  if (headerStatus) headerStatus.textContent = STATUS_LABELS[item.status] || '';
+
+  var price    = item.totalPrice != null
     ? 'R$ ' + Number(item.totalPrice).toLocaleString('pt-BR', {minimumFractionDigits:2})
     : '—';
   var earningEl = document.getElementById('earningVal');
   if (earningEl) earningEl.textContent = price;
-}
-
-function updateClientFromMessages(messages) {
-  if (!messages || !messages.length) return;
-  var myId = null;
-
-  var item = allOrderItems.find(function (x) { return x.id === currentItemId; });
-  if (!item) return;
-
-  var myInitials = OFAuth.getInitials(OFAuth.getName());
-
-  var otherMsg = messages.find(function (m) {
-    return m.senderName && OFAuth.getInitials(m.senderName) !== myInitials;
-  });
-
-  if (!otherMsg) return;
-
-  var nameEl = document.getElementById('infoPanelClientName');
-  var avatEl = document.getElementById('infoPanelClientAvatar');
-  if (nameEl) nameEl.textContent = otherMsg.senderName;
-  if (avatEl) avatEl.textContent = OFAuth.getInitials(otherMsg.senderName);
-
-  var headerName   = document.getElementById('chatHeaderName');
-  var headerAvatar = document.getElementById('chatHeaderAvatar');
-  if (headerName)   headerName.textContent   = otherMsg.senderName;
-  if (headerAvatar) headerAvatar.textContent = OFAuth.getInitials(otherMsg.senderName);
 }
 
 /* ── Action buttons ───────────────────────────────────────────────── */
@@ -210,23 +192,32 @@ function updateActionButtons(item) {
   var btns    = document.getElementById('actionButtons');
   if (!section || !btns || !item) return;
 
-  var status = item.status;
-  var html   = '';
+  var html = '';
 
-  if (status === 'PENDING_DELIVERY' || status === 'PENDING_DELIVERY_REVISION') {
-    html = '<button class="btn-deliver" onclick="openDeliveryModal()">FAZER ENTREGA</button>';
-  } else if (status === 'ADJUSTMENT_REQUEST') {
-    html =
-      '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptAdjustment\')">✓ ACEITAR REVISÃO</button>' +
-      '<button class="btn-dispute" onclick="doAction(\'refuseAdjustment\')">✗ Recusar Revisão</button>';
-  } else if (status === 'ON_DISPUTE') {
-    html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">⚖️ Esta disputa está sendo analisada pelo administrador. Aguarde a decisão.</p>';
-  } else if (status === 'FROZEN') {
-    html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">⏸️ O pedido está congelado aguardando decisão do cliente.</p>';
-  } else if (status === 'COMPLETED') {
-    html = '<p style="font-size:12px;color:var(--green);line-height:1.5">✅ Pedido concluído.</p>';
-  } else if (status === 'REFUNDED') {
-    html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">↩ Pedido reembolsado.</p>';
+  switch (item.status) {
+    case 'PENDING_DELIVERY':
+      html = '<button class="btn-deliver" onclick="openDeliveryModal()">📦 FAZER ENTREGA</button>';
+      break;
+    case 'PENDING_DELIVERY_REVISION':
+      html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">🔍 Entrega enviada — aguardando revisão do cliente.</p>';
+      break;
+    case 'ADJUSTMENT_REQUEST':
+      html =
+        '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptAdjustment\')">✓ ACEITAR REVISÃO</button>' +
+        '<button class="btn-dispute" onclick="doAction(\'refuseAdjustment\')">✗ Recusar Revisão</button>';
+      break;
+    case 'ON_DISPUTE':
+      html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">⚖️ Disputa em análise pelo administrador.</p>';
+      break;
+    case 'FROZEN':
+      html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">⏸️ Pedido congelado — aguardando decisão do cliente.</p>';
+      break;
+    case 'COMPLETED':
+      html = '<p style="font-size:12px;color:var(--green);line-height:1.5">✅ Pedido concluído.</p>';
+      break;
+    case 'REFUNDED':
+      html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">↩ Pedido reembolsado.</p>';
+      break;
   }
 
   btns.innerHTML = html;
@@ -241,9 +232,7 @@ async function loadMessages(itemId, silent) {
   var msgs = document.getElementById('chatMessages');
   if (!msgs) return;
 
-  if (!silent) {
-    msgs.innerHTML = '<div class="msg-date">Carregando...</div>';
-  }
+  if (!silent) msgs.innerHTML = '<div class="msg-date">Carregando...</div>';
 
   try {
     var res = await fetch(API_BASE + '/chat/orderItem/' + itemId, { headers: authHdr() });
@@ -254,31 +243,28 @@ async function loadMessages(itemId, silent) {
 
     var data = await res.json();
     if (itemId !== currentItemId) return;
-
     renderMessages(data);
-    updateClientFromMessages(data);
   } catch (e) {
     if (!silent) msgs.innerHTML = '<div class="msg-date" style="color:#ef4444">Erro ao carregar mensagens.</div>';
   }
 }
 
 function renderMessages(messages) {
-  var msgs    = document.getElementById('chatMessages');
+  var msgs      = document.getElementById('chatMessages');
   var wasBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 80;
-  var myName  = OFAuth.getName();
-  var myInits = OFAuth.getInitials(myName);
+  var myName    = OFAuth.getName();
 
   msgs.innerHTML = '';
 
   if (!messages || !messages.length) {
-    msgs.innerHTML = '<div class="msg-date">Nenhuma mensagem ainda.</div>';
+    msgs.innerHTML = '<div class="msg-date">Nenhuma mensagem ainda. Diga olá ao cliente! 👋</div>';
     return;
   }
 
   messages.forEach(function (m) {
-    var isMine  = m.senderName && m.senderName === myName;
-    var inits   = OFAuth.getInitials(m.senderName || '?');
-    var time    = m.sentAt ? new Date(m.sentAt).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
+    var isMine     = m.senderName && m.senderName === myName;
+    var inits      = OFAuth.getInitials(m.senderName || '?');
+    var time       = m.sentAt ? new Date(m.sentAt).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
     var eventLabel = MESSAGE_TYPE_LABELS[m.type];
 
     if (eventLabel) {
@@ -289,7 +275,7 @@ function renderMessages(messages) {
       msgs.appendChild(ev);
     }
 
-    if (!m.content && !m.attachments.length) return;
+    if (!m.content && !(m.attachments && m.attachments.length)) return;
 
     var div = document.createElement('div');
     div.className = 'msg' + (isMine ? ' mine' : '');
@@ -307,10 +293,13 @@ function renderMessages(messages) {
       }).join('');
     }
 
+    var avatarBg    = isMine ? 'var(--gdim)' : '#60a5fa';
+    var avatarColor = isMine ? ';color:var(--green)' : '';
+
     div.innerHTML =
-      '<div class="msg-avatar" style="background:var(--gdim);color:var(--green)">' + escHtml(inits) + '</div>' +
+      '<div class="msg-avatar" style="background:' + avatarBg + avatarColor + '">' + escHtml(inits) + '</div>' +
       '<div>' +
-        (m.content ? '<div class="msg-bubble">' + escHtml(m.content) + '</div>' : '') +
+        (m.content  ? '<div class="msg-bubble">' + escHtml(m.content) + '</div>' : '') +
         (attachHtml ? '<div class="msg-bubble">' + attachHtml + '</div>' : '') +
         '<div class="msg-meta">' + time + (isMine ? ' <span class="msg-check">✓✓</span>' : '') + '</div>' +
       '</div>';
@@ -341,14 +330,13 @@ async function sendMsg() {
       headers: authHdr(),
       body:    form
     });
-    if (res.ok) {
-      await loadMessages(currentItemId, true);
-    }
+    if (res.ok) await loadMessages(currentItemId, true);
   } catch (e) {}
 }
 
 function useQuick(btn) {
   var input = document.getElementById('msgInput');
+  if (input.disabled) return;
   input.value = btn.textContent.trim();
   input.focus();
 }
@@ -361,12 +349,12 @@ function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(e
 function openDeliveryModal() {
   if (!currentItemId) return;
   document.getElementById('deliveryMsg').value = '';
-  document.getElementById('deliveryMsg2').textContent = '';
-  document.getElementById('deliveryMsg2').className = 'admin-form-msg';
+  var statusMsg = document.getElementById('deliveryStatusMsg');
+  if (statusMsg) { statusMsg.textContent = ''; statusMsg.className = 'admin-form-msg'; }
   selectedDelivFiles = [];
   renderDelivFilesPreview();
-  document.getElementById('deliverySubmitBtn').disabled = false;
-  document.getElementById('deliverySubmitBtn').textContent = 'ENVIAR ENTREGA';
+  var btn = document.getElementById('deliverySubmitBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'ENVIAR ENTREGA'; }
   document.getElementById('deliveryModal').classList.add('show');
 }
 
@@ -404,13 +392,13 @@ function renderDelivFilesPreview() {
 async function submitDelivery() {
   if (!currentItemId) return;
 
-  var msg    = document.getElementById('deliveryMsg').value.trim();
-  var msgBox = document.getElementById('deliveryMsg2');
-  var btn    = document.getElementById('deliverySubmitBtn');
+  var msg       = document.getElementById('deliveryMsg').value.trim();
+  var statusMsg = document.getElementById('deliveryStatusMsg');
+  var btn       = document.getElementById('deliverySubmitBtn');
 
   btn.disabled    = true;
   btn.textContent = 'ENVIANDO...';
-  msgBox.textContent = '';
+  if (statusMsg) statusMsg.textContent = '';
 
   var form = new FormData();
   form.append('message', msg || 'Entrega realizada.');
@@ -426,24 +414,21 @@ async function submitDelivery() {
 
     if (!res.ok) {
       var data = await res.json().catch(function () { return {}; });
-      msgBox.textContent = (Array.isArray(data.errors) && data.errors.length)
+      var errMsg = (Array.isArray(data.errors) && data.errors.length)
         ? data.errors.map(function (e) { return e.message; }).join(' | ')
         : 'Erro ao enviar entrega.';
-      msgBox.className = 'admin-form-msg admin-form-msg-error';
+      if (statusMsg) { statusMsg.textContent = errMsg; statusMsg.className = 'admin-form-msg admin-form-msg-error'; }
       btn.disabled    = false;
       btn.textContent = 'ENVIAR ENTREGA';
       return;
     }
 
     closeDeliveryModal();
-    await loadSidebar();
+    await refreshCurrentItem();
     await loadMessages(currentItemId, true);
-    var item = allOrderItems.find(function (x) { return x.id === currentItemId; });
-    if (item) { updateActionButtons(item); updateServiceBar(item); }
 
   } catch (_) {
-    msgBox.textContent = 'Erro de conexão.';
-    msgBox.className = 'admin-form-msg admin-form-msg-error';
+    if (statusMsg) { statusMsg.textContent = 'Erro de conexão.'; statusMsg.className = 'admin-form-msg admin-form-msg-error'; }
     btn.disabled    = false;
     btn.textContent = 'ENVIAR ENTREGA';
   }
@@ -458,30 +443,44 @@ document.getElementById('deliveryModal').addEventListener('click', function (e) 
 async function doAction(action) {
   if (!currentItemId) return;
 
-  var endpoint = '/chat/orderItem/' + currentItemId + '/' + action;
-
   try {
-    var res = await fetch(API_BASE + endpoint, {
+    var res = await fetch(API_BASE + '/chat/orderItem/' + currentItemId + '/' + action, {
       method:  'POST',
       headers: authHdr()
     });
 
     if (!res.ok) {
       var data = await res.json().catch(function () { return {}; });
-      var msg = (Array.isArray(data.errors) && data.errors.length)
+      alert((Array.isArray(data.errors) && data.errors.length)
         ? data.errors.map(function (e) { return e.message; }).join(' | ')
-        : 'Erro ao executar ação.';
-      alert(msg);
+        : 'Erro ao executar ação.');
       return;
     }
 
-    await loadSidebar();
+    await refreshCurrentItem();
     await loadMessages(currentItemId, true);
-    var item = allOrderItems.find(function (x) { return x.id === currentItemId; });
-    if (item) { updateActionButtons(item); updateServiceBar(item); }
 
   } catch (_) {
     alert('Erro de conexão.');
+  }
+}
+
+/* ── Refresh helpers ──────────────────────────────────────────────── */
+
+async function refreshCurrentItem() {
+  try {
+    var res = await fetch(API_BASE + '/delivery/myActiveItems', { headers: authHdr() });
+    if (res.ok) {
+      allOrderItems = await res.json();
+      renderSidebar(allOrderItems);
+    }
+  } catch (_) {}
+
+  var item = allOrderItems.find(function (x) { return x.id === currentItemId; });
+  if (item) {
+    updateActionButtons(item);
+    updateServiceBar(item);
+    updateInfoPanel(item);
   }
 }
 
@@ -498,8 +497,18 @@ function formatFileSize(bytes) {
   return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-/* ── Attach btn ─────────────────────────────────────────────────────── */
+/* ── Attach delivery btn ────────────────────────────────────────────── */
 document.querySelector('.btn-attach-delivery').addEventListener('click', openDeliveryModal);
 
-/* ── Boot ──────────────────────────────────────────────────────────── */
-loadSidebar();
+/* ── Boot — open orderItemId from URL if provided ─────────────────── */
+(async function boot() {
+  await loadSidebar();
+
+  var params = new URLSearchParams(window.location.search);
+  var itemId = params.get('orderItemId');
+  if (itemId) {
+    var id   = Number(itemId);
+    var item = allOrderItems.find(function (x) { return x.id === id; });
+    if (item) selectConversation(id);
+  }
+})();

@@ -1,9 +1,10 @@
 package br.unicesumar.onefreela.service;
 
 import br.unicesumar.onefreela.dto.DeliverDTO;
-import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.MakeOrderDTO;
+import br.unicesumar.onefreela.dto.UserOrderDTO;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.entity.*;
 import br.unicesumar.onefreela.enums.OrderItemStatus;
 import br.unicesumar.onefreela.enums.OrderStatus;
@@ -93,16 +94,15 @@ public class OrderService {
         return hasStatus(orderItem, OrderItemStatus.ADJUSTMENT_REQUEST);
     }
 
-    private boolean canOpenDispute(OrderItem orderItem){
-        return hasStatus(orderItem, OrderItemStatus.PENDING_DELIVERY_REVISION);
-    }
-
-    private boolean isCompleted(OrderItem orderItem){
-        return hasStatus(orderItem, OrderItemStatus.COMPLETED);
-    }
-
-    public List<Order> findAllOrders (){
+    public List<Order> findAllOrders() {
         return orderRepository.findAll();
+    }
+
+    public List<UserOrderDTO> getMyOrders(User user) {
+        return orderRepository.findByUserOrderByCreatedAtDesc(user)
+                .stream()
+                .map(UserOrderDTO::fromEntity)
+                .toList();
     }
 
 
@@ -438,7 +438,8 @@ public class OrderService {
         }
 
         if (isWorkOwner(user, orderItem)){
-            errors.add (new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao pode recusar seu proprio serviço"));
+            errors.add(new ErrorDetail(ErrorCode.ACCESS_DENIED, "delivery", "nao pode recusar seu proprio serviço"));
+            throw new ValidationException(errors);
         }
 
         if (!isOrderOwner(user, orderItem)){

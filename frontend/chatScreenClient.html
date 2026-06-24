@@ -53,45 +53,7 @@
           <input type="text" placeholder="Buscar conversa..." id="convSearch" oninput="filterConvs()" />
         </div>
       </div>
-      <div class="conv-list" id="convList">
-
-        <div class="conv-item active" onclick="selectConv(this,'MR','#7fff00','Marina Rocha','UI/UX Designer')">
-          <div class="conv-avatar" style="background:#7fff00">MR<div class="conv-online"></div></div>
-          <div class="conv-info">
-            <div class="conv-name"><span class="conv-name-text">Marina Rocha</span><span class="conv-time">14:32</span></div>
-            <div class="conv-service-tag">🎨 Design System no Figma</div>
-            <div class="conv-preview"><span>Ótimo! Vou começar amanhã então...</span></div>
-          </div>
-        </div>
-
-        <div class="conv-item" onclick="selectConv(this,'LF','#b0ff4e','Lucas Ferreira','Dev Front-end')">
-          <div class="conv-avatar" style="background:#b0ff4e">LF<div class="conv-online"></div></div>
-          <div class="conv-info">
-            <div class="conv-name"><span class="conv-name-text">Lucas Ferreira</span><span class="conv-time">11:08</span></div>
-            <div class="conv-service-tag">💻 Front-end React</div>
-            <div class="conv-preview"><span>Pode me enviar o layout?</span><span class="conv-unread">2</span></div>
-          </div>
-        </div>
-
-        <div class="conv-item" onclick="selectConv(this,'AB','#84cc16','Ana Beatriz','Social Media')">
-          <div class="conv-avatar" style="background:#84cc16">AB<div class="conv-online away"></div></div>
-          <div class="conv-info">
-            <div class="conv-name"><span class="conv-name-text">Ana Beatriz</span><span class="conv-time">Ontem</span></div>
-            <div class="conv-service-tag">📱 Gestão de Redes Sociais</div>
-            <div class="conv-preview"><span>Relatório do mês enviado!</span></div>
-          </div>
-        </div>
-
-        <div class="conv-item" onclick="selectConv(this,'PC','#5bbd00','Pedro Castro','Motion Designer')">
-          <div class="conv-avatar" style="background:#5bbd00">PC<div class="conv-online offline"></div></div>
-          <div class="conv-info">
-            <div class="conv-name"><span class="conv-name-text">Pedro Castro</span><span class="conv-time">Seg</span></div>
-            <div class="conv-service-tag">🎬 Vídeo Institucional</div>
-            <div class="conv-preview"><span>Ok, entendido. Vou ajustar.</span></div>
-          </div>
-        </div>
-
-      </div>
+      <div class="conv-list" id="convList"></div>
     </div>
 
     <!-- ÁREA DE MENSAGENS -->
@@ -99,19 +61,16 @@
 
       <div class="chat-header">
         <div class="chat-header-left">
-          <div class="chat-header-avatar" id="chatHeaderAvatar" style="background:#7fff00">MR</div>
+          <div class="chat-header-avatar" id="chatHeaderAvatar"></div>
           <div class="chat-header-info">
-            <div class="chat-header-name" id="chatHeaderName">Marina Rocha</div>
-            <div class="chat-header-status"><span class="chat-header-status-dot"></span><span id="chatHeaderStatus">Online agora</span></div>
+            <div class="chat-header-name" id="chatHeaderName">—</div>
+            <div class="chat-header-status"><span class="chat-header-status-dot"></span><span id="chatHeaderStatus"></span></div>
           </div>
         </div>
         <div class="chat-header-right">
-          <button class="chat-action-btn" title="Ver perfil" onclick="window.location='onefreela-perfil-freelancer.html'">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          </button>
-          <button class="chat-action-btn" title="Ver serviço" onclick="window.location='onefreela-servico.html'">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-          </button>
+          <a href="profile.html#pedidos" class="chat-action-btn" title="Voltar para pedidos">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </a>
         </div>
       </div>
 
@@ -125,76 +84,7 @@
         <span class="service-bar-status" id="svcBarStatus">—</span>
       </div>
 
-      <div class="chat-messages" id="chatMessages">
-        <div class="msg-date">14 de Maio de 2026</div>
-
-        <div class="msg">
-          <div class="msg-avatar" style="background:#7fff00">MR</div>
-          <div>
-            <div class="msg-bubble">Olá Carlos! Obrigada por contratar meu serviço. Para começar, preciso que você me envie o briefing do produto e as referências visuais que você gosta. Quanto mais detalhes, melhor o resultado! 🎨</div>
-            <div class="msg-meta">14:10</div>
-          </div>
-        </div>
-
-        <div class="msg mine">
-          <div class="msg-avatar" style="background:#60a5fa">CA</div>
-          <div>
-            <div class="msg-bubble">Oi Marina! Claro, vou te enviar agora. O produto é um app de fintech. As cores principais são azul escuro e verde. Referências: Nubank, Inter e C6 Bank.</div>
-            <div class="msg-meta">14:18 <span class="msg-check">✓✓</span></div>
-          </div>
-        </div>
-
-        <div class="msg mine">
-          <div class="msg-avatar" style="background:#60a5fa">CA</div>
-          <div>
-            <div class="msg-bubble">
-              Aqui está o briefing completo:
-              <div class="msg-file">
-                <span class="msg-file-icon">📄</span>
-                <div class="msg-file-info">
-                  <div class="msg-file-name">briefing-fintech-app.pdf</div>
-                  <div class="msg-file-size">2.4 MB · PDF</div>
-                </div>
-              </div>
-            </div>
-            <div class="msg-meta">14:19 <span class="msg-check">✓✓</span></div>
-          </div>
-        </div>
-
-        <div class="msg">
-          <div class="msg-avatar" style="background:#7fff00">MR</div>
-          <div>
-            <div class="msg-bubble">Perfeito! Recebi o briefing. Vou analisar com atenção e já começo o mapeamento dos componentes. Tenho uma pergunta: vocês já têm alguma fonte definida ou posso sugerir?</div>
-            <div class="msg-meta">14:25</div>
-          </div>
-        </div>
-
-        <div class="msg mine">
-          <div class="msg-avatar" style="background:#60a5fa">CA</div>
-          <div>
-            <div class="msg-bubble">Pode sugerir! Só precisa ser moderna e ter boa legibilidade para mobile.</div>
-            <div class="msg-meta">14:28 <span class="msg-check">✓✓</span></div>
-          </div>
-        </div>
-
-        <div class="msg">
-          <div class="msg-avatar" style="background:#7fff00">MR</div>
-          <div>
-            <div class="msg-bubble">Ótimo! Vou começar amanhã então. Te apresento uma primeira versão da paleta e tipografia em até 2 dias. Qualquer dúvida pode me chamar aqui 😊</div>
-            <div class="msg-meta">14:32</div>
-          </div>
-        </div>
-
-        <div class="msg-date">Agora</div>
-        <div class="msg" id="typingIndicator">
-          <div class="msg-avatar" style="background:#7fff00">MR</div>
-          <div class="typing-bubble">
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-          </div>
-        </div>
-      </div>
+      <div class="chat-messages" id="chatMessages"></div>
 
       <div class="chat-input-area">
         <div class="chat-input-row">
@@ -216,65 +106,9 @@
       <div class="info-section">
         <div class="info-section-title">Freelancer</div>
         <div class="fl-profile-mini">
-          <div class="fl-profile-avatar" id="infoPanelAvatar">MR</div>
-          <div class="fl-profile-name" id="infoPanelName">Marina Rocha</div>
-          <div class="fl-profile-role" id="infoPanelRole">UI/UX Designer Sênior</div>
-          <div class="fl-profile-rating">★ 4.98 (214 avaliações)</div>
-          <a href="freelancerProfile.html" class="btn-view-profile">Ver perfil completo →</a>
-        </div>
-      </div>
-
-      <div class="info-section">
-        <div class="info-section-title">Serviço Ativo</div>
-        <div class="service-mini">
-          <div class="service-mini-thumb" style="background:linear-gradient(135deg,#0d1f0d,#1a3a1a)">🎨</div>
-          <div class="service-mini-body">
-            <div class="service-mini-title">Design System completo no Figma</div>
-            <div class="service-mini-package">✦ Pacote Padrão</div>
-            <div class="service-mini-price">R$1.200</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="info-section">
-        <div class="info-section-title">Progresso do Projeto</div>
-        <div class="progress-item">
-          <div class="progress-label">Conclusão geral <span>35%</span></div>
-          <div class="progress-track"><div class="progress-fill fill-35"></div></div>
-        </div>
-        <div class="progress-item">
-          <div class="progress-label">Componentes <span>20/60</span></div>
-          <div class="progress-track"><div class="progress-fill fill-33"></div></div>
-        </div>
-        <div class="progress-item">
-          <div class="progress-label">Dias restantes <span>7</span></div>
-          <div class="progress-track"><div class="progress-fill fill-70"></div></div>
-        </div>
-      </div>
-
-      <div class="info-section">
-        <div class="info-section-title">Marcos do Projeto</div>
-        <div class="milestone-list">
-          <div class="milestone">
-            <div class="milestone-dot done">✓</div>
-            <div class="milestone-text"><strong>Briefing recebido</strong>14 Mai 2026</div>
-          </div>
-          <div class="milestone">
-            <div class="milestone-dot done">✓</div>
-            <div class="milestone-text"><strong>Paleta e tipografia</strong>16 Mai 2026</div>
-          </div>
-          <div class="milestone">
-            <div class="milestone-dot pending">○</div>
-            <div class="milestone-text"><strong>Componentes base</strong>Em andamento</div>
-          </div>
-          <div class="milestone">
-            <div class="milestone-dot pending">○</div>
-            <div class="milestone-text"><strong>Revisão final</strong>Aguardando</div>
-          </div>
-          <div class="milestone">
-            <div class="milestone-dot pending">○</div>
-            <div class="milestone-text"><strong>Entrega</strong>24 Mai 2026</div>
-          </div>
+          <div class="fl-profile-avatar" id="infoPanelAvatar"></div>
+          <div class="fl-profile-name" id="infoPanelName">—</div>
+          <div class="fl-profile-role" id="infoPanelRole"></div>
         </div>
       </div>
 
