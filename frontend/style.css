@@ -2768,14 +2768,14 @@ footer {
 /* ── serviceScreen gallery emoji ─────────────────────────── */
 .gallery-emoji { position: relative; z-index: 1; font-size: 90px; }
 
-/* ── chatScreenFreelancer deliver button ─────────────────── */
+/* ── chatScreen deliver button ─────────────────────────────── */
 .btn-attach-delivery {
   background: var(--gdim);
   border-color: rgba(127,255,0,.3);
   color: var(--green);
 }
 
-/* ── chatScreenFreelancer msg-file spacing ───────────────── */
+/* ── chatScreen msg-file spacing ───────────────────────────── */
 .msg-file-mb { margin-bottom: 10px; }
 
 /* ── exploreFreelancers: fl-list default display ─────────── */

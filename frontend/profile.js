@@ -45,9 +45,9 @@ function initProfile() {
   // Main sections
   if (isFreelancer) show('servicos'); else hide('servicos');
 
-  // Chat nav link — correct target per role
+  // Chat nav link
   var chatLink = document.getElementById('navChatLink');
-  if (chatLink) chatLink.href = isFreelancer ? 'chatScreenFreelancer.html' : 'chatScreenClient.html';
+  if (chatLink) chatLink.href = 'chatScreen.html';
 
   // Client only: orders
   if (!isFreelancer) {
@@ -371,7 +371,7 @@ function renderFreelancerOrders(items) {
       '<div class="active-order-right">' +
         '<span class="order-item-status ' + stClass + '">' + escHtml(stLabel) + '</span>' +
         '<div class="active-order-price">' + price + '</div>' +
-        '<a href="chatScreenFreelancer.html?orderItemId=' + item.id + '" class="btn-chat-item">💬 Chat</a>' +
+        '<a href="chatScreen.html?orderItemId=' + item.id + '" class="btn-chat-item">💬 Chat</a>' +
       '</div>';
 
     list.appendChild(card);
@@ -468,7 +468,7 @@ function renderOrders(orders) {
         var stClass    = ITEM_STATUS_CLASSES[item.status] || 'item-status-pending';
         var stLabel    = ITEM_STATUS_LABELS[item.status]  || item.status;
         var chatBtn    = isPaid
-          ? '<a href="chatScreenClient.html?orderItemId=' + item.id + '" class="btn-chat-item">💬 Chat</a>'
+          ? '<a href="chatScreen.html?orderItemId=' + item.id + '" class="btn-chat-item">💬 Chat</a>'
           : '';
         var freelancer = item.freelancerName
           ? '<div class="order-freelancer">Freelancer: ' + escHtml(item.freelancerName) + '</div>'

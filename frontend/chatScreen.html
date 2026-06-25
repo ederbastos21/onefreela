@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OneFreela — Chat Freelancer</title>
+  <title>OneFreela — Chat</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -14,16 +14,19 @@
 
   <nav class="nav-app">
     <div class="nav-left">
-      <a href="exploreFreelancers.html" class="nav-logo">
+      <a href="index.html" class="nav-logo">
         <div class="nav-logo-icon">OF</div>
         <div class="nav-logo-text">One<span>Freela</span></div>
       </a>
     </div>
     <div class="nav-right">
+      <a href="cartScreen.html" class="nav-icon-btn" id="navCartLink" title="Carrinho">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </a>
       <div class="nav-icon-btn" id="notifBtn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       </div>
-      <a href="chatScreenFreelancer.html" class="nav-icon-btn active-page" title="Mensagens">
+      <a href="chatScreen.html" class="nav-icon-btn active-page" title="Mensagens">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </a>
       <div class="nav-user">
@@ -41,20 +44,21 @@
 
   <div class="chat-wrap">
 
-    <!-- LISTA DE PEDIDOS -->
+    <!-- LISTA DE CONVERSAS -->
     <div class="conv-sidebar">
       <div class="conv-header">
-        <div class="conv-title">Meus Pedidos</div>
+        <div class="conv-title" id="convTitle">Mensagens</div>
         <div class="conv-search">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Buscar pedido..." id="convSearch" oninput="filterConvs()" />
+          <input type="text" placeholder="Buscar conversa..." id="convSearch" oninput="filterConvs()" />
         </div>
       </div>
       <div class="conv-list" id="convList"></div>
     </div>
 
-    <!-- MENSAGENS -->
+    <!-- ÁREA DE MENSAGENS -->
     <div class="chat-area">
+
       <div class="chat-header">
         <div class="chat-header-left">
           <div class="chat-header-avatar" id="chatHeaderAvatar"></div>
@@ -64,7 +68,7 @@
           </div>
         </div>
         <div class="chat-header-right">
-          <a href="profile.html" class="chat-action-btn" title="Voltar para perfil">
+          <a href="profile.html" id="chatBackLink" class="chat-action-btn" title="Voltar para perfil">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </a>
         </div>
@@ -86,12 +90,12 @@
         <span class="chat-closed-icon">✅</span>
         <div>
           <div class="chat-closed-title">Serviço concluído</div>
-          <div class="chat-closed-sub">A entrega foi aceita e o pagamento foi liberado. Este chat foi encerrado e não aceita mais mensagens.</div>
+          <div class="chat-closed-sub" id="chatClosedSub">Este chat foi encerrado e não aceita mais mensagens.</div>
         </div>
       </div>
 
       <div class="chat-input-area" id="chatInputArea">
-        <div class="quick-replies">
+        <div class="quick-replies" id="quickReplies">
           <button class="quick-reply" onclick="useQuick(this)">Pode enviar o arquivo?</button>
           <button class="quick-reply" onclick="useQuick(this)">Preciso de mais detalhes</button>
           <button class="quick-reply" onclick="useQuick(this)">Entendido, obrigada!</button>
@@ -102,12 +106,12 @@
             <button class="chat-input-attach" title="Anexar arquivo">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
             </button>
-            <button class="chat-input-attach btn-attach-delivery" title="Enviar entrega">
+            <button class="chat-input-attach btn-attach-delivery" id="btnAttachDelivery" title="Enviar entrega">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </button>
           </div>
           <div class="chat-input-wrap">
-            <textarea class="chat-textarea" id="msgInput" placeholder="Selecione um pedido para começar..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)" disabled></textarea>
+            <textarea class="chat-textarea" id="msgInput" placeholder="Selecione uma conversa para começar..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)" disabled></textarea>
           </div>
           <button class="chat-send" onclick="sendMsg()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -116,14 +120,14 @@
       </div>
     </div>
 
-    <!-- INFO PANEL -->
+    <!-- PAINEL DE INFO -->
     <div class="info-panel">
-      <div class="info-section" id="infoPanelClientSection" style="display:none">
-        <div class="info-section-title">Cliente</div>
+      <div class="info-section" id="infoPanelCounterpartSection" style="display:none">
+        <div class="info-section-title" id="infoPanelCounterpartLabel">Contraparte</div>
         <div class="client-mini">
-          <div class="client-avatar" id="infoPanelClientAvatar">?</div>
-          <div class="client-name" id="infoPanelClientName">—</div>
-          <div class="client-meta" id="infoPanelClientMeta"></div>
+          <div class="client-avatar" id="infoPanelAvatar">?</div>
+          <div class="client-name" id="infoPanelName">—</div>
+          <div class="client-meta" id="infoPanelMeta"></div>
         </div>
       </div>
 
@@ -137,14 +141,14 @@
       </div>
 
       <div class="info-section" id="actionsSection" style="display:none">
-        <div class="info-section-title">Ações do Projeto</div>
+        <div class="info-section-title">Ações</div>
         <div id="actionButtons"></div>
       </div>
     </div>
 
   </div>
 
-  <!-- Delivery modal -->
+  <!-- Delivery modal (papel freelancer) -->
   <div class="auth-overlay" id="deliveryModal" style="z-index:1100">
     <div class="auth-modal" style="max-width:480px">
       <button class="btn-auth-close" onclick="closeDeliveryModal()">×</button>
@@ -169,8 +173,24 @@
     </div>
   </div>
 
+  <!-- Refuse delivery modal (papel cliente) -->
+  <div class="auth-overlay" id="refuseModal" style="z-index:1100">
+    <div class="auth-modal" style="max-width:480px">
+      <button class="btn-auth-close" onclick="closeRefuseModal()">×</button>
+      <h2 class="auth-modal-title">↩ SOLICITAR REVISÃO</h2>
+      <div style="margin-bottom:16px">
+        <label class="setting-label">Motivo da revisão</label>
+        <textarea id="refuseMsg" class="setting-input" rows="4"
+          placeholder="Explique o que precisa ser ajustado na entrega..."
+          style="margin-top:6px;resize:vertical;min-height:90px"></textarea>
+      </div>
+      <div class="admin-form-msg" id="refuseStatusMsg"></div>
+      <button class="btn-save" id="refuseSubmitBtn" onclick="submitRefuseDelivery()">ENVIAR SOLICITAÇÃO</button>
+    </div>
+  </div>
+
   <script src="auth.js"></script>
   <script src="main.js"></script>
-  <script src="chatScreenFreelancer.js"></script>
+  <script src="chatScreen.js"></script>
 </body>
 </html>

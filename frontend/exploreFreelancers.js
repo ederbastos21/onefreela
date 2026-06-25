@@ -255,10 +255,8 @@ function tryChat(e, workId) {
   const color = workColor(w.ownerId || w.id || 0);
   const role  = w.title || '';
   const type  = localStorage.getItem('of_user_type');
-  if (type === 'cliente') {
-    window.location.href = 'chatScreenClient.html';
-  } else if (type === 'freelancer') {
-    window.location.href = 'chatScreenFreelancer.html';
+  if (type === 'cliente' || type === 'freelancer') {
+    window.location.href = 'chatScreen.html';
   } else {
     openAuthModal(name, ini, color, role);
   }

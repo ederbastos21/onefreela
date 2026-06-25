@@ -4,15 +4,25 @@ OFAuth.requireLogin();
 OFAuth.loadNav();
 initNotifPanel();
 
+/* ── Role (conta inteira é freelancer OU cliente, nunca os dois) ─────── */
+
+var ROLE = OFAuth.getType() === 'freelancer' ? 'freelancer' : 'client';
+var IS_FREELANCER = ROLE === 'freelancer';
+
 /* ── State ─────────────────────────────────────────────────────────── */
 
-var allOrderItems      = [];
-var currentItemId      = null;
-var selectedDelivFiles = [];
-var pollTimer          = null;
+var allItems           = [];
+var currentItemId       = null;
+var lastMessages        = [];
+var selectedDelivFiles  = [];
+var pollTimer           = null;
 
 function authHdr() {
   return { Authorization: OFAuth.getToken() };
+}
+
+function findItem(itemId) {
+  return allItems.find(function (x) { return x.id === itemId; });
 }
 
 /* ── Config ─────────────────────────────────────────────────────────── */
@@ -37,66 +47,148 @@ var STATUS_BADGE_CLASSES = {
   REFUNDED:                  'status-done'
 };
 
-var MESSAGE_TYPE_INFO = {
+var FREELANCER_MESSAGE_TYPE_INFO = {
   TEXT:                           null,
   ATTACHMENT:                     null,
-  DELIVERY:                       { label: '📦 Entrega realizada',                          tone: 'ok' },
-  DELIVERY_ACCEPTED:              { label: '✅ Entrega aceita pelo cliente',                  tone: 'ok' },
-  DELIVERY_REFUSED:               { label: '❌ Revisão solicitada pelo cliente',              tone: 'danger' },
-  ADJUSTMENT_ACCEPTED:            { label: '🔄 Revisão aceita — pode reenviar',                tone: 'ok' },
-  ADJUSTMENT_REFUSED:             { label: '🚫 Revisão recusada — pedido congelado',           tone: 'danger' },
-  DISPUTE_OPENED:                 { label: '⚖️ Disputa aberta',                               tone: 'dispute' },
-  DISPUTE_RESOLVED_FREELANCER:    { label: '✓ Disputa resolvida — favor freelancer',          tone: 'ok' },
-  DISPUTE_RESOLVED_CLIENT:        { label: '↩ Disputa resolvida — reembolso processado',      tone: 'dispute' },
-  DELIVERY_ACCEPTED_AFTER_FREEZE: { label: '✅ Entrega aceita pelo cliente (pós-revisão)',      tone: 'ok' }
+  DELIVERY:                       { label: '📦 Entrega realizada',                     tone: 'ok' },
+  DELIVERY_ACCEPTED:              { label: '✅ Entrega aceita pelo cliente',             tone: 'ok' },
+  DELIVERY_REFUSED:               { label: '❌ Revisão solicitada pelo cliente',         tone: 'danger' },
+  ADJUSTMENT_ACCEPTED:            { label: '🔄 Revisão aceita — pode reenviar',           tone: 'ok' },
+  ADJUSTMENT_REFUSED:             { label: '🚫 Revisão recusada — pedido congelado',      tone: 'danger' },
+  DISPUTE_OPENED:                 { label: '⚖️ Disputa aberta',                          tone: 'dispute' },
+  DISPUTE_RESOLVED_FREELANCER:    { label: '✓ Disputa resolvida — favor freelancer',     tone: 'ok' },
+  DISPUTE_RESOLVED_CLIENT:        { label: '↩ Disputa resolvida — reembolso processado', tone: 'dispute' },
+  DELIVERY_ACCEPTED_AFTER_FREEZE: { label: '✅ Entrega aceita pelo cliente (pós-revisão)', tone: 'ok' }
 };
 
+var CLIENT_MESSAGE_TYPE_INFO = {
+  TEXT:                           null,
+  ATTACHMENT:                     null,
+  DELIVERY:                       { label: '📦 Entrega realizada — aguardando sua aprovação', tone: 'ok' },
+  DELIVERY_ACCEPTED:              { label: '✅ Entrega aprovada',                              tone: 'ok' },
+  DELIVERY_REFUSED:               { label: '❌ Revisão solicitada',                            tone: 'danger' },
+  ADJUSTMENT_ACCEPTED:            { label: '🔄 Revisão aceita pelo freelancer',                 tone: 'ok' },
+  ADJUSTMENT_REFUSED:             { label: '🚫 Revisão recusada — aguardando sua decisão',      tone: 'danger' },
+  DISPUTE_OPENED:                 { label: '⚖️ Disputa aberta',                                tone: 'dispute' },
+  DISPUTE_RESOLVED_FREELANCER:    { label: '✓ Disputa resolvida — favor freelancer',           tone: 'ok' },
+  DISPUTE_RESOLVED_CLIENT:        { label: '↩ Disputa resolvida — reembolso processado',       tone: 'dispute' },
+  DELIVERY_ACCEPTED_AFTER_FREEZE: { label: '✅ Entrega aceita após revisão recusada',           tone: 'ok' }
+};
+
+var MESSAGE_TYPE_INFO = IS_FREELANCER ? FREELANCER_MESSAGE_TYPE_INFO : CLIENT_MESSAGE_TYPE_INFO;
+
+/* ── Boot: ajusta UI conforme o papel ─────────────────────────────── */
+
+(function setupRoleUI() {
+  document.getElementById('convTitle').textContent = IS_FREELANCER ? 'Meus Pedidos' : 'Mensagens';
+  document.getElementById('convSearch').placeholder = IS_FREELANCER ? 'Buscar pedido...' : 'Buscar conversa...';
+  document.getElementById('infoPanelCounterpartLabel').textContent = IS_FREELANCER ? 'Cliente' : 'Freelancer';
+  document.getElementById('chatBackLink').href = IS_FREELANCER ? 'profile.html' : 'profile.html#pedidos';
+  document.getElementById('chatClosedSub').textContent = IS_FREELANCER
+    ? 'A entrega foi aceita e o pagamento foi liberado. Este chat foi encerrado e não aceita mais mensagens.'
+    : 'Você aprovou a entrega e o pagamento foi liberado ao freelancer. Este chat foi encerrado e não aceita mais mensagens.';
+
+  if (!IS_FREELANCER) {
+    document.getElementById('quickReplies').style.display = 'none';
+    document.getElementById('btnAttachDelivery').style.display = 'none';
+    document.getElementById('navCartLink').style.display = '';
+  } else {
+    document.getElementById('navCartLink').style.display = 'none';
+  }
+})();
+
 /* ── Sidebar ──────────────────────────────────────────────────────── */
+
+async function fetchRawItems() {
+  if (IS_FREELANCER) {
+    var res = await fetch(API_BASE + '/delivery/myActiveItems', { headers: authHdr() });
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return null; }
+    return res.ok ? await res.json() : [];
+  }
+
+  var res2 = await fetch(API_BASE + '/order/myOrders', { headers: authHdr() });
+  if (res2.status === 401 || res2.status === 403) { OFAuth.logout(); return null; }
+  var orders = res2.ok ? await res2.json() : [];
+  var items = [];
+  orders.forEach(function (order) {
+    if (order.status === 'PAID') {
+      (order.items || []).forEach(function (item) { items.push(item); });
+    }
+  });
+  return items;
+}
+
+function normalizeItem(raw) {
+  raw.counterpartName = IS_FREELANCER ? raw.clientName : raw.freelancerName;
+  return raw;
+}
 
 async function loadSidebar() {
   var list = document.getElementById('convList');
   list.innerHTML = '<div class="conv-item" style="justify-content:center;color:var(--muted2);font-size:12px;padding:12px">Carregando...</div>';
 
   try {
-    var res = await fetch(API_BASE + '/delivery/myActiveItems', { headers: authHdr() });
-    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
-    allOrderItems = res.ok ? await res.json() : [];
-    renderSidebar(allOrderItems);
+    var items = await fetchRawItems();
+    if (items === null) return;
+    allItems = items.map(normalizeItem);
+    renderSidebar();
   } catch (e) {
-    list.innerHTML = '<div class="conv-item" style="color:#ef4444;font-size:12px;padding:12px">Erro ao carregar pedidos.</div>';
+    list.innerHTML = '<div class="conv-item" style="color:#ef4444;font-size:12px;padding:12px">Erro ao carregar conversas.</div>';
   }
 }
 
-function renderSidebar(items) {
+async function refreshItems() {
+  try {
+    var items = await fetchRawItems();
+    if (items !== null) {
+      allItems = items.map(normalizeItem);
+      renderSidebar();
+    }
+  } catch (_) {}
+
+  var item = findItem(currentItemId);
+  if (item) {
+    updateActionButtons(item);
+    updateServiceBar(item);
+    updateInfoPanel(item);
+  }
+}
+
+function renderSidebar() {
   var list = document.getElementById('convList');
   list.innerHTML = '';
 
-  if (!items.length) {
-    list.innerHTML =
-      '<div class="conv-item" style="display:block;padding:20px 16px;text-align:center;color:var(--muted2);font-size:12px;line-height:1.6">' +
-        '<div style="font-size:28px;margin-bottom:8px">📦</div>' +
-        '<div style="font-weight:600;color:var(--text);margin-bottom:4px">Nenhum pedido ativo</div>' +
-        'Quando clientes comprarem seus serviços, os pedidos aparecem aqui.' +
-      '</div>';
+  if (!allItems.length) {
+    list.innerHTML = IS_FREELANCER
+      ? '<div class="conv-item" style="display:block;padding:20px 16px;text-align:center;color:var(--muted2);font-size:12px;line-height:1.6">' +
+          '<div style="font-size:28px;margin-bottom:8px">📦</div>' +
+          '<div style="font-weight:600;color:var(--text);margin-bottom:4px">Nenhum pedido ativo</div>' +
+          'Quando clientes comprarem seus serviços, os pedidos aparecem aqui.' +
+        '</div>'
+      : '<div class="conv-item" style="display:block;padding:28px 16px;text-align:center;color:var(--muted2);font-size:12px;line-height:1.6">' +
+          '<div style="font-size:28px;margin-bottom:8px">💬</div>' +
+          '<div style="font-weight:600;color:var(--text);margin-bottom:4px">Nenhuma conversa</div>' +
+          'Suas conversas aparecem aqui quando você faz um pedido.' +
+        '</div>';
     return;
   }
 
-  items.forEach(function (item) {
-    var statusLabel = STATUS_LABELS[item.status]      || item.status || '—';
-    var statusClass = STATUS_BADGE_CLASSES[item.status] || 'status-pending';
+  allItems.forEach(function (item) {
+    var statusLabel = STATUS_LABELS[item.status]       || item.status || '—';
+    var statusClass  = STATUS_BADGE_CLASSES[item.status] || 'status-pending';
     var price = item.totalPrice != null
       ? 'R$ ' + Number(item.totalPrice).toLocaleString('pt-BR', {minimumFractionDigits:2})
       : '—';
-    var clientInitials = OFAuth.getInitials(item.clientName || '?');
+    var inits = OFAuth.getInitials(item.counterpartName || '?');
 
     var div = document.createElement('div');
     div.className = 'conv-item' + (item.id === currentItemId ? ' active' : '');
     div.dataset.itemId = item.id;
-    div.dataset.searchText = ((item.workTitle || '') + ' ' + (item.clientName || '')).toLowerCase();
+    div.dataset.searchText = ((item.workTitle || '') + ' ' + (item.counterpartName || '')).toLowerCase();
     div.innerHTML =
-      '<div class="conv-avatar" style="background:var(--gdim);color:var(--green)">' + escHtml(clientInitials) + '</div>' +
+      '<div class="conv-avatar" style="background:var(--gdim);color:var(--green)">' + escHtml(inits) + '</div>' +
       '<div class="conv-info">' +
-        '<div class="conv-name"><span class="conv-name-text">' + escHtml(item.clientName || 'Cliente') + '</span><span class="conv-time">' + price + '</span></div>' +
+        '<div class="conv-name"><span class="conv-name-text">' + escHtml(item.counterpartName || (IS_FREELANCER ? 'Cliente' : 'Freelancer')) + '</span><span class="conv-time">' + price + '</span></div>' +
         '<div class="conv-service-tag">' + escHtml(item.workTitle || 'Pedido #' + item.id) + '</div>' +
         '<div class="conv-preview"><span class="status-badge ' + statusClass + '" style="font-size:9px">' + escHtml(statusLabel.toUpperCase()) + '</span></div>' +
       '</div>';
@@ -107,8 +199,8 @@ function renderSidebar(items) {
 }
 
 function filterConvs() {
-  var q = (document.getElementById('convSearch').value || '').toLowerCase();
-  document.querySelectorAll('#convList .conv-item[data-item-id]').forEach(function (el) {
+  var q = ((document.getElementById('convSearch') || {}).value || '').toLowerCase();
+  document.querySelectorAll('#convList .conv-item').forEach(function (el) {
     el.style.display = (el.dataset.searchText || '').includes(q) ? '' : 'none';
   });
 }
@@ -125,7 +217,7 @@ function selectConversation(itemId) {
   var input = document.getElementById('msgInput');
   if (input) { input.disabled = false; input.placeholder = 'Digite sua mensagem...'; }
 
-  var item = allOrderItems.find(function (x) { return x.id === itemId; });
+  var item = findItem(itemId);
   updateServiceBar(item);
   updateInfoPanel(item);
   updateActionButtons(item);
@@ -135,7 +227,7 @@ function selectConversation(itemId) {
   pollTimer = setInterval(function () {
     if (!currentItemId) return;
     loadMessages(currentItemId, true);
-    refreshCurrentItem();
+    refreshItems();
   }, 3000);
 }
 
@@ -150,12 +242,12 @@ function updateServiceBar(item) {
   var price    = item.totalPrice != null
     ? 'R$ ' + Number(item.totalPrice).toLocaleString('pt-BR', {minimumFractionDigits:2})
     : '—';
-  var deadline = item.deadlineDate
-    ? 'Entrega até: ' + new Date(item.deadlineDate).toLocaleDateString('pt-BR')
-    : '';
+  var sub = IS_FREELANCER
+    ? (item.deadlineDate ? 'Entrega até: ' + new Date(item.deadlineDate).toLocaleDateString('pt-BR') : (item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : ''))
+    : lastMessages.length + ' mensagem(ns)';
 
-  document.getElementById('svcBarTitle').textContent = item.workTitle || 'Pedido #' + item.id;
-  document.getElementById('svcBarSub').textContent   = deadline || (item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : '');
+  document.getElementById('svcBarTitle').textContent  = item.workTitle || 'Pedido #' + item.id;
+  document.getElementById('svcBarSub').textContent    = sub;
   document.getElementById('svcBarPrice').textContent  = price;
   document.getElementById('svcBarStatus').textContent = status;
 }
@@ -163,30 +255,32 @@ function updateServiceBar(item) {
 function updateInfoPanel(item) {
   if (!item) return;
 
-  var clientSection  = document.getElementById('infoPanelClientSection');
-  var earningSection = document.getElementById('infoPanelEarningSection');
-  if (clientSection)  clientSection.style.display  = '';
-  if (earningSection) earningSection.style.display  = '';
+  var counterpartSection = document.getElementById('infoPanelCounterpartSection');
+  var earningSection     = document.getElementById('infoPanelEarningSection');
+  if (counterpartSection) counterpartSection.style.display = '';
+  if (earningSection)     earningSection.style.display     = IS_FREELANCER ? '' : 'none';
 
-  var nameEl   = document.getElementById('infoPanelClientName');
-  var avatarEl = document.getElementById('infoPanelClientAvatar');
-  var metaEl   = document.getElementById('infoPanelClientMeta');
-  if (nameEl)   nameEl.textContent   = item.clientName || '—';
-  if (avatarEl) avatarEl.textContent = OFAuth.getInitials(item.clientName || '?');
-  if (metaEl)   metaEl.textContent   = item.workTitle  || '';
+  var nameEl   = document.getElementById('infoPanelName');
+  var avatarEl = document.getElementById('infoPanelAvatar');
+  var metaEl   = document.getElementById('infoPanelMeta');
+  if (nameEl)   nameEl.textContent   = item.counterpartName || '—';
+  if (avatarEl) avatarEl.textContent = OFAuth.getInitials(item.counterpartName || '?');
+  if (metaEl)   metaEl.textContent   = item.workTitle || '';
 
   var headerName   = document.getElementById('chatHeaderName');
   var headerAvatar = document.getElementById('chatHeaderAvatar');
   var headerStatus = document.getElementById('chatHeaderStatus');
-  if (headerName)   headerName.textContent   = item.clientName || '—';
-  if (headerAvatar) headerAvatar.textContent = OFAuth.getInitials(item.clientName || '?');
+  if (headerName)   headerName.textContent   = item.counterpartName || '—';
+  if (headerAvatar) headerAvatar.textContent = OFAuth.getInitials(item.counterpartName || '?');
   if (headerStatus) headerStatus.textContent = STATUS_LABELS[item.status] || '';
 
-  var price    = item.totalPrice != null
-    ? 'R$ ' + Number(item.totalPrice).toLocaleString('pt-BR', {minimumFractionDigits:2})
-    : '—';
-  var earningEl = document.getElementById('earningVal');
-  if (earningEl) earningEl.textContent = price;
+  if (IS_FREELANCER) {
+    var price = item.totalPrice != null
+      ? 'R$ ' + Number(item.totalPrice).toLocaleString('pt-BR', {minimumFractionDigits:2})
+      : '—';
+    var earningEl = document.getElementById('earningVal');
+    if (earningEl) earningEl.textContent = price;
+  }
 }
 
 /* ── Action buttons ───────────────────────────────────────────────── */
@@ -194,40 +288,56 @@ function updateInfoPanel(item) {
 function updateActionButtons(item) {
   var section = document.getElementById('actionsSection');
   var btns    = document.getElementById('actionButtons');
-  if (!section || !btns || !item) return;
+  if (!section || !btns) return;
+
+  toggleChatClosed(!!item && item.status === 'COMPLETED');
+
+  if (!item) { btns.innerHTML = ''; section.style.display = 'none'; return; }
 
   var html = '';
 
-  switch (item.status) {
-    case 'PENDING_DELIVERY':
-      html = '<button class="btn-deliver" onclick="openDeliveryModal()">📦 FAZER ENTREGA</button>';
-      break;
-    case 'PENDING_DELIVERY_REVISION':
-      html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">🔍 Entrega enviada — aguardando revisão do cliente.</p>';
-      break;
-    case 'ADJUSTMENT_REQUEST':
+  if (IS_FREELANCER) {
+    switch (item.status) {
+      case 'PENDING_DELIVERY':
+        html = '<button class="btn-deliver" onclick="openDeliveryModal()">📦 FAZER ENTREGA</button>';
+        break;
+      case 'PENDING_DELIVERY_REVISION':
+        html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">🔍 Entrega enviada — aguardando revisão do cliente.</p>';
+        break;
+      case 'ADJUSTMENT_REQUEST':
+        html =
+          '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptAdjustment\')">✓ ACEITAR REVISÃO</button>' +
+          '<button class="btn-dispute" onclick="doAction(\'refuseAdjustment\')">✗ Recusar Revisão</button>';
+        break;
+      case 'ON_DISPUTE':
+        html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">⚖️ Disputa em análise pelo administrador.</p>';
+        break;
+      case 'FROZEN':
+        html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">⏸️ Pedido congelado — aguardando decisão do cliente.</p>';
+        break;
+      case 'COMPLETED':
+        html = '<p style="font-size:12px;color:var(--green);line-height:1.5">✅ Pedido concluído.</p>';
+        break;
+      case 'REFUNDED':
+        html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">↩ Pedido reembolsado.</p>';
+        break;
+    }
+  } else {
+    if (item.status === 'PENDING_DELIVERY_REVISION') {
       html =
-        '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptAdjustment\')">✓ ACEITAR REVISÃO</button>' +
-        '<button class="btn-dispute" onclick="doAction(\'refuseAdjustment\')">✗ Recusar Revisão</button>';
-      break;
-    case 'ON_DISPUTE':
-      html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">⚖️ Disputa em análise pelo administrador.</p>';
-      break;
-    case 'FROZEN':
-      html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">⏸️ Pedido congelado — aguardando decisão do cliente.</p>';
-      break;
-    case 'COMPLETED':
-      html = '<p style="font-size:12px;color:var(--green);line-height:1.5">✅ Pedido concluído.</p>';
-      break;
-    case 'REFUNDED':
-      html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">↩ Pedido reembolsado.</p>';
-      break;
+        '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDelivery\')">✅ APROVAR ENTREGA</button>' +
+        '<button class="btn-dispute" style="margin-bottom:8px" onclick="openRefuseModal()">↩ Solicitar Revisão</button>';
+    } else if (item.status === 'FROZEN') {
+      html =
+        '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDeliveryAfterFreeze\')">✅ Aceitar mesmo assim</button>' +
+        '<button class="btn-dispute" onclick="doAction(\'openDispute\')">⚖️ Abrir Disputa</button>';
+    }
   }
+
+  if (!html) { btns.innerHTML = ''; section.style.display = 'none'; return; }
 
   btns.innerHTML = html;
   section.style.display = '';
-
-  toggleChatClosed(item.status === 'COMPLETED');
 }
 
 function toggleChatClosed(closed) {
@@ -258,6 +368,9 @@ async function loadMessages(itemId, silent) {
     var data = await res.json();
     if (itemId !== currentItemId) return;
     renderMessages(data);
+
+    var item = findItem(itemId);
+    if (item) updateServiceBar(item);
   } catch (e) {
     if (!silent) msgs.innerHTML = '<div class="msg-date" style="color:#ef4444">Erro ao carregar mensagens.</div>';
   }
@@ -268,10 +381,11 @@ function renderMessages(messages) {
   var wasBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 80;
   var myName    = OFAuth.getName();
 
+  lastMessages = messages || [];
   msgs.innerHTML = '';
 
   if (!messages || !messages.length) {
-    msgs.innerHTML = '<div class="msg-date">Nenhuma mensagem ainda. Diga olá ao cliente! 👋</div>';
+    msgs.innerHTML = '<div class="msg-date">Nenhuma mensagem ainda' + (IS_FREELANCER ? '. Diga olá ao cliente! 👋' : '.') + '</div>';
     return;
   }
 
@@ -367,7 +481,39 @@ function useQuick(btn) {
 function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
 function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
 
-/* ── Delivery modal ───────────────────────────────────────────────── */
+/* ── Action dispatcher ────────────────────────────────────────────── */
+
+async function doAction(action) {
+  if (!currentItemId) return;
+
+  var btns = document.querySelectorAll('#actionButtons button');
+  btns.forEach(function (b) { b.disabled = true; });
+
+  try {
+    var res = await fetch(API_BASE + '/chat/orderItem/' + currentItemId + '/' + action, {
+      method:  'POST',
+      headers: authHdr()
+    });
+
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      alert((Array.isArray(data.errors) && data.errors.length)
+        ? data.errors.map(function (e) { return e.message; }).join(' | ')
+        : 'Erro ao executar ação.');
+      btns.forEach(function (b) { b.disabled = false; });
+      return;
+    }
+
+    await refreshItems();
+    await loadMessages(currentItemId, true);
+
+  } catch (_) {
+    alert('Erro de conexão.');
+    btns.forEach(function (b) { b.disabled = false; });
+  }
+}
+
+/* ── Delivery modal (papel freelancer) ────────────────────────────── */
 
 function openDeliveryModal() {
   if (!currentItemId) return;
@@ -453,7 +599,7 @@ async function submitDelivery() {
     }
 
     closeDeliveryModal();
-    await refreshCurrentItem();
+    await refreshItems();
     await loadMessages(currentItemId, true);
 
   } catch (_) {
@@ -467,51 +613,70 @@ document.getElementById('deliveryModal').addEventListener('click', function (e) 
   if (e.target === this) closeDeliveryModal();
 });
 
-/* ── Action dispatcher ────────────────────────────────────────────── */
+document.querySelector('.btn-attach-delivery').addEventListener('click', openDeliveryModal);
 
-async function doAction(action) {
+/* ── Refuse delivery modal (papel cliente) ────────────────────────── */
+
+function openRefuseModal() {
+  if (!currentItemId) return;
+  document.getElementById('refuseMsg').value = '';
+  var statusMsg = document.getElementById('refuseStatusMsg');
+  if (statusMsg) { statusMsg.textContent = ''; statusMsg.className = 'admin-form-msg'; }
+  var btn = document.getElementById('refuseSubmitBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'ENVIAR SOLICITAÇÃO'; }
+  document.getElementById('refuseModal').classList.add('show');
+}
+
+function closeRefuseModal() {
+  document.getElementById('refuseModal').classList.remove('show');
+}
+
+async function submitRefuseDelivery() {
   if (!currentItemId) return;
 
+  var reason    = document.getElementById('refuseMsg').value.trim();
+  var statusMsg = document.getElementById('refuseStatusMsg');
+  var btn       = document.getElementById('refuseSubmitBtn');
+
+  btn.disabled    = true;
+  btn.textContent = 'ENVIANDO...';
+  if (statusMsg) { statusMsg.textContent = ''; statusMsg.className = 'admin-form-msg'; }
+
+  var form = new FormData();
+  if (reason) form.append('message', reason);
+
   try {
-    var res = await fetch(API_BASE + '/chat/orderItem/' + currentItemId + '/' + action, {
+    var res = await fetch(API_BASE + '/chat/orderItem/' + currentItemId + '/refuseDelivery', {
       method:  'POST',
-      headers: authHdr()
+      headers: authHdr(),
+      body:    form
     });
 
     if (!res.ok) {
       var data = await res.json().catch(function () { return {}; });
-      alert((Array.isArray(data.errors) && data.errors.length)
+      var errMsg = (Array.isArray(data.errors) && data.errors.length)
         ? data.errors.map(function (e) { return e.message; }).join(' | ')
-        : 'Erro ao executar ação.');
+        : 'Erro ao solicitar revisão.';
+      if (statusMsg) { statusMsg.textContent = errMsg; statusMsg.className = 'admin-form-msg admin-form-msg-error'; }
+      btn.disabled    = false;
+      btn.textContent = 'ENVIAR SOLICITAÇÃO';
       return;
     }
 
-    await refreshCurrentItem();
+    closeRefuseModal();
+    await refreshItems();
     await loadMessages(currentItemId, true);
 
   } catch (_) {
-    alert('Erro de conexão.');
+    if (statusMsg) { statusMsg.textContent = 'Erro de conexão.'; statusMsg.className = 'admin-form-msg admin-form-msg-error'; }
+    btn.disabled    = false;
+    btn.textContent = 'ENVIAR SOLICITAÇÃO';
   }
 }
 
-/* ── Refresh helpers ──────────────────────────────────────────────── */
-
-async function refreshCurrentItem() {
-  try {
-    var res = await fetch(API_BASE + '/delivery/myActiveItems', { headers: authHdr() });
-    if (res.ok) {
-      allOrderItems = await res.json();
-      renderSidebar(allOrderItems);
-    }
-  } catch (_) {}
-
-  var item = allOrderItems.find(function (x) { return x.id === currentItemId; });
-  if (item) {
-    updateActionButtons(item);
-    updateServiceBar(item);
-    updateInfoPanel(item);
-  }
-}
+document.getElementById('refuseModal').addEventListener('click', function (e) {
+  if (e.target === this) closeRefuseModal();
+});
 
 /* ── Utils ─────────────────────────────────────────────────────────── */
 
@@ -550,10 +715,7 @@ document.getElementById('chatMessages').addEventListener('click', function (e) {
   downloadFile(btn.dataset.url, btn.dataset.name);
 });
 
-/* ── Attach delivery btn ────────────────────────────────────────────── */
-document.querySelector('.btn-attach-delivery').addEventListener('click', openDeliveryModal);
-
-/* ── Boot — open orderItemId from URL if provided ─────────────────── */
+/* ── Boot — abre orderItemId da URL se vier por query param ───────── */
 (async function boot() {
   await loadSidebar();
 
@@ -561,7 +723,7 @@ document.querySelector('.btn-attach-delivery').addEventListener('click', openDel
   var itemId = params.get('orderItemId');
   if (itemId) {
     var id   = Number(itemId);
-    var item = allOrderItems.find(function (x) { return x.id === id; });
+    var item = findItem(id);
     if (item) selectConversation(id);
   }
 })();

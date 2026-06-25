@@ -43,8 +43,7 @@ function initScrollReveal(threshold, staggerSelector, staggerMs) {
 }
 
 /* ── Painel de notificações ───────────────────────────────────────
-   Usado em: index, serviceScreen, exploreFreelancers, cartScreen,
-             chatScreenClient, chatScreenFreelancer
+   Usado em: index, serviceScreen, exploreFreelancers, cartScreen, chatScreen
    ────────────────────────────────────────────────────────────────── */
 function initNotifPanel() {
   const btn   = document.getElementById('notifBtn');
@@ -78,13 +77,7 @@ function showToast(msg) {
    ────────────────────────────────────────────────────────────────── */
 function goToChat() {
   const type = localStorage.getItem('of_user_type');
-  if (type === 'freelancer') {
-    window.location.href = 'chatScreenFreelancer.html';
-  } else if (type === 'cliente') {
-    window.location.href = 'chatScreenClient.html';
-  } else {
-    window.location.href = 'loginScreen.html';
-  }
+  window.location.href = (type === 'freelancer' || type === 'cliente') ? 'chatScreen.html' : 'loginScreen.html';
 }
 
 /* ── Sidebar: item ativo ao clicar ───────────────────────────────
@@ -133,7 +126,7 @@ function _setThemeIcon(btn, theme) {
 }
 
 /* ── Chat: Enter para enviar + auto-resize do textarea ────────────
-   Usado em: chatScreenClient, chatScreenFreelancer
+   Usado em: chatScreen
    sendFn: referência para a função sendMsg() da página
    ────────────────────────────────────────────────────────────────── */
 function initChatInput(sendFn) {
