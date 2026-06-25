@@ -15,6 +15,7 @@ public class FreelancerOrderItemDTO {
     private LocalDate createdAt;
     private LocalDate deadlineDate;
     private int deliveryTries;
+    private int amount;
 
     public static FreelancerOrderItemDTO fromEntity(OrderItem item) {
         FreelancerOrderItemDTO dto = new FreelancerOrderItemDTO();
@@ -24,6 +25,7 @@ public class FreelancerOrderItemDTO {
         dto.createdAt     = item.getCreatedAt();
         dto.deadlineDate  = item.getDeadlineDate();
         dto.deliveryTries = item.getDeliveryTries();
+        dto.amount        = item.getAmount();
         if (item.getWork() != null) {
             dto.workTitle = item.getWork().getTitle();
         }
@@ -41,4 +43,5 @@ public class FreelancerOrderItemDTO {
     public LocalDate getCreatedAt()  { return createdAt; }
     public LocalDate getDeadlineDate() { return deadlineDate; }
     public int getDeliveryTries()    { return deliveryTries; }
+    public int getAmount()           { return amount; }
 }

@@ -10,6 +10,7 @@ import br.unicesumar.onefreela.enums.OrderItemStatus;
 import br.unicesumar.onefreela.enums.OrderStatus;
 import br.unicesumar.onefreela.enums.WorkStatus;
 import br.unicesumar.onefreela.exception.ValidationException;
+import br.unicesumar.onefreela.repository.CartRepository;
 import br.unicesumar.onefreela.repository.OrderItemRepository;
 import br.unicesumar.onefreela.repository.OrderRepository;
 import br.unicesumar.onefreela.repository.WorkAdditionalRepository;
@@ -33,17 +34,20 @@ public class OrderService {
     private final DeliveryFileStorageService deliveryFileStorageService;
     private final WorkAdditionalRepository workAdditionalRepository;
     private final PaymentService paymentService;
+    private final CartRepository cartRepository;
 
     public OrderService(OrderItemRepository orderItemRepository, OrderRepository orderRepository,
                         DeliveryService deliveryService, DeliveryFileStorageService deliveryFileStorageService,
                         WorkAdditionalRepository workAdditionalRepository,
-                        @Lazy PaymentService paymentService) {
+                        @Lazy PaymentService paymentService,
+                        CartRepository cartRepository) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.deliveryService = deliveryService;
         this.deliveryFileStorageService = deliveryFileStorageService;
         this.workAdditionalRepository = workAdditionalRepository;
         this.paymentService = paymentService;
+        this.cartRepository = cartRepository;
     }
 
     public Order findOrderById(Long id){
@@ -249,7 +253,12 @@ public class OrderService {
         order.setTotalPrice(totalOrderPrice);
         order.setOrderItemlist(orderItems);
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        cart.getCartItemList().removeAll(selectedItems);
+        cartRepository.save(cart);
+
+        return savedOrder;
     }
 
     @Transactional

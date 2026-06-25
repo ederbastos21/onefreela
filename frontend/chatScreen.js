@@ -185,11 +185,14 @@ function renderSidebar() {
     div.className = 'conv-item' + (item.id === currentItemId ? ' active' : '');
     div.dataset.itemId = item.id;
     div.dataset.searchText = ((item.workTitle || '') + ' ' + (item.counterpartName || '')).toLowerCase();
+    var amountBadge = (item.amount && item.amount > 1)
+      ? ' <span style="background:var(--green);color:#000;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">' + item.amount + 'x</span>'
+      : '';
     div.innerHTML =
       '<div class="conv-avatar" style="background:var(--gdim);color:var(--green)">' + escHtml(inits) + '</div>' +
       '<div class="conv-info">' +
         '<div class="conv-name"><span class="conv-name-text">' + escHtml(item.counterpartName || (IS_FREELANCER ? 'Cliente' : 'Freelancer')) + '</span><span class="conv-time">' + price + '</span></div>' +
-        '<div class="conv-service-tag">' + escHtml(item.workTitle || 'Pedido #' + item.id) + '</div>' +
+        '<div class="conv-service-tag">' + escHtml(item.workTitle || 'Pedido #' + item.id) + amountBadge + '</div>' +
         '<div class="conv-preview"><span class="status-badge ' + statusClass + '" style="font-size:9px">' + escHtml(statusLabel.toUpperCase()) + '</span></div>' +
       '</div>';
 
@@ -246,7 +249,8 @@ function updateServiceBar(item) {
     ? (item.deadlineDate ? 'Entrega até: ' + new Date(item.deadlineDate).toLocaleDateString('pt-BR') : (item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : ''))
     : lastMessages.length + ' mensagem(ns)';
 
-  document.getElementById('svcBarTitle').textContent  = item.workTitle || 'Pedido #' + item.id;
+  var amountSuffix = (item.amount && item.amount > 1) ? ' (' + item.amount + ' unidades)' : '';
+  document.getElementById('svcBarTitle').textContent  = (item.workTitle || 'Pedido #' + item.id) + amountSuffix;
   document.getElementById('svcBarSub').textContent    = sub;
   document.getElementById('svcBarPrice').textContent  = price;
   document.getElementById('svcBarStatus').textContent = status;
