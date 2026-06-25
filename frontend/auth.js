@@ -162,6 +162,73 @@
     if (navUser) navRight.insertBefore(group, navUser); else navRight.appendChild(group);
   }
 
+  /* ── Nav badges ──────────────────────────────────────────────────── */
+  function _makeBadge(el, id) {
+    if (!el) return null;
+    var b = document.createElement('span');
+    b.id = id;
+    b.className = 'nav-badge';
+    b.style.display = 'none';
+    el.appendChild(b);
+    return b;
+  }
+
+  function _setBadge(b, n) {
+    if (!b) return;
+    if (!n || n <= 0) { b.style.display = 'none'; return; }
+    b.textContent = n > 99 ? '99+' : String(n);
+    b.style.display = 'flex';
+  }
+
+  function _injectNavBadges(userType) {
+    var cartEl = document.querySelector('a[href="cartScreen.html"]');
+    var favEl  = document.getElementById('navFavoritesLink');
+    var chatEl = document.getElementById('navChatLink')
+              || document.querySelector('a[href="chatScreen.html"]')
+              || document.querySelector('[title="Mensagens"]');
+
+    var cartBadge = _makeBadge(cartEl, '_navBadgeCart');
+    var favBadge  = _makeBadge(favEl,  '_navBadgeFav');
+    var chatBadge = _makeBadge(chatEl, '_navBadgeChat');
+
+    /* Cart — from localStorage (instant, no request) */
+    var cartMap = JSON.parse(localStorage.getItem('of_cart_workmap') || '{}');
+    _setBadge(cartBadge, Object.keys(cartMap).length);
+
+    /* Chat — active (unfinished) items */
+    var DONE = ['COMPLETED', 'REFUNDED'];
+    if (userType === 'freelancer') {
+      fetch(API_BASE + '/delivery/myActiveItems', { headers: authHdr() })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (items) {
+          var active = (items || []).filter(function (i) { return DONE.indexOf(i.status) === -1; });
+          _setBadge(chatBadge, active.length);
+        }).catch(function () {});
+    } else {
+      fetch(API_BASE + '/order/myOrders', { headers: authHdr() })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (orders) {
+          var count = 0;
+          (orders || []).forEach(function (o) {
+            if (o.status === 'PAID') {
+              (o.items || []).forEach(function (i) {
+                if (DONE.indexOf(i.status) === -1) count++;
+              });
+            }
+          });
+          _setBadge(chatBadge, count);
+        }).catch(function () {});
+    }
+
+    /* Favorites — client only */
+    if (userType !== 'freelancer' && favEl) {
+      fetch(API_BASE + '/favorites', { headers: authHdr() })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (list) { _setBadge(favBadge, (list || []).length); })
+        .catch(function () {});
+    }
+  }
+
   window.OFAuth = {
     getName:     function () { return localStorage.getItem('of_name')        || ''; },
     getType:     function () { return localStorage.getItem('of_user_type')   || ''; },
@@ -243,7 +310,16 @@
       var navLogo = document.querySelector('.nav-logo');
       if (navLogo) navLogo.setAttribute('href', 'exploreFreelancers.html');
 
-      if (this.isLoggedIn()) renderBalance();
+      /* Hide notification bell */
+      var notifBtn = document.getElementById('notifBtn');
+      if (notifBtn) notifBtn.style.display = 'none';
+      var notifPanel = document.getElementById('notifPanel');
+      if (notifPanel) notifPanel.style.display = 'none';
+
+      if (this.isLoggedIn()) {
+        renderBalance();
+        _injectNavBadges(type);
+      }
     },
 
     /* Populates profile hero + settings inputs on profile pages */

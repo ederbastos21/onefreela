@@ -13,7 +13,8 @@
     .fp-hero {
       background: var(--card2);
       border-bottom: 1px solid var(--border);
-      padding: 40px 0 36px;
+      padding-top: calc(var(--nav-h-app) + 36px);
+      padding-bottom: 36px;
       margin-bottom: 40px;
     }
     .fp-hero-inner {
@@ -293,7 +294,7 @@
     </div>
   </div>
 
-  <div class="app-page" id="fpBody">
+  <div class="app-page" id="fpBody" style="padding-top:0">
     <div class="container" style="max-width:1100px">
       <div id="fpLoading" class="fp-loading">Carregando perfil...</div>
       <div id="fpNotFound" class="fp-not-found" style="display:none">
