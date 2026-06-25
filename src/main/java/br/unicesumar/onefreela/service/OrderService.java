@@ -292,7 +292,7 @@ public class OrderService {
                 deliveryFile.setDelivery(savedDelivery);
                 deliveryFile.setFileSize(file.getSize());
                 deliveryFile.setExtension(file.getContentType());
-                deliveryFile.setOriginalName(file.getName());
+                deliveryFile.setOriginalName(file.getOriginalFilename());
                 deliveryFile.setUploadedAt(LocalDate.now());
                 deliveryFile.setPath(deliveryFileStorageService.store(file));
                 savedDelivery.getFileList().add(deliveryFile);

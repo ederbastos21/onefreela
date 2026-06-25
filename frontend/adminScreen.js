@@ -1104,13 +1104,21 @@ async function openDisputeModal(orderItemId) {
           DISPUTE_RESOLVED_CLIENT:       '↩ Cliente',
           DELIVERY_ACCEPTED_AFTER_FREEZE:'✅'
         };
+        var TYPE_TONE_COLORS = {
+          DELIVERY_REFUSED:    '#ef4444',
+          ADJUSTMENT_REFUSED:  '#ef4444',
+          DISPUTE_OPENED:      '#a855f7',
+          DISPUTE_RESOLVED_FREELANCER: 'var(--green)',
+          DISPUTE_RESOLVED_CLIENT:     '#a855f7'
+        };
         var icon = TYPE_ICONS[m.type] || '•';
+        var labelColor = TYPE_TONE_COLORS[m.type] || 'var(--text)';
         var time = m.sentAt ? new Date(m.sentAt).toLocaleString('pt-BR') : '';
         return '<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">' +
-          '<span style="color:var(--text);font-weight:600">' + escHtmlAdmin(icon + ' ' + (m.senderName || 'Sistema')) + '</span>' +
+          '<span style="color:' + labelColor + ';font-weight:600">' + escHtmlAdmin(icon + ' ' + (m.senderName || 'Sistema')) + '</span>' +
           '<span style="color:var(--muted);margin-left:8px;font-size:11px">' + time + '</span>' +
           '<div style="margin-top:4px">' + escHtmlAdmin(m.content || '') + '</div>' +
-          (m.attachments && m.attachments.length ? '<div style="color:var(--muted);margin-top:2px">📎 ' + m.attachments.length + ' anexo(s)</div>' : '') +
+          (m.attachments && m.attachments.length ? '<div style="color:var(--muted);margin-top:2px">📎 ' + m.attachments.map(function (a) { return escHtmlAdmin(a.originalName || 'arquivo'); }).join(', ') + '</div>' : '') +
         '</div>';
       }).join('');
       msgBox.scrollTop = msgBox.scrollHeight;

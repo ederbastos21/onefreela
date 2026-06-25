@@ -37,18 +37,18 @@ var STATUS_BADGE_CLASSES = {
   REFUNDED:                  'status-done'
 };
 
-var MESSAGE_TYPE_LABELS = {
-  TEXT:                          null,
-  ATTACHMENT:                    null,
-  DELIVERY:                      '📦 Entrega realizada',
-  DELIVERY_ACCEPTED:             '✅ Entrega aceita pelo cliente',
-  DELIVERY_REFUSED:              '❌ Revisão solicitada pelo cliente',
-  ADJUSTMENT_ACCEPTED:           '🔄 Revisão aceita — pode reenviar',
-  ADJUSTMENT_REFUSED:            '🚫 Revisão recusada — pedido congelado',
-  DISPUTE_OPENED:                '⚖️ Disputa aberta',
-  DISPUTE_RESOLVED_FREELANCER:   '✓ Disputa resolvida — favor freelancer',
-  DISPUTE_RESOLVED_CLIENT:       '↩ Disputa resolvida — reembolso processado',
-  DELIVERY_ACCEPTED_AFTER_FREEZE:'✅ Entrega aceita pelo cliente (pós-revisão)'
+var MESSAGE_TYPE_INFO = {
+  TEXT:                           null,
+  ATTACHMENT:                     null,
+  DELIVERY:                       { label: '📦 Entrega realizada',                          tone: 'ok' },
+  DELIVERY_ACCEPTED:              { label: '✅ Entrega aceita pelo cliente',                  tone: 'ok' },
+  DELIVERY_REFUSED:               { label: '❌ Revisão solicitada pelo cliente',              tone: 'danger' },
+  ADJUSTMENT_ACCEPTED:            { label: '🔄 Revisão aceita — pode reenviar',                tone: 'ok' },
+  ADJUSTMENT_REFUSED:             { label: '🚫 Revisão recusada — pedido congelado',           tone: 'danger' },
+  DISPUTE_OPENED:                 { label: '⚖️ Disputa aberta',                               tone: 'dispute' },
+  DISPUTE_RESOLVED_FREELANCER:    { label: '✓ Disputa resolvida — favor freelancer',          tone: 'ok' },
+  DISPUTE_RESOLVED_CLIENT:        { label: '↩ Disputa resolvida — reembolso processado',      tone: 'dispute' },
+  DELIVERY_ACCEPTED_AFTER_FREEZE: { label: '✅ Entrega aceita pelo cliente (pós-revisão)',      tone: 'ok' }
 };
 
 /* ── Sidebar ──────────────────────────────────────────────────────── */
@@ -132,7 +132,11 @@ function selectConversation(itemId) {
   loadMessages(itemId);
 
   if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(function () { if (currentItemId) loadMessages(currentItemId, true); }, 8000);
+  pollTimer = setInterval(function () {
+    if (!currentItemId) return;
+    loadMessages(currentItemId, true);
+    refreshCurrentItem();
+  }, 3000);
 }
 
 /* ── Service bar + info panel ─────────────────────────────────────── */
@@ -222,6 +226,16 @@ function updateActionButtons(item) {
 
   btns.innerHTML = html;
   section.style.display = '';
+
+  toggleChatClosed(item.status === 'COMPLETED');
+}
+
+function toggleChatClosed(closed) {
+  var banner    = document.getElementById('chatClosedBanner');
+  var inputArea = document.getElementById('chatInputArea');
+  if (!banner || !inputArea) return;
+  banner.style.display    = closed ? '' : 'none';
+  inputArea.style.display = closed ? 'none' : '';
 }
 
 /* ── Messages ─────────────────────────────────────────────────────── */
@@ -262,33 +276,28 @@ function renderMessages(messages) {
   }
 
   messages.forEach(function (m) {
-    var isMine     = m.senderName && m.senderName === myName;
-    var inits      = OFAuth.getInitials(m.senderName || '?');
-    var time       = m.sentAt ? new Date(m.sentAt).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
-    var eventLabel = MESSAGE_TYPE_LABELS[m.type];
+    var isMine    = m.senderName && m.senderName === myName;
+    var inits     = OFAuth.getInitials(m.senderName || '?');
+    var time      = m.sentAt ? new Date(m.sentAt).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
+    var eventInfo = MESSAGE_TYPE_INFO[m.type];
+    var hasFiles  = m.attachments && m.attachments.length;
 
-    if (eventLabel) {
-      var ev = document.createElement('div');
-      ev.className = 'msg-date';
-      ev.style.cssText = 'font-size:11px;padding:4px 12px;background:rgba(127,255,0,.06);border-radius:var(--radius);color:var(--green);border:1px solid rgba(127,255,0,.15);margin:8px auto;display:table';
-      ev.textContent = eventLabel;
-      msgs.appendChild(ev);
-    }
-
-    if (!m.content && !(m.attachments && m.attachments.length)) return;
+    if (!eventInfo && !m.content && !hasFiles) return;
 
     var div = document.createElement('div');
     div.className = 'msg' + (isMine ? ' mine' : '');
 
     var attachHtml = '';
-    if (m.attachments && m.attachments.length) {
+    if (hasFiles) {
       attachHtml = m.attachments.map(function (a) {
+        var url = API_BASE + '/chat/orderItem/' + m.orderItemId + '/attachment/' + (a.source || 'MESSAGE') + '/' + a.id + '/download';
         return '<div class="msg-file">' +
           '<span class="msg-file-icon">📄</span>' +
           '<div class="msg-file-info">' +
             '<div class="msg-file-name">' + escHtml(a.originalName || 'arquivo') + '</div>' +
             '<div class="msg-file-size">' + formatFileSize(a.fileSize) + '</div>' +
           '</div>' +
+          '<button class="msg-file-download" data-url="' + escHtml(url) + '" data-name="' + escHtml(a.originalName || 'arquivo') + '" title="Baixar arquivo">⬇</button>' +
         '</div>';
       }).join('');
     }
@@ -296,11 +305,25 @@ function renderMessages(messages) {
     var avatarBg    = isMine ? 'var(--gdim)' : '#60a5fa';
     var avatarColor = isMine ? ';color:var(--green)' : '';
 
+    var bodyHtml;
+    if (eventInfo) {
+      var toneClass = eventInfo.tone !== 'ok' ? ' tone-' + eventInfo.tone : '';
+      bodyHtml =
+        '<div class="msg-bubble msg-event' + toneClass + '">' +
+          '<div class="msg-event-label' + toneClass + '">' + escHtml(eventInfo.label) + '</div>' +
+          (m.content ? '<div class="msg-event-text">' + escHtml(m.content) + '</div>' : '') +
+          attachHtml +
+        '</div>';
+    } else {
+      bodyHtml =
+        (m.content  ? '<div class="msg-bubble">' + escHtml(m.content) + '</div>' : '') +
+        (attachHtml ? '<div class="msg-bubble">' + attachHtml + '</div>' : '');
+    }
+
     div.innerHTML =
       '<div class="msg-avatar" style="background:' + avatarBg + avatarColor + '">' + escHtml(inits) + '</div>' +
-      '<div>' +
-        (m.content  ? '<div class="msg-bubble">' + escHtml(m.content) + '</div>' : '') +
-        (attachHtml ? '<div class="msg-bubble">' + attachHtml + '</div>' : '') +
+      '<div class="msg-content">' +
+        bodyHtml +
         '<div class="msg-meta">' + time + (isMine ? ' <span class="msg-check">✓✓</span>' : '') + '</div>' +
       '</div>';
 
@@ -396,9 +419,15 @@ async function submitDelivery() {
   var statusMsg = document.getElementById('deliveryStatusMsg');
   var btn       = document.getElementById('deliverySubmitBtn');
 
+  if (statusMsg) { statusMsg.textContent = ''; statusMsg.className = 'admin-form-msg'; }
+
+  if (!selectedDelivFiles.length) {
+    if (statusMsg) { statusMsg.textContent = 'Selecione ao menos um arquivo para entregar.'; statusMsg.className = 'admin-form-msg admin-form-msg-error'; }
+    return;
+  }
+
   btn.disabled    = true;
   btn.textContent = 'ENVIANDO...';
-  if (statusMsg) statusMsg.textContent = '';
 
   var form = new FormData();
   form.append('message', msg || 'Entrega realizada.');
@@ -496,6 +525,30 @@ function formatFileSize(bytes) {
   if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / 1048576).toFixed(1) + ' MB';
 }
+
+async function downloadFile(url, filename) {
+  try {
+    var res = await fetch(url, { headers: authHdr() });
+    if (!res.ok) { alert('Erro ao baixar arquivo.'); return; }
+    var blob = await res.blob();
+    var blobUrl = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename || 'arquivo';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch (_) {
+    alert('Erro de conexão ao baixar arquivo.');
+  }
+}
+
+document.getElementById('chatMessages').addEventListener('click', function (e) {
+  var btn = e.target.closest('.msg-file-download');
+  if (!btn) return;
+  downloadFile(btn.dataset.url, btn.dataset.name);
+});
 
 /* ── Attach delivery btn ────────────────────────────────────────────── */
 document.querySelector('.btn-attach-delivery').addEventListener('click', openDeliveryModal);

@@ -82,7 +82,15 @@
 
       <div class="chat-messages" id="chatMessages"></div>
 
-      <div class="chat-input-area">
+      <div class="chat-closed-banner" id="chatClosedBanner" style="display:none">
+        <span class="chat-closed-icon">✅</span>
+        <div>
+          <div class="chat-closed-title">Serviço concluído</div>
+          <div class="chat-closed-sub">A entrega foi aceita e o pagamento foi liberado. Este chat foi encerrado e não aceita mais mensagens.</div>
+        </div>
+      </div>
+
+      <div class="chat-input-area" id="chatInputArea">
         <div class="quick-replies">
           <button class="quick-reply" onclick="useQuick(this)">Pode enviar o arquivo?</button>
           <button class="quick-reply" onclick="useQuick(this)">Preciso de mais detalhes</button>

@@ -1,10 +1,16 @@
 package br.unicesumar.onefreela.controller;
 
+import br.unicesumar.onefreela.dto.AttachmentDownload;
 import br.unicesumar.onefreela.dto.ChatMessageDTO;
 import br.unicesumar.onefreela.dto.DeliverDTO;
 import br.unicesumar.onefreela.dto.MessageResponse;
 import br.unicesumar.onefreela.service.ChatService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -39,8 +45,8 @@ public class ChatController {
     }
 
     @PostMapping("/orderItem/{orderItemId}/refuseDelivery")
-    public MessageResponse refuseDelivery(@PathVariable Long orderItemId, HttpServletRequest request) {
-        return chatService.refuseDelivery(orderItemId, request);
+    public MessageResponse refuseDelivery(@PathVariable Long orderItemId, @RequestParam(required = false) String message, HttpServletRequest request) {
+        return chatService.refuseDelivery(orderItemId, message, request);
     }
 
     @PostMapping("/orderItem/{orderItemId}/acceptAdjustment")
@@ -61,5 +67,22 @@ public class ChatController {
     @PostMapping("/orderItem/{orderItemId}/acceptDeliveryAfterFreeze")
     public MessageResponse acceptDeliveryAfterFreeze(@PathVariable Long orderItemId, HttpServletRequest request) {
         return chatService.acceptDeliveryAfterFreeze(orderItemId, request);
+    }
+
+    @GetMapping("/orderItem/{orderItemId}/attachment/{source}/{attachmentId}/download")
+    public ResponseEntity<Resource> downloadAttachment(@PathVariable Long orderItemId, @PathVariable String source, @PathVariable Long attachmentId, HttpServletRequest request) {
+        AttachmentDownload download = chatService.downloadAttachment(orderItemId, source, attachmentId, request);
+
+        MediaType mediaType;
+        try {
+            mediaType = MediaType.parseMediaType(download.getContentType());
+        } catch (Exception e) {
+            mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        }
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(download.getFilename() != null ? download.getFilename() : "arquivo").build().toString())
+                .body(download.getResource());
     }
 }

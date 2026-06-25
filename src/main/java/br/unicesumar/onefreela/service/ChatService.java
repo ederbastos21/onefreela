@@ -1,11 +1,13 @@
 package br.unicesumar.onefreela.service;
 
+import br.unicesumar.onefreela.dto.AttachmentDownload;
 import br.unicesumar.onefreela.dto.ChatMessageDTO;
 import br.unicesumar.onefreela.dto.DeliverDTO;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.MessageResponse;
 import br.unicesumar.onefreela.entity.Conversation;
 import br.unicesumar.onefreela.entity.Delivery;
+import br.unicesumar.onefreela.entity.DeliveryFile;
 import br.unicesumar.onefreela.entity.Message;
 import br.unicesumar.onefreela.entity.MessageAttachment;
 import br.unicesumar.onefreela.entity.Order;
@@ -15,12 +17,18 @@ import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.enums.MessageType;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.ConversationRepository;
+import br.unicesumar.onefreela.repository.DeliveryFileRepository;
+import br.unicesumar.onefreela.repository.MessageAttachmentRepository;
 import br.unicesumar.onefreela.repository.MessageRepository;
 import br.unicesumar.onefreela.service.validator.ChatValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -35,14 +43,18 @@ public class ChatService {
     private final ChatValidator chatValidator;
     private final OrderService orderService;
     private final ChatFileStorageService chatFileStorageService;
+    private final MessageAttachmentRepository messageAttachmentRepository;
+    private final DeliveryFileRepository deliveryFileRepository;
 
-    public ChatService(ConversationRepository conversationRepository, MessageRepository messageRepository, AuthService authService, ChatValidator chatValidator, OrderService orderService, ChatFileStorageService chatFileStorageService) {
+    public ChatService(ConversationRepository conversationRepository, MessageRepository messageRepository, AuthService authService, ChatValidator chatValidator, OrderService orderService, ChatFileStorageService chatFileStorageService, MessageAttachmentRepository messageAttachmentRepository, DeliveryFileRepository deliveryFileRepository) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.authService = authService;
         this.chatValidator = chatValidator;
         this.orderService = orderService;
         this.chatFileStorageService = chatFileStorageService;
+        this.messageAttachmentRepository = messageAttachmentRepository;
+        this.deliveryFileRepository = deliveryFileRepository;
     }
 
     private Conversation findConversationByOrderItem(Long orderItemId) {
@@ -225,7 +237,7 @@ public class ChatService {
     }
 
     @Transactional
-    public MessageResponse refuseDelivery(Long orderItemId, HttpServletRequest request) {
+    public MessageResponse refuseDelivery(Long orderItemId, String reason, HttpServletRequest request) {
         User authenticatedUser = authService.getAuthenticatedUser(request);
         Conversation conversation = findConversationByOrderItem(orderItemId);
 
@@ -233,7 +245,9 @@ public class ChatService {
 
         orderService.refuseDelivery(authenticatedUser, orderItemId);
 
-        return createEventMessage(conversation, authenticatedUser, MessageType.DELIVERY_REFUSED, "Entrega recusada pelo cliente");
+        String content = (reason != null && !reason.isBlank()) ? reason : "Entrega recusada pelo cliente";
+
+        return createEventMessage(conversation, authenticatedUser, MessageType.DELIVERY_REFUSED, content);
     }
 
     @Transactional
@@ -281,5 +295,56 @@ public class ChatService {
         );
 
         return createEventMessage(conversation, authenticatedUser, MessageType.DISPUTE_OPENED, summary);
+    }
+
+    public AttachmentDownload downloadAttachment(Long orderItemId, String source, Long attachmentId, HttpServletRequest request) {
+        User authenticatedUser = authService.getAuthenticatedUser(request);
+        Conversation conversation = findConversationByOrderItem(orderItemId);
+
+        validateParticipant(conversation, authenticatedUser);
+
+        List<ErrorDetail> errors = new ArrayList<>();
+        String path;
+        String originalName;
+        String contentType;
+
+        if ("DELIVERY".equalsIgnoreCase(source)) {
+            DeliveryFile file = deliveryFileRepository.findById(attachmentId).orElse(null);
+
+            if (file == null || file.getDelivery() == null || file.getDelivery().getOrderItem() == null
+                    || !file.getDelivery().getOrderItem().getId().equals(orderItemId)) {
+                errors.add(new ErrorDetail(ErrorCode.ATTACHMENT_NOT_FOUND, "attachment", "arquivo nao encontrado"));
+                throw new ValidationException(errors);
+            }
+
+            path = file.getPath();
+            originalName = file.getOriginalName();
+            contentType = file.getExtension();
+        } else {
+            MessageAttachment attachment = messageAttachmentRepository.findById(attachmentId).orElse(null);
+
+            if (attachment == null || attachment.getMessage() == null
+                    || !attachment.getMessage().getConversation().getId().equals(conversation.getId())) {
+                errors.add(new ErrorDetail(ErrorCode.ATTACHMENT_NOT_FOUND, "attachment", "arquivo nao encontrado"));
+                throw new ValidationException(errors);
+            }
+
+            path = attachment.getPath();
+            originalName = attachment.getOriginalName();
+            contentType = attachment.getExtension();
+        }
+
+        try {
+            Resource resource = new UrlResource(Path.of(path).toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                errors.add(new ErrorDetail(ErrorCode.ATTACHMENT_NOT_FOUND, "attachment", "arquivo nao encontrado no servidor"));
+                throw new ValidationException(errors);
+            }
+
+            return new AttachmentDownload(resource, originalName, contentType);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Erro ao acessar arquivo", e);
+        }
     }
 }

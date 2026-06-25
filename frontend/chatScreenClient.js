@@ -25,18 +25,18 @@ var STATUS_LABELS = {
   REFUNDED:                   'Reembolsado'
 };
 
-var MESSAGE_TYPE_LABELS = {
+var MESSAGE_TYPE_INFO = {
   TEXT:                           null,
   ATTACHMENT:                     null,
-  DELIVERY:                       '📦 Entrega realizada — aguardando sua aprovação',
-  DELIVERY_ACCEPTED:              '✅ Entrega aprovada',
-  DELIVERY_REFUSED:               '❌ Revisão solicitada',
-  ADJUSTMENT_ACCEPTED:            '🔄 Revisão aceita pelo freelancer',
-  ADJUSTMENT_REFUSED:             '🚫 Revisão recusada — aguardando sua decisão',
-  DISPUTE_OPENED:                 '⚖️ Disputa aberta',
-  DISPUTE_RESOLVED_FREELANCER:    '✓ Disputa resolvida — favor freelancer',
-  DISPUTE_RESOLVED_CLIENT:        '↩ Disputa resolvida — reembolso processado',
-  DELIVERY_ACCEPTED_AFTER_FREEZE: '✅ Entrega aceita após revisão recusada'
+  DELIVERY:                       { label: '📦 Entrega realizada — aguardando sua aprovação', tone: 'ok' },
+  DELIVERY_ACCEPTED:              { label: '✅ Entrega aprovada',                              tone: 'ok' },
+  DELIVERY_REFUSED:               { label: '❌ Revisão solicitada',                            tone: 'danger' },
+  ADJUSTMENT_ACCEPTED:            { label: '🔄 Revisão aceita pelo freelancer',                 tone: 'ok' },
+  ADJUSTMENT_REFUSED:             { label: '🚫 Revisão recusada — aguardando sua decisão',      tone: 'danger' },
+  DISPUTE_OPENED:                 { label: '⚖️ Disputa aberta',                                tone: 'dispute' },
+  DISPUTE_RESOLVED_FREELANCER:    { label: '✓ Disputa resolvida — favor freelancer',           tone: 'ok' },
+  DISPUTE_RESOLVED_CLIENT:        { label: '↩ Disputa resolvida — reembolso processado',       tone: 'dispute' },
+  DELIVERY_ACCEPTED_AFTER_FREEZE: { label: '✅ Entrega aceita após revisão recusada',           tone: 'ok' }
 };
 
 /* ── Boot ───────────────────────────────────────────────────────────── */
@@ -175,7 +175,7 @@ async function loadConversation(itemId) {
     updateActionButtons();
 
     if (pollTimer) clearInterval(pollTimer);
-    pollTimer = setInterval(function () { pollMessages(itemId); }, 6000);
+    pollTimer = setInterval(function () { pollMessages(itemId); }, 3000);
 
   } catch (e) {
     if (msgs) msgs.innerHTML =
@@ -248,33 +248,28 @@ function renderMessages(messages) {
   }
 
   messages.forEach(function (m) {
-    var isMine     = m.senderName === myName;
-    var inits      = OFAuth.getInitials(m.senderName || '?');
-    var time       = m.sentAt ? new Date(m.sentAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-    var eventLabel = MESSAGE_TYPE_LABELS[m.type];
+    var isMine    = m.senderName === myName;
+    var inits     = OFAuth.getInitials(m.senderName || '?');
+    var time      = m.sentAt ? new Date(m.sentAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+    var eventInfo = MESSAGE_TYPE_INFO[m.type];
+    var hasFiles  = m.attachments && m.attachments.length;
 
-    if (eventLabel) {
-      var ev = document.createElement('div');
-      ev.className = 'msg-date';
-      ev.style.cssText = 'font-size:11px;padding:4px 12px;background:rgba(127,255,0,.06);border-radius:var(--radius);color:var(--green);border:1px solid rgba(127,255,0,.15);margin:8px auto;display:table';
-      ev.textContent = eventLabel;
-      msgs.appendChild(ev);
-    }
-
-    if (!m.content && !(m.attachments && m.attachments.length)) return;
+    if (!eventInfo && !m.content && !hasFiles) return;
 
     var div = document.createElement('div');
     div.className = 'msg' + (isMine ? ' mine' : '');
 
     var attachHtml = '';
-    if (m.attachments && m.attachments.length) {
+    if (hasFiles) {
       attachHtml = m.attachments.map(function (a) {
+        var url = API_BASE + '/chat/orderItem/' + m.orderItemId + '/attachment/' + (a.source || 'MESSAGE') + '/' + a.id + '/download';
         return '<div class="msg-file">' +
           '<span class="msg-file-icon">📄</span>' +
           '<div class="msg-file-info">' +
             '<div class="msg-file-name">' + escHtml(a.originalName || 'arquivo') + '</div>' +
             '<div class="msg-file-size">' + formatFileSize(a.fileSize) + '</div>' +
           '</div>' +
+          '<button class="msg-file-download" data-url="' + escHtml(url) + '" data-name="' + escHtml(a.originalName || 'arquivo') + '" title="Baixar arquivo">⬇</button>' +
         '</div>';
       }).join('');
     }
@@ -282,11 +277,25 @@ function renderMessages(messages) {
     var avatarColor     = isMine ? '#60a5fa' : 'var(--gdim)';
     var avatarTextColor = isMine ? '' : ';color:var(--green)';
 
+    var bodyHtml;
+    if (eventInfo) {
+      var toneClass = eventInfo.tone !== 'ok' ? ' tone-' + eventInfo.tone : '';
+      bodyHtml =
+        '<div class="msg-bubble msg-event' + toneClass + '">' +
+          '<div class="msg-event-label' + toneClass + '">' + escHtml(eventInfo.label) + '</div>' +
+          (m.content ? '<div class="msg-event-text">' + escHtml(m.content) + '</div>' : '') +
+          attachHtml +
+        '</div>';
+    } else {
+      bodyHtml =
+        (m.content  ? '<div class="msg-bubble">' + escHtml(m.content) + '</div>' : '') +
+        (attachHtml ? '<div class="msg-bubble">' + attachHtml + '</div>' : '');
+    }
+
     div.innerHTML =
       '<div class="msg-avatar" style="background:' + avatarColor + avatarTextColor + '">' + escHtml(inits) + '</div>' +
-      '<div>' +
-        (m.content ? '<div class="msg-bubble">' + escHtml(m.content) + '</div>' : '') +
-        (attachHtml ? '<div class="msg-bubble">' + attachHtml + '</div>' : '') +
+      '<div class="msg-content">' +
+        bodyHtml +
         '<div class="msg-meta">' + time + (isMine ? ' <span class="msg-check">✓✓</span>' : '') + '</div>' +
       '</div>';
 
@@ -306,12 +315,14 @@ function updateActionButtons() {
   var item   = sidebarItems.find(function (x) { return x.id === currentItemId; });
   var status = item ? item.status : null;
 
+  toggleChatClosed(status === 'COMPLETED');
+
   var html = '';
 
   if (status === 'PENDING_DELIVERY_REVISION') {
     html =
       '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDelivery\')">✅ APROVAR ENTREGA</button>' +
-      '<button class="btn-dispute" style="margin-bottom:8px" onclick="doAction(\'refuseDelivery\')">↩ Solicitar Revisão</button>';
+      '<button class="btn-dispute" style="margin-bottom:8px" onclick="openRefuseModal()">↩ Solicitar Revisão</button>';
   } else if (status === 'FROZEN') {
     html =
       '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDeliveryAfterFreeze\')">✅ Aceitar mesmo assim</button>' +
@@ -323,6 +334,14 @@ function updateActionButtons() {
 
   btns.innerHTML = html;
   section.style.display = '';
+}
+
+function toggleChatClosed(closed) {
+  var banner    = document.getElementById('chatClosedBanner');
+  var inputArea = document.getElementById('chatInputArea');
+  if (!banner || !inputArea) return;
+  banner.style.display    = closed ? '' : 'none';
+  inputArea.style.display = closed ? 'none' : '';
 }
 
 /* ── Send message ─────────────────────────────────────────────────── */
@@ -392,6 +411,72 @@ async function doAction(action) {
   }
 }
 
+/* ── Refuse delivery modal ─────────────────────────────────────────── */
+
+function openRefuseModal() {
+  if (!currentItemId) return;
+  document.getElementById('refuseMsg').value = '';
+  var statusMsg = document.getElementById('refuseStatusMsg');
+  if (statusMsg) { statusMsg.textContent = ''; statusMsg.className = 'admin-form-msg'; }
+  var btn = document.getElementById('refuseSubmitBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'ENVIAR SOLICITAÇÃO'; }
+  document.getElementById('refuseModal').classList.add('show');
+}
+
+function closeRefuseModal() {
+  document.getElementById('refuseModal').classList.remove('show');
+}
+
+async function submitRefuseDelivery() {
+  if (!currentItemId) return;
+
+  var reason    = document.getElementById('refuseMsg').value.trim();
+  var statusMsg = document.getElementById('refuseStatusMsg');
+  var btn       = document.getElementById('refuseSubmitBtn');
+
+  btn.disabled    = true;
+  btn.textContent = 'ENVIANDO...';
+  if (statusMsg) { statusMsg.textContent = ''; statusMsg.className = 'admin-form-msg'; }
+
+  var form = new FormData();
+  if (reason) form.append('message', reason);
+
+  try {
+    var res = await fetch(API_BASE + '/chat/orderItem/' + currentItemId + '/refuseDelivery', {
+      method:  'POST',
+      headers: authHdr(),
+      body:    form
+    });
+
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var errMsg = (Array.isArray(data.errors) && data.errors.length)
+        ? data.errors.map(function (e) { return e.message; }).join(' | ')
+        : 'Erro ao solicitar revisão.';
+      if (statusMsg) { statusMsg.textContent = errMsg; statusMsg.className = 'admin-form-msg admin-form-msg-error'; }
+      btn.disabled    = false;
+      btn.textContent = 'ENVIAR SOLICITAÇÃO';
+      return;
+    }
+
+    closeRefuseModal();
+    await refreshSidebarItems();
+    var msgRes = await fetch(API_BASE + '/chat/orderItem/' + currentItemId, { headers: authHdr() });
+    if (msgRes.ok) { lastMessages = await msgRes.json(); renderMessages(lastMessages); }
+    updateActionButtons();
+    updateServiceBar(currentItemId);
+
+  } catch (_) {
+    if (statusMsg) { statusMsg.textContent = 'Erro de conexão.'; statusMsg.className = 'admin-form-msg admin-form-msg-error'; }
+    btn.disabled    = false;
+    btn.textContent = 'ENVIAR SOLICITAÇÃO';
+  }
+}
+
+document.getElementById('refuseModal').addEventListener('click', function (e) {
+  if (e.target === this) closeRefuseModal();
+});
+
 /* ── Sidebar search ──────────────────────────────────────────────── */
 
 function filterConvs() {
@@ -419,3 +504,27 @@ function formatFileSize(bytes) {
   if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / 1048576).toFixed(1) + ' MB';
 }
+
+async function downloadFile(url, filename) {
+  try {
+    var res = await fetch(url, { headers: authHdr() });
+    if (!res.ok) { alert('Erro ao baixar arquivo.'); return; }
+    var blob = await res.blob();
+    var blobUrl = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename || 'arquivo';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch (_) {
+    alert('Erro de conexão ao baixar arquivo.');
+  }
+}
+
+document.getElementById('chatMessages').addEventListener('click', function (e) {
+  var btn = e.target.closest('.msg-file-download');
+  if (!btn) return;
+  downloadFile(btn.dataset.url, btn.dataset.name);
+});

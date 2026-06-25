@@ -3,6 +3,7 @@ package br.unicesumar.onefreela.dto;
 import br.unicesumar.onefreela.entity.Message;
 import br.unicesumar.onefreela.enums.MessageType;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MessageResponse {
@@ -35,10 +36,17 @@ public class MessageResponse {
             response.orderItemId = message.getConversation().getOrderItem().getId();
         }
 
-        response.attachments = message.getAttachmentList()
+        response.attachments = new ArrayList<>(message.getAttachmentList()
                 .stream()
                 .map(MessageAttachmentResponse::fromEntity)
-                .toList();
+                .toList());
+
+        if (message.getDelivery() != null) {
+            message.getDelivery().getFileList()
+                    .stream()
+                    .map(MessageAttachmentResponse::fromDeliveryFile)
+                    .forEach(response.attachments::add);
+        }
 
         return response;
     }
