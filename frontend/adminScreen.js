@@ -15,6 +15,78 @@ let reviewingReportId    = null;
 let allDisputes        = [];
 let reviewingDisputeId = null;
 
+var ADMIN_PAGE_SIZE   = 10;
+var adminUsersPage    = 1;
+var adminWorksPage    = 1;
+var adminReportsPage  = 1;
+var adminDisputesPage = 1;
+
+var ADMIN_SECTIONS = ['dashboard', 'usuarios', 'servicos', 'denuncias', 'disputas'];
+var adminLoadedSections = {};
+
+function switchAdminSection(id) {
+  ADMIN_SECTIONS.forEach(function (s) {
+    var el = document.getElementById(s);
+    if (el) el.style.display = 'none';
+  });
+
+  var target = document.getElementById(id);
+  if (target) target.style.display = '';
+
+  document.querySelectorAll('.nav-item[data-section]').forEach(function (el) {
+    el.classList.remove('active');
+  });
+  document.querySelectorAll('.nav-item[data-section="' + id + '"]').forEach(function (el) {
+    el.classList.add('active');
+  });
+
+  if (!adminLoadedSections[id]) {
+    adminLoadedSections[id] = true;
+    if (id === 'usuarios') loadUsers();
+    if (id === 'servicos') loadWorks();
+    if (id === 'denuncias') loadReports();
+    if (id === 'disputas') loadDisputes();
+  }
+}
+
+function renderAdminPagination(containerId, total, currentPage, setterName) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  var totalPages = Math.ceil(total / ADMIN_PAGE_SIZE);
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+  var start = (currentPage - 1) * ADMIN_PAGE_SIZE + 1;
+  var end   = Math.min(currentPage * ADMIN_PAGE_SIZE, total);
+
+  var base   = 'border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:6px;padding:5px 11px;cursor:pointer;font-size:13px;transition:background .15s';
+  var active = 'border:1px solid var(--green);background:var(--green);color:#000;border-radius:6px;padding:5px 11px;cursor:pointer;font-size:13px;font-weight:700';
+
+  var html = '<div style="display:flex;align-items:center;gap:6px;padding:18px 0 4px;justify-content:center;flex-wrap:wrap">';
+  html += '<span style="font-size:12px;color:var(--muted2);margin-right:6px">' + start + '–' + end + ' de ' + total + '</span>';
+
+  if (currentPage > 1) {
+    html += '<button style="' + base + '" onclick="' + setterName + '(' + (currentPage - 1) + ')">‹</button>';
+  }
+
+  var from = Math.max(1, currentPage - 2);
+  var to   = Math.min(totalPages, currentPage + 2);
+  for (var p = from; p <= to; p++) {
+    html += '<button style="' + (p === currentPage ? active : base) + '" onclick="' + setterName + '(' + p + ')">' + p + '</button>';
+  }
+
+  if (currentPage < totalPages) {
+    html += '<button style="' + base + '" onclick="' + setterName + '(' + (currentPage + 1) + ')">›</button>';
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function setAdminUsersPage(p)    { adminUsersPage    = p; renderUsers(); }
+function setAdminWorksPage(p)    { adminWorksPage    = p; renderWorks(); }
+function setAdminReportsPage(p)  { adminReportsPage  = p; renderReports(); }
+function setAdminDisputesPage(p) { adminDisputesPage = p; renderDisputes(); }
+
 function authHeader() {
   return { 'Authorization': OFAuth.getToken() };
 }
@@ -27,6 +99,9 @@ function initAdmin() {
     window.location.href = 'profile.html';
     return;
   }
+  // Start on dashboard; other sections load on first visit
+  switchAdminSection('dashboard');
+  // Load all data in background so stats cards populate
   loadUsers();
   loadWorks();
   loadReports();
@@ -96,6 +171,7 @@ function updateStats() {
 
 function setFilter(filter) {
   currentFilter = filter;
+  adminUsersPage = 1;
   document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
   var id  = 'filter' + filter.charAt(0).toUpperCase() + filter.slice(1);
   var btn = document.getElementById(id);
@@ -104,6 +180,7 @@ function setFilter(filter) {
 }
 
 function filterUsers() {
+  adminUsersPage = 1;
   renderUsers();
 }
 
@@ -139,10 +216,14 @@ function renderUsers() {
 
   if (filtered.length === 0) {
     list.innerHTML = '<p class="admin-list-empty">Nenhum usuário encontrado.</p>';
+    renderAdminPagination('usersPagination', 0, 1, 'setAdminUsersPage');
     return;
   }
 
-  filtered.forEach(function (u) {
+  var start     = (adminUsersPage - 1) * ADMIN_PAGE_SIZE;
+  var pageItems = filtered.slice(start, start + ADMIN_PAGE_SIZE);
+
+  pageItems.forEach(function (u) {
     var initials  = OFAuth.getInitials(u.name || '');
     var isAdminU  = !!u.admin;
     var isFreelU  = !!u.freelancer;
@@ -173,6 +254,8 @@ function renderUsers() {
 
     list.appendChild(row);
   });
+
+  renderAdminPagination('usersPagination', filtered.length, adminUsersPage, 'setAdminUsersPage');
 }
 
 /* ── Detail / Inspect modal ──────────────────────────────────────── */
@@ -466,6 +549,7 @@ var WORK_STATUS_BADGE = {
 
 function setWorksFilter(filter) {
   currentWorksFilter = filter;
+  adminWorksPage = 1;
   document.querySelectorAll('#servicos .filter-btn').forEach(function (b) { b.classList.remove('active'); });
   var map = {
     all:            'filterWorksAll',
@@ -478,7 +562,7 @@ function setWorksFilter(filter) {
   renderWorks();
 }
 
-function filterWorks() { renderWorks(); }
+function filterWorks() { adminWorksPage = 1; renderWorks(); }
 
 function getFilteredWorks() {
   var query = (document.getElementById('searchWorksInput').value || '').toLowerCase().trim();
@@ -513,10 +597,14 @@ function renderWorks() {
 
   if (filtered.length === 0) {
     list.innerHTML = '<p class="admin-list-empty">Nenhum serviço encontrado.</p>';
+    renderAdminPagination('adminWorksPagination', 0, 1, 'setAdminWorksPage');
     return;
   }
 
-  filtered.forEach(function (w) {
+  var wStart     = (adminWorksPage - 1) * ADMIN_PAGE_SIZE;
+  var wPageItems = filtered.slice(wStart, wStart + ADMIN_PAGE_SIZE);
+
+  wPageItems.forEach(function (w) {
     var statusLbl  = WORK_STATUS_LABELS[w.status] || w.status;
     var badgeCls   = WORK_STATUS_BADGE[w.status]  || 'admin-badge';
     var isPending  = w.status === 'PENDING_REVIEW';
@@ -551,6 +639,8 @@ function renderWorks() {
 
     list.appendChild(row);
   });
+
+  renderAdminPagination('adminWorksPagination', filtered.length, adminWorksPage, 'setAdminWorksPage');
 }
 
 /* ── Work review modal ───────────────────────────────────────────── */
@@ -738,6 +828,7 @@ async function loadReports() {
 
 function setReportsFilter(filter) {
   currentReportsFilter = filter;
+  adminReportsPage = 1;
   document.querySelectorAll('#denuncias .filter-btn').forEach(function (b) { b.classList.remove('active'); });
   var idMap = {
     all:          'filterReportsAll',
@@ -752,6 +843,7 @@ function setReportsFilter(filter) {
 }
 
 function filterReports() {
+  adminReportsPage = 1;
   renderReports();
 }
 
@@ -774,14 +866,16 @@ function renderReports() {
 
   if (!visible.length) {
     list.innerHTML = '<p class="admin-list-empty">Nenhuma denúncia encontrada.</p>';
+    renderAdminPagination('adminReportsPagination', 0, 1, 'setAdminReportsPage');
     return;
   }
 
   list.innerHTML = '';
-  visible
-    .slice()
-    .sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); })
-    .forEach(function (r) {
+  var sortedR    = visible.slice().sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+  var rStart     = (adminReportsPage - 1) * ADMIN_PAGE_SIZE;
+  var rPageItems = sortedR.slice(rStart, rStart + ADMIN_PAGE_SIZE);
+
+  rPageItems.forEach(function (r) {
       var row = document.createElement('div');
       row.className = 'admin-user-row';
       row.style.cursor = 'pointer';
@@ -816,6 +910,8 @@ function renderReports() {
       row.addEventListener('click', function () { openReportModal(r.id); });
       list.appendChild(row);
     });
+
+  renderAdminPagination('adminReportsPagination', sortedR.length, adminReportsPage, 'setAdminReportsPage');
 }
 
 function openReportModal(reportId) {
@@ -942,6 +1038,7 @@ async function loadDisputes() {
 }
 
 function filterDisputes() {
+  adminDisputesPage = 1;
   renderDisputes();
 }
 
@@ -959,11 +1056,15 @@ function renderDisputes() {
 
   if (!visible.length) {
     list.innerHTML = '<p class="admin-list-empty">Nenhuma disputa em aberto. 🎉</p>';
+    renderAdminPagination('adminDisputesPagination', 0, 1, 'setAdminDisputesPage');
     return;
   }
 
   list.innerHTML = '';
-  visible.forEach(function (item) {
+  var dStart     = (adminDisputesPage - 1) * ADMIN_PAGE_SIZE;
+  var dPageItems = visible.slice(dStart, dStart + ADMIN_PAGE_SIZE);
+
+  dPageItems.forEach(function (item) {
     var row = document.createElement('div');
     row.className = 'admin-user-row';
     row.style.cursor = 'pointer';
@@ -989,6 +1090,8 @@ function renderDisputes() {
     row.addEventListener('click', function () { openDisputeModal(item.id); });
     list.appendChild(row);
   });
+
+  renderAdminPagination('adminDisputesPagination', visible.length, adminDisputesPage, 'setAdminDisputesPage');
 }
 
 async function openDisputeModal(orderItemId) {

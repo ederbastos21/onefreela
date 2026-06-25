@@ -5,6 +5,80 @@ let editingWorkId  = null;
 let ordersData     = [];
 let payingOrderIdx = -1;
 
+var freelancerOrdersData = [];
+var loadedSections = {};
+
+var PAGE_SIZE    = 10;
+var worksPage    = 1;
+var ordersPage   = 1;
+var flOrdersPage = 1;
+var reportsPage  = 1;
+
+var PROFILE_SECTIONS = ['servicos', 'pedidosAtivos', 'pedidos', 'denuncias', 'configGroup'];
+
+function switchSection(id) {
+  PROFILE_SECTIONS.forEach(function (s) {
+    var el = document.getElementById(s);
+    if (el) el.style.display = 'none';
+  });
+
+  var target = document.getElementById(id);
+  if (target) target.style.display = '';
+
+  document.querySelectorAll('.nav-item[data-section]').forEach(function (el) {
+    el.classList.remove('active');
+  });
+  document.querySelectorAll('.nav-item[data-section="' + id + '"]').forEach(function (el) {
+    el.classList.add('active');
+  });
+
+  if (!loadedSections[id]) {
+    loadedSections[id] = true;
+    if (id === 'pedidos')       loadOrders();
+    if (id === 'servicos')      loadWorks();
+    if (id === 'pedidosAtivos') loadFreelancerOrders();
+    if (id === 'denuncias')     { buildReportsFilterButtons(); loadMyReports(); }
+  }
+}
+
+function renderPagination(containerId, total, currentPage, setterName) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  var totalPages = Math.ceil(total / PAGE_SIZE);
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+  var start = (currentPage - 1) * PAGE_SIZE + 1;
+  var end   = Math.min(currentPage * PAGE_SIZE, total);
+
+  var base   = 'border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:6px;padding:5px 11px;cursor:pointer;font-size:13px;transition:background .15s';
+  var active = 'border:1px solid var(--green);background:var(--green);color:#000;border-radius:6px;padding:5px 11px;cursor:pointer;font-size:13px;font-weight:700';
+
+  var html = '<div style="display:flex;align-items:center;gap:6px;padding:18px 0 4px;justify-content:center;flex-wrap:wrap">';
+  html += '<span style="font-size:12px;color:var(--muted2);margin-right:6px">' + start + '–' + end + ' de ' + total + '</span>';
+
+  if (currentPage > 1) {
+    html += '<button style="' + base + '" onclick="' + setterName + '(' + (currentPage - 1) + ')">‹</button>';
+  }
+
+  var from = Math.max(1, currentPage - 2);
+  var to   = Math.min(totalPages, currentPage + 2);
+  for (var p = from; p <= to; p++) {
+    html += '<button style="' + (p === currentPage ? active : base) + '" onclick="' + setterName + '(' + p + ')">' + p + '</button>';
+  }
+
+  if (currentPage < totalPages) {
+    html += '<button style="' + base + '" onclick="' + setterName + '(' + (currentPage + 1) + ')">›</button>';
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function setWorksPage(p)    { worksPage    = p; renderWorks(); }
+function setOrdersPage(p)   { ordersPage   = p; renderOrders(ordersData); }
+function setFlOrdersPage(p) { flOrdersPage = p; renderFreelancerOrders(freelancerOrdersData); }
+function setReportsPage(p)  { reportsPage  = p; renderMyReports(); }
+
 function authHeader() {
   return { 'Authorization': OFAuth.getToken() };
 }
@@ -30,35 +104,29 @@ function initProfile() {
   document.getElementById('profileType').textContent = typeLabel;
   document.getElementById('editProfileLink').href    = isFreelancer ? 'freelancerEditProfile.html' : 'clientEditProfile.html';
 
-  // Sidebar "Página Inicial" link (o logo da navbar é fixado por OFAuth.loadNav)
-  const homeUrl = isFreelancer ? 'exploreFreelancers.html' : 'index.html';
+  const homeUrl     = isFreelancer ? 'exploreFreelancers.html' : 'index.html';
   const sidebarHome = document.getElementById('sidebarHome');
   if (sidebarHome) sidebarHome.href = homeUrl;
 
-  // Sidebar items
-  if (isFreelancer) show('sidebarServicos'); else hide('sidebarServicos');
-  if (!isFreelancer) show('sidebarExplorar'); else hide('sidebarExplorar');
-  if (!isFreelancer) show('sidebarFavoritos'); else hide('sidebarFavoritos');
-
-  // Main sections
-  if (isFreelancer) show('servicos'); else hide('servicos');
-
-  // Chat nav link
-  var chatLink = document.getElementById('navChatLink');
-  if (chatLink) chatLink.href = 'chatScreen.html';
-
-  if (!isFreelancer) {
-    show('sidebarPedidos');
-    show('pedidos');
-    loadOrders();
-    show('sidebarDenuncias');
-    show('denuncias');
-    buildReportsFilterButtons();
-    loadMyReports();
-  } else {
-    // Pedidos recebidos (clientes compraram do freelancer)
+  // Sidebar visibility by role
+  if (isFreelancer) {
+    show('sidebarServicos');
     show('sidebarPedidosAtivos');
-    show('pedidosAtivos');
+    show('sidebarPedidos');
+    hide('sidebarExplorar');
+    hide('sidebarFavoritos');
+    hide('sidebarDenuncias');
+  } else {
+    hide('sidebarServicos');
+    hide('sidebarPedidosAtivos');
+    show('sidebarPedidos');
+    show('sidebarExplorar');
+    show('sidebarFavoritos');
+    show('sidebarDenuncias');
+  }
+
+  // Set section titles for freelancer pedidos
+  if (isFreelancer) {
     var recTitle = document.querySelector('#pedidosAtivos .block-title');
     if (recTitle) {
       recTitle.style.fontSize = '22px';
@@ -66,11 +134,6 @@ function initProfile() {
         'Pedidos Recebidos' +
         '<div style="font-size:14px;font-weight:400;color:var(--muted2);margin-top:4px">Serviços comprados pelos clientes de você</div>';
     }
-    loadFreelancerOrders();
-
-    // Pedidos feitos (o freelancer comprou de outros)
-    show('sidebarPedidos');
-    show('pedidos');
     var myTitle = document.querySelector('#pedidos .block-title');
     if (myTitle) {
       myTitle.style.fontSize = '22px';
@@ -78,7 +141,6 @@ function initProfile() {
         'Meus Pedidos' +
         '<div style="font-size:14px;font-weight:400;color:var(--muted2);margin-top:4px">Serviços que você comprou de outros freelancers</div>';
     }
-    loadOrders();
   }
 
   // Client-only settings fields
@@ -97,7 +159,11 @@ function initProfile() {
     if (notifDesc1)  notifDesc1.textContent  = 'Receba um e-mail quando alguém enviar uma proposta para seus projetos';
   }
 
-  if (isFreelancer) loadWorks();
+  var chatLink = document.getElementById('navChatLink');
+  if (chatLink) chatLink.href = 'chatScreen.html';
+
+  // Start on settings section (lazy-loads other sections on demand)
+  switchSection('configGroup');
 }
 
 /* ── Freelancer: works ────────────────────────────────────────────── */
@@ -161,7 +227,10 @@ function renderWorks() {
 
   const STATUS_LABELS = { ACTIVE: 'Ativo', INACTIVE: 'Pausado', PENDING_REVIEW: 'Em análise', REJECTED: 'Rejeitado' };
 
-  works.forEach(function (w) {
+  var start    = (worksPage - 1) * PAGE_SIZE;
+  var pageItems = works.slice(start, start + PAGE_SIZE);
+
+  pageItems.forEach(function (w) {
     const isActive    = w.status === 'ACTIVE';
     const canTogglePause = w.status === 'ACTIVE' || w.status === 'INACTIVE';
     const pauseLabel  = isActive ? 'Pausar' : 'Reativar';
@@ -192,6 +261,8 @@ function renderWorks() {
   addBtn.innerHTML = '+ Adicionar novo serviço';
   addBtn.addEventListener('click', function () { openWorkModal(null); });
   list.appendChild(addBtn);
+
+  renderPagination('worksPagination', works.length, worksPage, 'setWorksPage');
 }
 
 function openWorkModal(workId) {
@@ -408,6 +479,7 @@ async function loadFreelancerOrders() {
 }
 
 function renderFreelancerOrders(items) {
+  freelancerOrdersData = items;
   var list  = document.getElementById('activeOrdersList');
   var badge = document.getElementById('activeOrdersBadge');
 
@@ -425,7 +497,11 @@ function renderFreelancerOrders(items) {
 
   list.innerHTML = '';
 
-  items.slice().sort(function (a, b) { return b.id - a.id; }).forEach(function (item) {
+  var sorted    = items.slice().sort(function (a, b) { return b.id - a.id; });
+  var start     = (flOrdersPage - 1) * PAGE_SIZE;
+  var pageItems = sorted.slice(start, start + PAGE_SIZE);
+
+  pageItems.forEach(function (item) {
     var stLabel  = ITEM_FL_STATUS_LABELS[item.status] || item.status;
     var stClass  = ITEM_FL_STATUS_CSS[item.status]    || 'item-status-pending';
     var price    = formatPrice(item.totalPrice);
@@ -461,6 +537,8 @@ function renderFreelancerOrders(items) {
 
     list.appendChild(card);
   });
+
+  renderPagination('flOrdersPagination', sorted.length, flOrdersPage, 'setFlOrdersPage');
 }
 
 /* ── Client: orders ───────────────────────────────────────────────── */
@@ -538,9 +616,11 @@ function renderOrders(orders) {
 
   list.innerHTML = '';
 
-  var sorted = orders.slice().sort(function (a, b) { return b.id - a.id; });
+  var sorted    = orders.slice().sort(function (a, b) { return b.id - a.id; });
+  var start     = (ordersPage - 1) * PAGE_SIZE;
+  var pageItems = sorted.slice(start, start + PAGE_SIZE);
 
-  sorted.forEach(function (order, idx) {
+  pageItems.forEach(function (order) {
     var originalIdx = ordersData.indexOf(order);
     var statusClass = ORDER_STATUS_CLASSES[order.status] || 'order-status-not-paid';
     var statusLabel = ORDER_STATUS_LABELS[order.status]  || order.status;
@@ -609,6 +689,8 @@ function renderOrders(orders) {
 
     list.appendChild(card);
   });
+
+  renderPagination('ordersPagination', sorted.length, ordersPage, 'setOrdersPage');
 }
 
 function escHtml(s) {
@@ -656,6 +738,7 @@ function buildReportsFilterButtons() {
     var btn = e.target.closest('[data-filter]');
     if (!btn) return;
     myReportsFilter = btn.dataset.filter;
+    reportsPage = 1;
     wrap.querySelectorAll('.rf-btn').forEach(function (b) { b.classList.remove('active'); });
     btn.classList.add('active');
     renderMyReports();
@@ -700,11 +783,13 @@ function renderMyReports() {
     return;
   }
 
-  list.innerHTML = visible
-    .slice()
-    .sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); })
-    .map(tplMyReportCard)
-    .join('');
+  var sorted    = visible.slice().sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+  var start     = (reportsPage - 1) * PAGE_SIZE;
+  var pageItems = sorted.slice(start, start + PAGE_SIZE);
+
+  list.innerHTML = pageItems.map(tplMyReportCard).join('');
+
+  renderPagination('reportsPagination', sorted.length, reportsPage, 'setReportsPage');
 }
 
 function tplMyReportCard(r) {

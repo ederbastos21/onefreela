@@ -124,36 +124,36 @@
 
     <aside class="sidebar">
       <span class="sidebar-label">Minha Conta</span>
-      <a href="#perfil" class="nav-item active">
+      <a href="#" class="nav-item" data-section="configGroup" onclick="switchSection('configGroup');return false;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Perfil
       </a>
 
       <!-- Freelancer only -->
-      <a href="#servicos" class="nav-item" id="sidebarServicos" style="display:none">
+      <a href="#" class="nav-item" id="sidebarServicos" data-section="servicos" onclick="switchSection('servicos');return false;" style="display:none">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
         Serviços
         <span class="nav-item-badge" id="worksBadge" style="display:none">0</span>
       </a>
-      <a href="#pedidosAtivos" class="nav-item" id="sidebarPedidosAtivos" style="display:none">
+      <a href="#" class="nav-item" id="sidebarPedidosAtivos" data-section="pedidosAtivos" onclick="switchSection('pedidosAtivos');return false;" style="display:none">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Pedidos Ativos
         <span class="nav-item-badge" id="activeOrdersBadge" style="display:none">0</span>
       </a>
 
       <!-- Client only -->
-      <a href="#pedidos" class="nav-item" id="sidebarPedidos" style="display:none">
+      <a href="#" class="nav-item" id="sidebarPedidos" data-section="pedidos" onclick="switchSection('pedidos');return false;" style="display:none">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         Pedidos
         <span class="nav-item-badge" id="ordersBadge" style="display:none">0</span>
       </a>
-      <a href="#denuncias" class="nav-item" id="sidebarDenuncias" style="display:none">
+      <a href="#" class="nav-item" id="sidebarDenuncias" data-section="denuncias" onclick="switchSection('denuncias');return false;" style="display:none">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
         Minhas Denúncias
         <span class="nav-item-badge" id="myReportsBadge" style="display:none">0</span>
       </a>
 
-      <a href="#config" class="nav-item">
+      <a href="#" class="nav-item" data-section="configGroup" onclick="switchSection('configGroup');return false;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         Configurações
       </a>
@@ -210,18 +210,21 @@
       <div id="servicos" class="section-block reveal" style="display:none">
         <div class="block-title">Meus Serviços</div>
         <div class="services-list" id="servicesList"></div>
+        <div id="worksPagination"></div>
       </div>
 
       <!-- Freelancer only: active orders -->
       <div id="pedidosAtivos" class="section-block reveal" style="display:none">
         <div class="block-title">Pedidos Ativos</div>
         <div id="activeOrdersList"></div>
+        <div id="flOrdersPagination"></div>
       </div>
 
       <!-- Client only: orders -->
       <div id="pedidos" class="section-block reveal" style="display:none">
         <div class="block-title">Meus Pedidos</div>
         <div id="ordersList"></div>
+        <div id="ordersPagination"></div>
       </div>
 
       <!-- Client only: my reports -->
@@ -231,7 +234,11 @@
           <div class="reports-filter-wrap" id="reportsFilterWrap"></div>
         </div>
         <div id="myReportsList"></div>
+        <div id="reportsPagination"></div>
       </div>
+
+      <!-- Settings group (personal info + security + notifications + danger) -->
+      <div id="configGroup" style="display:none">
 
       <!-- Both: personal info -->
       <div id="config" class="section-block reveal">
@@ -337,6 +344,8 @@
           <button class="btn-danger">Excluir minha conta permanentemente</button>
         </div>
       </div>
+
+      </div><!-- /configGroup -->
 
     </main>
   </div>
