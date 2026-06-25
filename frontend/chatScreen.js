@@ -290,7 +290,7 @@ function updateActionButtons(item) {
   var btns    = document.getElementById('actionButtons');
   if (!section || !btns) return;
 
-  toggleChatClosed(!!item && item.status === 'COMPLETED');
+  toggleChatClosed(item);
 
   if (!item) { btns.innerHTML = ''; section.style.display = 'none'; return; }
 
@@ -323,14 +323,29 @@ function updateActionButtons(item) {
         break;
     }
   } else {
-    if (item.status === 'PENDING_DELIVERY_REVISION') {
-      html =
-        '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDelivery\')">✅ APROVAR ENTREGA</button>' +
-        '<button class="btn-dispute" style="margin-bottom:8px" onclick="openRefuseModal()">↩ Solicitar Revisão</button>';
-    } else if (item.status === 'FROZEN') {
-      html =
-        '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDeliveryAfterFreeze\')">✅ Aceitar mesmo assim</button>' +
-        '<button class="btn-dispute" onclick="doAction(\'openDispute\')">⚖️ Abrir Disputa</button>';
+    switch (item.status) {
+      case 'PENDING_DELIVERY':
+        html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">⏳ Aguardando o freelancer enviar a entrega.</p>';
+        break;
+      case 'PENDING_DELIVERY_REVISION':
+        html =
+          '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDelivery\')">✅ APROVAR ENTREGA</button>' +
+          '<button class="btn-dispute" style="margin-bottom:8px" onclick="openRefuseModal()">↩ Solicitar Revisão</button>';
+        break;
+      case 'FROZEN':
+        html =
+          '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDeliveryAfterFreeze\')">✅ Aceitar mesmo assim</button>' +
+          '<button class="btn-dispute" onclick="doAction(\'openDispute\')">⚖️ Abrir Disputa</button>';
+        break;
+      case 'ON_DISPUTE':
+        html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">⚖️ Disputa em análise pelo administrador.</p>';
+        break;
+      case 'COMPLETED':
+        html = '<p style="font-size:12px;color:var(--green);line-height:1.5">✅ Pedido concluído.</p>';
+        break;
+      case 'REFUNDED':
+        html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">↩ Pedido reembolsado.</p>';
+        break;
     }
   }
 
@@ -340,12 +355,34 @@ function updateActionButtons(item) {
   section.style.display = '';
 }
 
-function toggleChatClosed(closed) {
+function toggleChatClosed(item) {
   var banner    = document.getElementById('chatClosedBanner');
   var inputArea = document.getElementById('chatInputArea');
   if (!banner || !inputArea) return;
-  banner.style.display    = closed ? '' : 'none';
-  inputArea.style.display = closed ? 'none' : '';
+
+  var isFinished = !!item && (item.status === 'COMPLETED' || item.status === 'REFUNDED');
+  banner.style.display    = isFinished ? '' : 'none';
+  inputArea.style.display = isFinished ? 'none' : '';
+
+  if (!isFinished) return;
+
+  var icon  = banner.querySelector('.chat-closed-icon');
+  var title = banner.querySelector('.chat-closed-title');
+  var sub   = document.getElementById('chatClosedSub');
+
+  if (item.status === 'REFUNDED') {
+    if (icon)  icon.textContent  = '↩';
+    if (title) title.textContent = 'Pedido reembolsado';
+    if (sub) sub.textContent = IS_FREELANCER
+      ? 'O administrador resolveu a disputa em favor do cliente e o valor foi reembolsado a ele. Este chat foi encerrado e não aceita mais mensagens.'
+      : 'O administrador resolveu a disputa em seu favor e o valor foi reembolsado. Este chat foi encerrado e não aceita mais mensagens.';
+  } else {
+    if (icon)  icon.textContent  = '✅';
+    if (title) title.textContent = 'Serviço concluído';
+    if (sub) sub.textContent = IS_FREELANCER
+      ? 'A entrega foi aceita e o pagamento foi liberado. Este chat foi encerrado e não aceita mais mensagens.'
+      : 'Você aprovou a entrega e o pagamento foi liberado ao freelancer. Este chat foi encerrado e não aceita mais mensagens.';
+  }
 }
 
 /* ── Messages ─────────────────────────────────────────────────────── */

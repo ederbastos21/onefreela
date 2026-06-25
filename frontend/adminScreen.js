@@ -1060,11 +1060,25 @@ async function openDisputeModal(orderItemId) {
         var icon = TYPE_ICONS[m.type] || '•';
         var labelColor = TYPE_TONE_COLORS[m.type] || 'var(--text)';
         var time = m.sentAt ? new Date(m.sentAt).toLocaleString('pt-BR') : '';
+        var attachHtml = '';
+        if (m.attachments && m.attachments.length) {
+          attachHtml = m.attachments.map(function (a) {
+            var url = API_BASE + '/admin/disputes/' + orderItemId + '/attachment/' + (a.source || 'MESSAGE') + '/' + a.id + '/download';
+            return '<div class="msg-file">' +
+              '<span class="msg-file-icon">📄</span>' +
+              '<div class="msg-file-info">' +
+                '<div class="msg-file-name">' + escHtmlAdmin(a.originalName || 'arquivo') + '</div>' +
+                '<div class="msg-file-size">' + formatFileSizeAdmin(a.fileSize) + '</div>' +
+              '</div>' +
+              '<button class="msg-file-download" data-url="' + escHtmlAdmin(url) + '" data-name="' + escHtmlAdmin(a.originalName || 'arquivo') + '" title="Baixar arquivo">⬇</button>' +
+            '</div>';
+          }).join('');
+        }
         return '<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">' +
           '<span style="color:' + labelColor + ';font-weight:600">' + escHtmlAdmin(icon + ' ' + (m.senderName || 'Sistema')) + '</span>' +
           '<span style="color:var(--muted);margin-left:8px;font-size:11px">' + time + '</span>' +
           '<div style="margin-top:4px">' + escHtmlAdmin(m.content || '') + '</div>' +
-          (m.attachments && m.attachments.length ? '<div style="color:var(--muted);margin-top:2px">📎 ' + m.attachments.map(function (a) { return escHtmlAdmin(a.originalName || 'arquivo'); }).join(', ') + '</div>' : '') +
+          attachHtml +
         '</div>';
       }).join('');
       msgBox.scrollTop = msgBox.scrollHeight;
@@ -1078,6 +1092,37 @@ function closeDisputeModal() {
   document.getElementById('disputeModal').classList.remove('show');
   reviewingDisputeId = null;
 }
+
+function formatFileSizeAdmin(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+async function downloadFileAdmin(url, filename) {
+  try {
+    var res = await fetch(url, { headers: authHeader() });
+    if (!res.ok) { alert('Erro ao baixar arquivo.'); return; }
+    var blob = await res.blob();
+    var blobUrl = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename || 'arquivo';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch (_) {
+    alert('Erro de conexão ao baixar arquivo.');
+  }
+}
+
+document.getElementById('disputeMessages').addEventListener('click', function (e) {
+  var btn = e.target.closest('.msg-file-download');
+  if (!btn) return;
+  downloadFileAdmin(btn.dataset.url, btn.dataset.name);
+});
 
 async function resolveDispute(side) {
   if (!reviewingDisputeId) return;

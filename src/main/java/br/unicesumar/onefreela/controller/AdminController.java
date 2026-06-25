@@ -1,6 +1,7 @@
 package br.unicesumar.onefreela.controller;
 
 import br.unicesumar.onefreela.dto.AdminUserUpdateDTO;
+import br.unicesumar.onefreela.dto.AttachmentDownload;
 import br.unicesumar.onefreela.dto.MessageResponse;
 import br.unicesumar.onefreela.dto.ReportReviewDTO;
 import br.unicesumar.onefreela.dto.WorkResponse;
@@ -10,6 +11,10 @@ import br.unicesumar.onefreela.enums.WorkStatus;
 import br.unicesumar.onefreela.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,14 +29,16 @@ public class AdminController {
     private final WorkService workService;
     private final ReportService reportService;
     private final DisputeService disputeService;
+    private final ChatService chatService;
 
     public AdminController(AuthService authService, UserService userService, WorkService workService,
-                           ReportService reportService, DisputeService disputeService) {
+                           ReportService reportService, DisputeService disputeService, ChatService chatService) {
         this.authService = authService;
         this.userService = userService;
         this.workService = workService;
         this.reportService = reportService;
         this.disputeService = disputeService;
+        this.chatService = chatService;
     }
 
     @GetMapping("/users")
@@ -204,6 +211,27 @@ public class AdminController {
         authService.checkAdmin(request, admin);
         return ResponseEntity.ok(disputeService.getDisputeMessages(orderItemId)
                 .stream().map(MessageResponse::fromEntity).toList());
+    }
+
+    @GetMapping("/disputes/{orderItemId}/attachment/{source}/{attachmentId}/download")
+    public ResponseEntity<Resource> downloadDisputeAttachment(HttpServletRequest request, @PathVariable Long orderItemId,
+                                                               @PathVariable String source, @PathVariable Long attachmentId) {
+        User admin = authService.getAuthenticatedUser(request);
+        authService.checkAdmin(request, admin);
+
+        AttachmentDownload download = chatService.downloadAttachmentForAdmin(orderItemId, source, attachmentId);
+
+        MediaType mediaType;
+        try {
+            mediaType = MediaType.parseMediaType(download.getContentType());
+        } catch (Exception e) {
+            mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        }
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(download.getFilename() != null ? download.getFilename() : "arquivo").build().toString())
+                .body(download.getResource());
     }
 
     @PostMapping("/disputes/{orderItemId}/resolveForFreelancer")

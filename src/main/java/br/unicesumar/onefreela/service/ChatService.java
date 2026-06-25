@@ -303,6 +303,16 @@ public class ChatService {
 
         validateParticipant(conversation, authenticatedUser);
 
+        return resolveAttachment(orderItemId, conversation, source, attachmentId);
+    }
+
+    // usado pelo admin ao revisar uma disputa - sem checagem de participante, pois o admin nao faz parte da conversa
+    public AttachmentDownload downloadAttachmentForAdmin(Long orderItemId, String source, Long attachmentId) {
+        Conversation conversation = findConversationByOrderItem(orderItemId);
+        return resolveAttachment(orderItemId, conversation, source, attachmentId);
+    }
+
+    private AttachmentDownload resolveAttachment(Long orderItemId, Conversation conversation, String source, Long attachmentId) {
         List<ErrorDetail> errors = new ArrayList<>();
         String path;
         String originalName;
