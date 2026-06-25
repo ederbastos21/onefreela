@@ -162,6 +162,39 @@
     if (navUser) navRight.insertBefore(group, navUser); else navRight.appendChild(group);
   }
 
+  /* ── Site footer ─────────────────────────────────────────────────── */
+  function _injectFooter() {
+    if (document.getElementById('ofSiteFooter')) return;
+    var footer = document.createElement('footer');
+    footer.id = 'ofSiteFooter';
+    footer.className = 'site-footer';
+    footer.innerHTML =
+      '<div class="footer-inner">' +
+        '<div class="footer-brand">' +
+          '<div class="footer-logo">OF</div>' +
+          '<div class="footer-logo-text">One<span>Freela</span></div>' +
+          '<p class="footer-tagline">Conectando talentos<br>a oportunidades reais.</p>' +
+        '</div>' +
+        '<div class="footer-col">' +
+          '<div class="footer-col-title">Sobre</div>' +
+          '<p class="footer-about">OneFreela é uma plataforma que conecta clientes e freelancers de forma simples, segura e eficiente.</p>' +
+        '</div>' +
+        '<div class="footer-col">' +
+          '<div class="footer-col-title">Suporte</div>' +
+          '<p class="footer-support-text">Nosso suporte é realizado exclusivamente por email. Envie sua dúvida para o endereço abaixo e nossa equipe responderá em até 48 horas úteis.</p>' +
+          '<a href="mailto:suporte@onefreela.com" class="footer-email">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
+            'suporte@onefreela.com' +
+          '</a>' +
+        '</div>' +
+      '</div>' +
+      '<div class="footer-bottom">' +
+        '<span>© ' + new Date().getFullYear() + ' OneFreela. Todos os direitos reservados.</span>' +
+        '<span>Suporte via email · suporte@onefreela.com</span>' +
+      '</div>';
+    document.body.appendChild(footer);
+  }
+
   /* ── Nav badges ──────────────────────────────────────────────────── */
   function _makeBadge(el, id) {
     if (!el) return null;
@@ -315,6 +348,8 @@
       if (notifBtn) notifBtn.style.display = 'none';
       var notifPanel = document.getElementById('notifPanel');
       if (notifPanel) notifPanel.style.display = 'none';
+
+      _injectFooter();
 
       if (this.isLoggedIn()) {
         renderBalance();
