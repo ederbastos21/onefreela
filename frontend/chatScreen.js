@@ -306,8 +306,8 @@ function updateActionButtons(item) {
         break;
       case 'ADJUSTMENT_REQUEST':
         html =
-          '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptAdjustment\')">✓ ACEITAR REVISÃO</button>' +
-          '<button class="btn-dispute" onclick="doAction(\'refuseAdjustment\')">✗ Recusar Revisão</button>';
+          '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptAdjustment\')">✓ REALIZAR AJUSTE</button>' +
+          '<button class="btn-dispute" onclick="doAction(\'refuseAdjustment\')">✗ Recusar Ajuste</button>';
         break;
       case 'ON_DISPUTE':
         html = '<p style="font-size:12px;color:var(--muted2);line-height:1.5">⚖️ Disputa em análise pelo administrador.</p>';
@@ -329,8 +329,8 @@ function updateActionButtons(item) {
         break;
       case 'PENDING_DELIVERY_REVISION':
         html =
-          '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDelivery\')">✅ APROVAR ENTREGA</button>' +
-          '<button class="btn-dispute" style="margin-bottom:8px" onclick="openRefuseModal()">↩ Solicitar Revisão</button>';
+          '<button class="btn-approve" style="margin-bottom:8px" onclick="doAction(\'acceptDelivery\')">✅ ACEITAR ENTREGA</button>' +
+          '<button class="btn-dispute" style="margin-bottom:8px" onclick="openRefuseModal()">↩ Solicitar Ajuste</button>';
         break;
       case 'FROZEN':
         html =

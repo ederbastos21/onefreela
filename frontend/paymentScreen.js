@@ -95,12 +95,10 @@ function updateTotals(snapshot) {
   (snapshot || []).forEach(item => {
     if (item._work) subtotal += Number(item._work.price) * (item.amount || 1);
   });
-  const fee   = subtotal * 0.10;
-  const total = subtotal + fee;
+  const total = subtotal;
   const count = (snapshot || []).length;
 
   const subLabel = document.getElementById('paySubtotalLabel');
-  if (subLabel) subLabel.textContent = 'Subtotal (' + count + ' serviço' + (count !== 1 ? 's' : '') + ')';
 
   const subVal = document.getElementById('paySubtotalVal');
   if (subVal)  subVal.textContent = formatMoney(subtotal);
