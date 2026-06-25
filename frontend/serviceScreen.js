@@ -182,8 +182,6 @@ async function addToCart() {
   }
 }
 
-function buyNow() { showToast('✓ Redirecionando para o pagamento...'); }
-
 initNotifPanel();
 
 let _currentWorkId = null;
