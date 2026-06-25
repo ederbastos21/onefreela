@@ -8,13 +8,15 @@ let payingOrderIdx = -1;
 var freelancerOrdersData = [];
 var loadedSections = {};
 
-var PAGE_SIZE    = 10;
-var worksPage    = 1;
-var ordersPage   = 1;
-var flOrdersPage = 1;
-var reportsPage  = 1;
+var PAGE_SIZE              = 10;
+var worksPage              = 1;
+var ordersPage             = 1;
+var flOrdersPage           = 1;
+var reportsPage            = 1;
+var disputasRecebidasPage  = 1;
+var minhasDisputasPage     = 1;
 
-var PROFILE_SECTIONS = ['servicos', 'pedidosAtivos', 'pedidos', 'denuncias', 'configGroup'];
+var PROFILE_SECTIONS = ['servicos', 'pedidosAtivos', 'pedidos', 'denuncias', 'configGroup', 'disputasRecebidas', 'minhasDisputas'];
 
 function switchSection(id) {
   PROFILE_SECTIONS.forEach(function (s) {
@@ -38,6 +40,22 @@ function switchSection(id) {
     if (id === 'servicos')      loadWorks();
     if (id === 'pedidosAtivos') loadFreelancerOrders();
     if (id === 'denuncias')     { buildReportsFilterButtons(); loadMyReports(); }
+    if (id === 'disputasRecebidas') {
+      if (!loadedSections['pedidosAtivos']) {
+        loadedSections['pedidosAtivos'] = true;
+        loadFreelancerOrders();
+      } else {
+        renderDisputasRecebidas();
+      }
+    }
+    if (id === 'minhasDisputas') {
+      if (!loadedSections['pedidos']) {
+        loadedSections['pedidos'] = true;
+        loadOrders();
+      } else {
+        renderMinhasDisputas();
+      }
+    }
   }
 }
 
@@ -74,10 +92,12 @@ function renderPagination(containerId, total, currentPage, setterName) {
   el.innerHTML = html;
 }
 
-function setWorksPage(p)    { worksPage    = p; renderWorks(); }
-function setOrdersPage(p)   { ordersPage   = p; renderOrders(ordersData); }
-function setFlOrdersPage(p) { flOrdersPage = p; renderFreelancerOrders(freelancerOrdersData); }
-function setReportsPage(p)  { reportsPage  = p; renderMyReports(); }
+function setWorksPage(p)             { worksPage             = p; renderWorks(); }
+function setOrdersPage(p)            { ordersPage            = p; renderOrders(ordersData); }
+function setFlOrdersPage(p)          { flOrdersPage          = p; renderFreelancerOrders(freelancerOrdersData); }
+function setReportsPage(p)           { reportsPage           = p; renderMyReports(); }
+function setDisputasRecebidasPage(p) { disputasRecebidasPage = p; renderDisputasRecebidas(); }
+function setMinhasDisputasPage(p)    { minhasDisputasPage    = p; renderMinhasDisputas(); }
 
 function authHeader() {
   return { 'Authorization': OFAuth.getToken() };
@@ -112,17 +132,21 @@ function initProfile() {
   if (isFreelancer) {
     show('sidebarServicos');
     show('sidebarPedidosAtivos');
+    show('sidebarDisputasRecebidas');
     show('sidebarPedidos');
+    show('sidebarMinhasDisputas');
+    show('sidebarDenuncias');
     hide('sidebarExplorar');
     hide('sidebarFavoritos');
-    hide('sidebarDenuncias');
   } else {
     hide('sidebarServicos');
     hide('sidebarPedidosAtivos');
+    hide('sidebarDisputasRecebidas');
     show('sidebarPedidos');
+    hide('sidebarMinhasDisputas');
+    show('sidebarDenuncias');
     show('sidebarExplorar');
     show('sidebarFavoritos');
-    show('sidebarDenuncias');
   }
 
   // Set section titles for freelancer pedidos
@@ -147,17 +171,6 @@ function initProfile() {
   document.querySelectorAll('.client-only').forEach(function (el) {
     el.style.display = isFreelancer ? 'none' : '';
   });
-
-  // Notification labels differ by role
-  const notifLabel1 = document.getElementById('notifLabel1');
-  const notifDesc1  = document.getElementById('notifDesc1');
-  if (isFreelancer) {
-    if (notifLabel1) notifLabel1.textContent = 'Novas propostas de clientes';
-    if (notifDesc1)  notifDesc1.textContent  = 'Receba um e-mail quando um cliente entrar em contato com você';
-  } else {
-    if (notifLabel1) notifLabel1.textContent = 'Novas propostas de freelancers';
-    if (notifDesc1)  notifDesc1.textContent  = 'Receba um e-mail quando alguém enviar uma proposta para seus projetos';
-  }
 
   var chatLink = document.getElementById('navChatLink');
   if (chatLink) chatLink.href = 'chatScreen.html';
@@ -473,6 +486,7 @@ async function loadFreelancerOrders() {
 
     var items = await res.json();
     renderFreelancerOrders(items);
+    renderDisputasRecebidas();
   } catch (e) {
     if (list) list.innerHTML = '<div class="works-error">Erro ao carregar pedidos ativos.</div>';
   }
@@ -541,6 +555,126 @@ function renderFreelancerOrders(items) {
   renderPagination('flOrdersPagination', sorted.length, flOrdersPage, 'setFlOrdersPage');
 }
 
+/* ── Freelancer: disputas recebidas (clientes disputaram contra o freelancer) ── */
+
+function renderDisputasRecebidas() {
+  var list  = document.getElementById('disputasRecebidasList');
+  var badge = document.getElementById('disputasRecebidasBadge');
+  if (!list) return;
+
+  var disputed = (freelancerOrdersData || []).filter(function (i) { return i.status === 'ON_DISPUTE'; });
+
+  if (badge) {
+    badge.textContent   = disputed.length;
+    badge.style.display = disputed.length > 0 ? '' : 'none';
+  }
+
+  if (!disputed.length) {
+    list.innerHTML = '<div class="active-orders-empty">Nenhuma disputa recebida. Quando um cliente contestar sua entrega, ela aparecerá aqui.</div>';
+    renderPagination('disputasRecebidasPagination', 0, 1, 'setDisputasRecebidasPage');
+    return;
+  }
+
+  var sorted    = disputed.slice().sort(function (a, b) { return b.id - a.id; });
+  var start     = (disputasRecebidasPage - 1) * PAGE_SIZE;
+  var pageItems = sorted.slice(start, start + PAGE_SIZE);
+
+  list.innerHTML = '';
+  pageItems.forEach(function (item) {
+    var price    = formatPrice(item.totalPrice);
+    var deadline = item.deadlineDate
+      ? new Date(item.deadlineDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
+    var card = document.createElement('div');
+    card.className = 'order-card';
+    card.style.borderLeft = '3px solid #fb923c';
+    card.innerHTML =
+      '<div class="order-card-header" style="align-items:center;gap:12px">' +
+        '<div style="display:flex;align-items:baseline;gap:10px;flex:1;min-width:0">' +
+          '<span style="font-size:22px;font-weight:800;color:var(--green);letter-spacing:-0.5px">#' + item.id + '</span>' +
+          '<span style="font-size:16px;font-weight:600;color:var(--text)">' + escHtml(item.workTitle || 'Serviço') + '</span>' +
+        '</div>' +
+        '<span class="order-item-status item-status-dispute" style="font-size:12px;white-space:nowrap">⚖️ Em Disputa</span>' +
+      '</div>' +
+      '<div class="order-items-list">' +
+        '<div class="order-item-row" style="gap:14px;padding:14px 0;align-items:center">' +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="font-size:13px;color:var(--muted2)">Cliente: <span style="color:var(--text)">' + escHtml(item.clientName || '—') + '</span></div>' +
+            '<div style="font-size:13px;color:var(--muted2);margin-top:3px">Prazo: <span style="color:var(--text)">' + deadline + '</span></div>' +
+          '</div>' +
+          '<span style="font-size:15px;font-weight:700;color:var(--green);white-space:nowrap">' + price + '</span>' +
+          '<a href="chatScreen.html?orderItemId=' + item.id + '" class="btn-chat-item" style="font-size:13px;padding:6px 14px">💬 Ver chat</a>' +
+        '</div>' +
+      '</div>';
+    list.appendChild(card);
+  });
+
+  renderPagination('disputasRecebidasPagination', sorted.length, disputasRecebidasPage, 'setDisputasRecebidasPage');
+}
+
+/* ── Freelancer/Both: minhas disputas (disputas abertas pelo dono do perfil como comprador) ── */
+
+function renderMinhasDisputas() {
+  var list  = document.getElementById('minhasDisputasList');
+  var badge = document.getElementById('minhasDisputasBadge');
+  if (!list) return;
+
+  var disputed = [];
+  (ordersData || []).forEach(function (order) {
+    if (order.items) {
+      order.items.forEach(function (item) {
+        if (item.status === 'ON_DISPUTE') disputed.push({ item: item, order: order });
+      });
+    }
+  });
+
+  if (badge) {
+    badge.textContent   = disputed.length;
+    badge.style.display = disputed.length > 0 ? '' : 'none';
+  }
+
+  if (!disputed.length) {
+    list.innerHTML = '<div class="active-orders-empty">Nenhuma disputa em aberto. Quando contestar uma entrega recebida, ela aparecerá aqui.</div>';
+    renderPagination('minhasDisputasPagination', 0, 1, 'setMinhasDisputasPage');
+    return;
+  }
+
+  var sorted    = disputed.slice().sort(function (a, b) { return b.item.id - a.item.id; });
+  var start     = (minhasDisputasPage - 1) * PAGE_SIZE;
+  var pageItems = sorted.slice(start, start + PAGE_SIZE);
+
+  list.innerHTML = '';
+  pageItems.forEach(function (entry) {
+    var item  = entry.item;
+    var order = entry.order;
+    var price = formatPrice(item.totalPrice);
+    var fl    = item.freelancerName
+      ? '<div style="font-size:13px;color:var(--muted2);margin-top:3px">Freelancer: <span style="color:var(--text)">' + escHtml(item.freelancerName) + '</span></div>'
+      : '';
+    var card = document.createElement('div');
+    card.className = 'order-card';
+    card.style.borderLeft = '3px solid #fb923c';
+    card.innerHTML =
+      '<div class="order-card-header" style="align-items:center;gap:12px">' +
+        '<div style="display:flex;align-items:baseline;gap:10px;flex:1;min-width:0">' +
+          '<span style="font-size:22px;font-weight:800;color:var(--green);letter-spacing:-0.5px">#' + item.id + '</span>' +
+          '<span style="font-size:16px;font-weight:600;color:var(--text)">' + escHtml(item.workTitle || 'Serviço') + '</span>' +
+        '</div>' +
+        '<span class="order-item-status item-status-dispute" style="font-size:12px;white-space:nowrap">⚖️ Em Disputa</span>' +
+      '</div>' +
+      '<div class="order-items-list">' +
+        '<div class="order-item-row" style="gap:14px;padding:14px 0;align-items:center">' +
+          '<div style="flex:1;min-width:0">' + fl + '</div>' +
+          '<span style="font-size:15px;font-weight:700;color:var(--green);white-space:nowrap">' + price + '</span>' +
+          '<a href="chatScreen.html?orderItemId=' + item.id + '" class="btn-chat-item" style="font-size:13px;padding:6px 14px">💬 Ver chat</a>' +
+        '</div>' +
+      '</div>';
+    list.appendChild(card);
+  });
+
+  renderPagination('minhasDisputasPagination', sorted.length, minhasDisputasPage, 'setMinhasDisputasPage');
+}
+
 /* ── Client: orders ───────────────────────────────────────────────── */
 
 var METHOD_LABELS = {
@@ -595,6 +729,7 @@ async function loadOrders() {
 
     ordersData = await res.json();
     renderOrders(ordersData);
+    renderMinhasDisputas();
   } catch (e) {
     if (list) list.innerHTML = '<div class="works-error">Erro ao carregar pedidos.</div>';
   }
