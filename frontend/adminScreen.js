@@ -163,11 +163,12 @@ function renderUsers() {
       '<div class="admin-user-meta">' +
         '<span class="admin-badge admin-badge-' + roleKey + '">' + roleLabel + '</span>' +
         (u.verified ? '<span class="admin-badge admin-badge-verified">Verificado</span>' : '') +
+        (u.blocked  ? '<span class="admin-badge admin-badge-blocked">Bloqueado</span>'    : '') +
         '<span class="admin-user-date">' + dateText + '</span>' +
       '</div>' +
       '<div class="admin-user-actions">' +
         '<button class="btn-row"            onclick="openEditModal('   + uid + ')">Editar</button>' +
-        '<button class="btn-row btn-row-danger" onclick="confirmDeleteUser(' + uid + ')">Excluir</button>' +
+        '<button class="btn-row btn-row-danger" onclick="toggleBlockUser(' + uid + ')">' + (u.blocked ? 'Desbloquear' : 'Bloquear') + '</button>' +
       '</div>';
 
     list.appendChild(row);
@@ -200,7 +201,8 @@ function openDetailModal(userId) {
   var badgesEl = document.getElementById('detailBadges');
   badgesEl.innerHTML =
     '<span class="admin-badge admin-badge-' + roleKey + '">' + roleLabel + '</span>' +
-    (u.verified ? '<span class="admin-badge admin-badge-verified">Verificado</span>' : '');
+    (u.verified ? '<span class="admin-badge admin-badge-verified">Verificado</span>' : '') +
+    (u.blocked  ? '<span class="admin-badge admin-badge-blocked">Bloqueado</span>'    : '');
 
   var toggleBtn = document.getElementById('detailToggleAdminBtn');
   if (toggleBtn) {
@@ -208,6 +210,11 @@ function openDetailModal(userId) {
     toggleBtn.className   = isAdminU
       ? 'btn-detail-delete'
       : 'btn-detail-edit';
+  }
+
+  var blockBtn = document.getElementById('detailToggleBlockBtn');
+  if (blockBtn) {
+    blockBtn.textContent = u.blocked ? 'Desbloquear' : 'Bloquear';
   }
 
   document.getElementById('detailModal').classList.add('show');
@@ -224,10 +231,10 @@ function openEditFromDetail() {
   openEditModal(id);
 }
 
-function deleteFromDetail() {
+function toggleUserBlock() {
   var id = detailUserId;
   closeDetailModal();
-  confirmDeleteUser(id);
+  toggleBlockUser(id);
 }
 
 async function toggleUserAdmin() {
@@ -342,29 +349,44 @@ async function submitUserForm() {
   btn.disabled    = true;
   btn.textContent = 'SALVANDO...';
 
-  if (isEdit) {
-    setUserFormMsg('Edição de usuários pelo admin não está disponível nesta versão da API.', 'error');
-    btn.disabled    = false;
-    btn.textContent = 'SALVAR ALTERAÇÕES';
-    return;
-  }
-
-  var payload = { name, email, password, cpf: '00000000000', birthday: '2000-01-01', phoneNumber: '00000000000', freelancer: type === 'freelancer' };
-
   try {
-    var res = await fetch(API_BASE + '/users/register', {
-      method: 'POST',
-      headers: { ...authHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    if (isEdit) {
+      var res = await fetch(API_BASE + '/admin/users/' + editingUserId, {
+        method: 'PUT',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email })
+      });
 
-    if (!res.ok) {
-      var data = await res.json().catch(function () { return {}; });
-      var msg  = Array.isArray(data.errors) && data.errors.length
-        ? data.errors.map(function (e) { return e.message; }).join(' • ')
-        : 'Erro ao cadastrar usuário.';
-      setUserFormMsg(msg, 'error');
-      return;
+      if (!res.ok) {
+        var data = await res.json().catch(function () { return {}; });
+        var msg  = Array.isArray(data.errors) && data.errors.length
+          ? data.errors.map(function (e) { return e.message; }).join(' • ')
+          : 'Erro ao salvar alterações.';
+        setUserFormMsg(msg, 'error');
+        return;
+      }
+
+      var original = allUsers.find(function (x) { return x.id === editingUserId; });
+      if (original && !!original.admin !== isAdminF) {
+        var toggleEndpoint = isAdminF ? '/admin/makeUserAdmin/' : '/admin/removeUserAdmin/';
+        await fetch(API_BASE + toggleEndpoint + editingUserId, { method: 'POST', headers: authHeader() });
+      }
+    } else {
+      var payload = { name, email, password, cpf: '00000000000', birthday: '2000-01-01', phoneNumber: '00000000000', freelancer: type === 'freelancer' };
+      var res = await fetch(API_BASE + '/users/register', {
+        method: 'POST',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        var data = await res.json().catch(function () { return {}; });
+        var msg  = Array.isArray(data.errors) && data.errors.length
+          ? data.errors.map(function (e) { return e.message; }).join(' • ')
+          : 'Erro ao cadastrar usuário.';
+        setUserFormMsg(msg, 'error');
+        return;
+      }
     }
 
     closeUserFormModal();
@@ -373,36 +395,34 @@ async function submitUserForm() {
     setUserFormMsg('Erro de conexão.', 'error');
   } finally {
     btn.disabled    = false;
-    btn.textContent = 'CADASTRAR';
+    btn.textContent = isEdit ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR';
   }
 }
 
-/* ── Delete ──────────────────────────────────────────────────────── */
+/* ── Block / Unblock ─────────────────────────────────────────────── */
 
-async function confirmDeleteUser(userId) {
-  var u    = allUsers.find(function (x) { return x.id === userId; });
-  var name = u ? '"' + (u.name || 'este usuário') + '"' : 'este usuário';
+async function toggleBlockUser(userId) {
+  var u = allUsers.find(function (x) { return x.id === userId; });
+  if (!u) return;
 
-  if (!confirm('Excluir ' + name + '? Esta ação não pode ser desfeita.')) return;
+  var isBlocked = !!u.blocked;
+  var endpoint  = isBlocked ? '/admin/unblockUser/' + userId : '/admin/blockUser/' + userId;
 
   try {
-    var res = await fetch(API_BASE + '/admin/removeUser/' + userId, {
-      method: 'POST',
-      headers: authHeader()
-    });
+    var res = await fetch(API_BASE + endpoint, { method: 'POST', headers: authHeader() });
 
     if (!res.ok) {
       var data = await res.json().catch(function () { return {}; });
       var msg  = Array.isArray(data.errors) && data.errors.length
         ? data.errors.map(function (e) { return e.message; }).join(' • ')
-        : 'Erro ao excluir usuário.';
+        : 'Erro ao alterar bloqueio do usuário.';
       alert(msg);
       return;
     }
 
     await loadUsers();
   } catch (e) {
-    alert('Erro de conexão ao excluir.');
+    alert('Erro de conexão.');
   }
 }
 
@@ -430,16 +450,18 @@ async function loadWorks() {
 
 var WORK_STATUS_LABELS = {
   ACTIVE:         'Ativo',
-  INACTIVE:       'Inativo',
+  INACTIVE:       'Pausado',
   PENDING_REVIEW: 'Pendente',
-  REJECTED:       'Rejeitado'
+  REJECTED:       'Rejeitado',
+  BLOCKED:        'Bloqueado'
 };
 
 var WORK_STATUS_BADGE = {
   ACTIVE:         'admin-badge-order-paid',
   INACTIVE:       'admin-badge-work-inactive',
   PENDING_REVIEW: 'admin-badge-order-not_paid',
-  REJECTED:       'admin-badge-order-refunded'
+  REJECTED:       'admin-badge-order-refunded',
+  BLOCKED:        'admin-badge-blocked'
 };
 
 function setWorksFilter(filter) {
@@ -498,6 +520,8 @@ function renderWorks() {
     var statusLbl  = WORK_STATUS_LABELS[w.status] || w.status;
     var badgeCls   = WORK_STATUS_BADGE[w.status]  || 'admin-badge';
     var isPending  = w.status === 'PENDING_REVIEW';
+    var isBlocked  = w.status === 'BLOCKED';
+    var pauseLabel = w.status === 'ACTIVE' ? 'Pausar' : 'Reativar';
     var ownerName  = (w.owner && w.owner.name) ? w.owner.name : '—';
     var price      = w.price != null ? 'R$ ' + Number(w.price).toFixed(2).replace('.', ',') : '—';
     var date       = w.createdAt ? w.createdAt.split('T')[0] : '—';
@@ -518,7 +542,9 @@ function renderWorks() {
         '<span class="admin-user-date">' + date + '</span>' +
         '<div class="admin-user-actions">' +
           (isPending ? '<button class="btn-row" onclick="openWorkReviewModal(' + w.id + ')">Revisar</button>' : '') +
-          (!isPending ? '<button class="btn-row" onclick="pauseWork(' + w.id + ')">Pausar</button>' : '') +
+          (!isPending && !isBlocked ? '<button class="btn-row" onclick="pauseWork(' + w.id + ')">' + pauseLabel + '</button>' : '') +
+          (!isPending && !isBlocked ? '<button class="btn-row btn-row-danger" onclick="blockWork(' + w.id + ')">Bloquear</button>' : '') +
+          (isBlocked ? '<button class="btn-row" onclick="unblockWork(' + w.id + ')">Desbloquear</button>' : '') +
           '<button class="btn-row btn-row-danger" onclick="deleteWork(' + w.id + ')">Excluir</button>' +
         '</div>' +
       '</div>';
@@ -594,12 +620,53 @@ async function submitWorkReview(status) {
 }
 
 async function pauseWork(workId) {
-  if (!confirm('Pausar este serviço?')) return;
   try {
     var res = await fetch(API_BASE + '/admin/works/pauseWork/' + workId, {
       method: 'POST', headers: authHeader()
     });
-    if (!res.ok) { alert('Erro ao pausar serviço.'); return; }
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao alterar status do serviço.';
+      alert(msg);
+      return;
+    }
+    await loadWorks();
+  } catch (_) { alert('Erro de conexão.'); }
+}
+
+async function blockWork(workId) {
+  if (!confirm('Bloquear este serviço? Ele deixará de aparecer para o cliente e para o freelancer.')) return;
+  try {
+    var res = await fetch(API_BASE + '/admin/works/blockWork/' + workId, {
+      method: 'POST', headers: authHeader()
+    });
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao bloquear serviço.';
+      alert(msg);
+      return;
+    }
+    await loadWorks();
+  } catch (_) { alert('Erro de conexão.'); }
+}
+
+async function unblockWork(workId) {
+  try {
+    var res = await fetch(API_BASE + '/admin/works/unblockWork/' + workId, {
+      method: 'POST', headers: authHeader()
+    });
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao desbloquear serviço.';
+      alert(msg);
+      return;
+    }
     await loadWorks();
   } catch (_) { alert('Erro de conexão.'); }
 }
@@ -610,7 +677,14 @@ async function deleteWork(workId) {
     var res = await fetch(API_BASE + '/admin/removeWork/' + workId, {
       method: 'POST', headers: authHeader()
     });
-    if (!res.ok) { alert('Erro ao excluir serviço.'); return; }
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao excluir serviço.';
+      alert(msg);
+      return;
+    }
     await loadWorks();
   } catch (_) { alert('Erro de conexão.'); }
 }

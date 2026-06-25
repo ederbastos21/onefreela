@@ -142,8 +142,12 @@ function renderWorks() {
     badge.style.display = works.length > 0 ? '' : 'none';
   }
 
+  const STATUS_LABELS = { ACTIVE: 'Ativo', INACTIVE: 'Pausado', PENDING_REVIEW: 'Em análise', REJECTED: 'Rejeitado' };
+
   works.forEach(function (w) {
-    const isActive = w.status === 'ACTIVE';
+    const isActive    = w.status === 'ACTIVE';
+    const canTogglePause = w.status === 'ACTIVE' || w.status === 'INACTIVE';
+    const pauseLabel  = isActive ? 'Pausar' : 'Reativar';
     const card = document.createElement('div');
     card.className = 'service-card';
     card.innerHTML = `
@@ -154,10 +158,12 @@ function renderWorks() {
         ${w.category ? `<div class="service-cat-tag">${w.category}</div>` : ''}
       </div>
       <div class="service-right">
-        <span class="service-status ${isActive ? 'status-active' : 'status-paused'}">${isActive ? 'Ativo' : 'Inativo'}</span>
+        <span class="service-status ${isActive ? 'status-active' : 'status-paused'}">${STATUS_LABELS[w.status] || w.status}</span>
         <div class="service-price">${formatPrice(w.price)}</div>
         <div class="service-actions">
           <button class="btn-sm" onclick="openWorkModal(${w.id})">Editar</button>
+          ${canTogglePause ? `<button class="btn-sm" onclick="toggleWorkPause(${w.id})">${pauseLabel}</button>` : ''}
+          ${canTogglePause ? `<button class="btn-sm btn-sm-danger" onclick="confirmBlockWork(${w.id})">Bloquear</button>` : ''}
           <button class="btn-sm btn-sm-danger" onclick="confirmDeleteWork(${w.id})">Excluir</button>
         </div>
       </div>`;
@@ -265,6 +271,54 @@ async function submitWork() {
   } finally {
     btn.disabled    = false;
     btn.textContent = isEdit ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR SERVIÇO';
+  }
+}
+
+async function toggleWorkPause(workId) {
+  try {
+    const res = await fetch(`${API_BASE}/works/${workId}/pause`, {
+      method: 'POST',
+      headers: authHeader()
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(function () { return {}; });
+      const msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao alterar status do serviço.';
+      alert(msg);
+      return;
+    }
+
+    await loadWorks();
+  } catch (e) {
+    alert('Erro de conexão.');
+  }
+}
+
+async function confirmBlockWork(workId) {
+  const w    = works.find(function (x) { return x.id === workId; });
+  const name = w ? `"${w.title}"` : 'este serviço';
+  if (!confirm(`Bloquear ${name}? Ele vai desaparecer da sua lista de serviços e só um administrador poderá reverter isso.`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/works/${workId}/block`, {
+      method: 'POST',
+      headers: authHeader()
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(function () { return {}; });
+      const msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao bloquear serviço.';
+      alert(msg);
+      return;
+    }
+
+    await loadWorks();
+  } catch (e) {
+    alert('Erro de conexão.');
   }
 }
 

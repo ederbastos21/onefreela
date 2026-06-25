@@ -4,5 +4,6 @@ public enum WorkStatus {
     PENDING_REVIEW,
     ACTIVE,
     REJECTED,
-    INACTIVE
+    INACTIVE,
+    BLOCKED
 }

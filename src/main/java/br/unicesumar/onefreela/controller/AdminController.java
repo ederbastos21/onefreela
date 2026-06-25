@@ -1,5 +1,6 @@
 package br.unicesumar.onefreela.controller;
 
+import br.unicesumar.onefreela.dto.AdminUserUpdateDTO;
 import br.unicesumar.onefreela.dto.MessageResponse;
 import br.unicesumar.onefreela.dto.ReportReviewDTO;
 import br.unicesumar.onefreela.dto.WorkResponse;
@@ -43,8 +44,18 @@ public class AdminController {
         return null;
     }
 
+    @PutMapping("/users/{id}")
+    public ResponseEntity<?> updateUser (HttpServletRequest httpServletRequest, @PathVariable("id") Long userId,
+                                         @Valid @RequestBody AdminUserUpdateDTO dto){
+        User user = authService.getAuthenticatedUser(httpServletRequest);
+        if (authService.checkAdmin(httpServletRequest, user)){
+            return ResponseEntity.ok().body(userService.adminUpdateUser(userId, dto));
+        }
+        return null;
+    }
+
     @PostMapping("/removeUser/{id}")
-    public ResponseEntity<?> removeUser (HttpServletRequest httpServletRequest, @PathVariable Long userId){
+    public ResponseEntity<?> removeUser (HttpServletRequest httpServletRequest, @PathVariable("id") Long userId){
         User user = authService.getAuthenticatedUser(httpServletRequest);
         if (authService.checkAdmin(httpServletRequest, user)){
             userService.deleteById(userId);
@@ -55,7 +66,7 @@ public class AdminController {
     }
 
     @PostMapping("/makeUserAdmin/{id}")
-    public ResponseEntity<?> makeUserAdmin (HttpServletRequest httpServletRequest, @PathVariable Long userId){
+    public ResponseEntity<?> makeUserAdmin (HttpServletRequest httpServletRequest, @PathVariable("id") Long userId){
         User user = authService.getAuthenticatedUser(httpServletRequest);
         if (authService.checkAdmin(httpServletRequest, user)){
             User savedUser = userService.makeAdmin(userId);
@@ -65,10 +76,30 @@ public class AdminController {
     }
 
     @PostMapping("/removeUserAdmin/{id}")
-    public ResponseEntity<?> removeUserAdmin (HttpServletRequest httpServletRequest, @PathVariable Long userId){
+    public ResponseEntity<?> removeUserAdmin (HttpServletRequest httpServletRequest, @PathVariable("id") Long userId){
         User user = authService.getAuthenticatedUser(httpServletRequest);
         if (authService.checkAdmin(httpServletRequest, user)){
             User savedUser = userService.removeAdmin(userId);
+            return ResponseEntity.ok().body(savedUser);
+        }
+        return null;
+    }
+
+    @PostMapping("/blockUser/{id}")
+    public ResponseEntity<?> blockUser (HttpServletRequest httpServletRequest, @PathVariable("id") Long userId){
+        User user = authService.getAuthenticatedUser(httpServletRequest);
+        if (authService.checkAdmin(httpServletRequest, user)){
+            User savedUser = userService.blockUser(userId);
+            return ResponseEntity.ok().body(savedUser);
+        }
+        return null;
+    }
+
+    @PostMapping("/unblockUser/{id}")
+    public ResponseEntity<?> unblockUser (HttpServletRequest httpServletRequest, @PathVariable("id") Long userId){
+        User user = authService.getAuthenticatedUser(httpServletRequest);
+        if (authService.checkAdmin(httpServletRequest, user)){
+            User savedUser = userService.unblockUser(userId);
             return ResponseEntity.ok().body(savedUser);
         }
         return null;
@@ -95,13 +126,28 @@ public class AdminController {
     }
 
     @PostMapping("/works/pauseWork/{id}")
-    public ResponseEntity<?> pauseWork (HttpServletRequest httpServletRequest, @PathVariable Long workId){
+    public ResponseEntity<?> pauseWork (HttpServletRequest httpServletRequest, @PathVariable("id") Long workId){
         User user = authService.getAuthenticatedUser(httpServletRequest);
         if(authService.checkAdmin(httpServletRequest, user)){
-            Work work = workService.findById(workId);
-            work.setStatus(WorkStatus.INACTIVE);
-            workService.save(work);
-            return ResponseEntity.ok().body(work);
+            return ResponseEntity.ok().body(workService.togglePause(user, workId));
+        }
+        return null;
+    }
+
+    @PostMapping("/works/blockWork/{id}")
+    public ResponseEntity<?> blockWork (HttpServletRequest httpServletRequest, @PathVariable("id") Long workId){
+        User user = authService.getAuthenticatedUser(httpServletRequest);
+        if(authService.checkAdmin(httpServletRequest, user)){
+            return ResponseEntity.ok().body(workService.blockWork(user, workId));
+        }
+        return null;
+    }
+
+    @PostMapping("/works/unblockWork/{id}")
+    public ResponseEntity<?> unblockWork (HttpServletRequest httpServletRequest, @PathVariable("id") Long workId){
+        User user = authService.getAuthenticatedUser(httpServletRequest);
+        if(authService.checkAdmin(httpServletRequest, user)){
+            return ResponseEntity.ok().body(workService.unblockWork(workId));
         }
         return null;
     }
@@ -115,7 +161,7 @@ public class AdminController {
     }
 
     @PostMapping("/removeWork/{id}")
-    public ResponseEntity<?> removeWork (HttpServletRequest httpServletRequest, @PathVariable Long workId){
+    public ResponseEntity<?> removeWork (HttpServletRequest httpServletRequest, @PathVariable("id") Long workId){
         User user = authService.getAuthenticatedUser(httpServletRequest);
         if(authService.checkAdmin(httpServletRequest, user)){
             workService.deleteWork(user,workId);

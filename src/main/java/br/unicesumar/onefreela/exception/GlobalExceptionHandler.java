@@ -21,7 +21,8 @@ public class GlobalExceptionHandler {
     private static final Set<ErrorCode> UNAUTHORIZED_CODES = Set.of(
             ErrorCode.TOKEN_NOT_FOUND,
             ErrorCode.TOKEN_EXPIRED,
-            ErrorCode.UNAUTHORIZED
+            ErrorCode.UNAUTHORIZED,
+            ErrorCode.USER_BLOCKED
     );
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

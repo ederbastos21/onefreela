@@ -12,4 +12,5 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     List<OrderItem> findByWorkOwnerAndStatus(User owner, OrderItemStatus status);
     List<OrderItem> findByWorkOwnerOrderByCreatedAtDesc(User owner);
     List<OrderItem> findByStatus(OrderItemStatus status);
+    boolean existsByWorkId(Long workId);
 }

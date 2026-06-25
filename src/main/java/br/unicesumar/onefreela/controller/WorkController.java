@@ -45,6 +45,20 @@ public class WorkController {
         return ResponseEntity.ok("Serviço excluído com sucesso");
     }
 
+    @PostMapping("/{id}/pause")
+    public ResponseEntity<WorkResponse> togglePause(HttpServletRequest httpServletRequest, @PathVariable Long id) {
+        User authenticatedUser = authService.checkFreelancer(httpServletRequest);
+        WorkResponse response = workService.togglePause(authenticatedUser, id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/block")
+    public ResponseEntity<WorkResponse> blockWork(HttpServletRequest httpServletRequest, @PathVariable Long id) {
+        User authenticatedUser = authService.checkFreelancer(httpServletRequest);
+        WorkResponse response = workService.blockWork(authenticatedUser, id);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/myWorks")
     public ResponseEntity<List<WorkResponse>> findMyWorks(HttpServletRequest httpServletRequest) {
         User authenticatedUser = authService.checkFreelancer(httpServletRequest);

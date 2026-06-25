@@ -79,6 +79,11 @@ public class AuthService {
 
         verifyPassword(loginRequestDTO.getPassword(), user);
 
+        if (user.isBlocked()) {
+            errors.add(new ErrorDetail(ErrorCode.USER_BLOCKED, "login", "Sua conta foi bloqueada pelo administrador"));
+            throw new ValidationException(errors);
+        }
+
         //tries to extract an existing session instead of creating a new one
         String existingSession = sessionService.getSession(user.getId());
         if (existingSession != null){
@@ -131,6 +136,11 @@ public class AuthService {
 
         if (user == null) {
             errors.add(new ErrorDetail(ErrorCode.TOKEN_NOT_FOUND, "token", "token nao corresponde a nenhum usuario registrado"));
+            throw new ValidationException(errors);
+        }
+
+        if (user.isBlocked()) {
+            errors.add(new ErrorDetail(ErrorCode.USER_BLOCKED, "token", "sua conta foi bloqueada pelo administrador"));
             throw new ValidationException(errors);
         }
 

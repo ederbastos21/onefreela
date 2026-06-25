@@ -25,6 +25,7 @@ public class User {
     private boolean isAdmin;
     private boolean isFreelancer;
     private boolean verified;
+    private boolean blocked;
 
     @OneToOne (mappedBy = "user")
     @JsonIgnore
@@ -136,6 +137,18 @@ public class User {
 
     public boolean isVerified() {
         return verified;
+    }
+
+    public boolean getBlocked() {
+        return blocked;
+    }
+
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
+    }
+
+    public boolean isBlocked() {
+        return blocked;
     }
 
     public Cart getCart() {

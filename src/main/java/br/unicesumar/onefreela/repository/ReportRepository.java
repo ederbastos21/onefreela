@@ -8,4 +8,5 @@ import java.util.List;
 public interface ReportRepository extends JpaRepository<Report, Long> {
     List<Report> findByReporterId(Long reporterId);
     List<Report> findByStatus(ReportStatus status);
+    boolean existsByWorkId(Long workId);
 }
