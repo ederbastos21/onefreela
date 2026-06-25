@@ -173,7 +173,7 @@ function renderSidebar() {
     return;
   }
 
-  allItems.forEach(function (item) {
+  allItems.slice().sort(function (a, b) { return b.id - a.id; }).forEach(function (item) {
     var statusLabel = STATUS_LABELS[item.status]       || item.status || '—';
     var statusClass  = STATUS_BADGE_CLASSES[item.status] || 'status-pending';
     var price = item.totalPrice != null
@@ -188,11 +188,12 @@ function renderSidebar() {
     var amountBadge = (item.amount && item.amount > 1)
       ? ' <span style="background:var(--green);color:#000;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">' + item.amount + 'x</span>'
       : '';
+    var serviceLabel = '<span style="color:var(--green);font-weight:700;font-size:14px">#' + item.id + '</span> ' + escHtml(item.workTitle || 'Serviço');
     div.innerHTML =
       '<div class="conv-avatar" style="background:var(--gdim);color:var(--green)">' + escHtml(inits) + '</div>' +
       '<div class="conv-info">' +
-        '<div class="conv-name"><span class="conv-name-text">' + escHtml(item.counterpartName || (IS_FREELANCER ? 'Cliente' : 'Freelancer')) + '</span><span class="conv-time">' + price + '</span></div>' +
-        '<div class="conv-service-tag">' + escHtml(item.workTitle || 'Pedido #' + item.id) + amountBadge + '</div>' +
+        '<div class="conv-name"><span class="conv-name-text" style="font-size:14px">' + serviceLabel + amountBadge + '</span><span class="conv-time">' + price + '</span></div>' +
+        '<div class="conv-service-tag" style="font-size:12px;color:var(--muted2)">' + escHtml(item.counterpartName || (IS_FREELANCER ? 'Cliente' : 'Freelancer')) + '</div>' +
         '<div class="conv-preview"><span class="status-badge ' + statusClass + '" style="font-size:9px">' + escHtml(statusLabel.toUpperCase()) + '</span></div>' +
       '</div>';
 

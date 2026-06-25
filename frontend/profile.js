@@ -408,26 +408,37 @@ function renderFreelancerOrders(items) {
 
   list.innerHTML = '';
 
-  items.forEach(function (item) {
+  items.slice().sort(function (a, b) { return b.id - a.id; }).forEach(function (item) {
     var stLabel  = ITEM_FL_STATUS_LABELS[item.status] || item.status;
     var stClass  = ITEM_FL_STATUS_CSS[item.status]    || 'item-status-pending';
     var price    = formatPrice(item.totalPrice);
-    var initials = item.clientName
-      ? item.clientName.trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase()
-      : '?';
+    var amtBadge = (item.amount && item.amount > 1)
+      ? '<span style="background:var(--green);color:#000;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;margin-left:8px">' + item.amount + 'x</span>'
+      : '';
+    var deadline = item.deadlineDate
+      ? new Date(item.deadlineDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
 
     var card = document.createElement('div');
-    card.className = 'active-order-card';
+    card.className = 'order-card';
     card.innerHTML =
-      '<div class="active-order-client-avatar">' + escHtml(initials) + '</div>' +
-      '<div class="active-order-body">' +
-        '<div class="active-order-title">' + escHtml(item.workTitle || 'Serviço') + '</div>' +
-        '<div class="active-order-client">Cliente: ' + escHtml(item.clientName || '—') + '</div>' +
+      '<div class="order-card-header" style="align-items:center;gap:12px">' +
+        '<div style="display:flex;align-items:baseline;gap:10px;flex:1;min-width:0">' +
+          '<span style="font-size:22px;font-weight:800;color:var(--green);letter-spacing:-0.5px">#' + item.id + '</span>' +
+          '<span style="font-size:16px;font-weight:600;color:var(--text)">' + escHtml(item.workTitle || 'Serviço') + '</span>' +
+          amtBadge +
+        '</div>' +
+        '<span class="order-item-status ' + stClass + '" style="font-size:12px;white-space:nowrap">' + escHtml(stLabel) + '</span>' +
       '</div>' +
-      '<div class="active-order-right">' +
-        '<span class="order-item-status ' + stClass + '">' + escHtml(stLabel) + '</span>' +
-        '<div class="active-order-price">' + price + '</div>' +
-        '<a href="chatScreen.html?orderItemId=' + item.id + '" class="btn-chat-item">💬 Chat</a>' +
+      '<div class="order-items-list">' +
+        '<div class="order-item-row" style="gap:14px;padding:14px 0;align-items:center">' +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="font-size:13px;color:var(--muted2)">Cliente: <span style="color:var(--text)">' + escHtml(item.clientName || '—') + '</span></div>' +
+            '<div style="font-size:13px;color:var(--muted2);margin-top:3px">Entrega até: <span style="color:var(--text)">' + deadline + '</span></div>' +
+          '</div>' +
+          '<span style="font-size:15px;font-weight:700;color:var(--green);white-space:nowrap">' + price + '</span>' +
+          '<a href="chatScreen.html?orderItemId=' + item.id + '" class="btn-chat-item" style="font-size:13px;padding:6px 14px">💬 Abrir chat</a>' +
+        '</div>' +
       '</div>';
 
     list.appendChild(card);
@@ -509,65 +520,73 @@ function renderOrders(orders) {
 
   list.innerHTML = '';
 
-  orders.forEach(function (order, idx) {
+  var sorted = orders.slice().sort(function (a, b) { return b.id - a.id; });
+
+  sorted.forEach(function (order, idx) {
+    var originalIdx = ordersData.indexOf(order);
     var statusClass = ORDER_STATUS_CLASSES[order.status] || 'order-status-not-paid';
     var statusLabel = ORDER_STATUS_LABELS[order.status]  || order.status;
     var methodLabel = METHOD_LABELS[order.paymentMethod] || order.paymentMethod || '—';
     var isPaid      = order.status === 'PAID';
+    var canPay      = order.status === 'NOT_PAID' || order.status === 'FAILED';
+
+    var dateStr = order.createdAt
+      ? new Date(order.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—';
 
     var itemsHtml = '';
     if (order.items && order.items.length) {
       itemsHtml = '<div class="order-items-list">';
       order.items.forEach(function (item) {
-        var amt        = item.amount > 1 ? ' × ' + item.amount : '';
-        var price      = formatPrice(item.totalPrice);
         var stClass    = ITEM_STATUS_CLASSES[item.status] || 'item-status-pending';
         var stLabel    = ITEM_STATUS_LABELS[item.status]  || item.status;
+        var amtBadge   = item.amount > 1
+          ? '<span style="background:var(--green);color:#000;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;margin-left:8px">' + item.amount + 'x</span>'
+          : '';
         var chatBtn    = isPaid
-          ? '<a href="chatScreen.html?orderItemId=' + item.id + '" class="btn-chat-item">💬 Chat</a>'
+          ? '<a href="chatScreen.html?orderItemId=' + item.id + '" class="btn-chat-item" style="font-size:13px;padding:6px 14px">💬 Abrir chat</a>'
           : '';
         var freelancer = item.freelancerName
-          ? '<div class="order-freelancer">Freelancer: ' + escHtml(item.freelancerName) + '</div>'
+          ? '<div style="font-size:13px;color:var(--muted2);margin-top:3px">Freelancer: <span style="color:var(--text)">' + escHtml(item.freelancerName) + '</span></div>'
           : '';
 
         itemsHtml +=
-          '<div class="order-item-row">' +
+          '<div class="order-item-row" style="gap:14px;padding:14px 0;align-items:center">' +
             '<div style="flex:1;min-width:0">' +
-              '<div class="order-item-title">' + escHtml(item.workTitle || 'Serviço') + amt + '</div>' +
+              '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
+                '<span style="font-size:15px;font-weight:600;color:var(--text)">' + escHtml(item.workTitle || 'Serviço') + '</span>' +
+                amtBadge +
+              '</div>' +
               freelancer +
             '</div>' +
-            '<span class="order-item-status ' + stClass + '">' + stLabel + '</span>' +
-            '<span class="order-item-price">' + price + '</span>' +
+            '<span class="order-item-status ' + stClass + '" style="font-size:12px;white-space:nowrap">' + stLabel + '</span>' +
+            '<span style="font-size:15px;font-weight:700;color:var(--green);white-space:nowrap">' + formatPrice(item.totalPrice) + '</span>' +
             chatBtn +
           '</div>';
       });
       itemsHtml += '</div>';
     }
 
-    var canPay     = order.status === 'NOT_PAID' || order.status === 'FAILED';
     var payBtnHtml = canPay
-      ? '<div class="order-pay-action"><button class="btn-pay-order" onclick="openPaymentModal(' + idx + ')">Realizar Pagamento</button></div>'
+      ? '<div class="order-pay-action"><button class="btn-pay-order" onclick="openPaymentModal(' + originalIdx + ')">Realizar Pagamento</button></div>'
       : '';
-
-    var dateStr = order.createdAt
-      ? new Date(order.createdAt).toLocaleDateString('pt-BR')
-      : '—';
 
     var card = document.createElement('div');
     card.className = 'order-card';
     card.innerHTML =
-      '<div class="order-card-header">' +
-        '<div class="order-card-meta">' +
-          '<div class="order-id">Pedido #' + order.id + '</div>' +
-          '<div class="order-date">' + dateStr + '</div>' +
+      '<div class="order-card-header" style="align-items:center;gap:12px">' +
+        '<div style="display:flex;align-items:baseline;gap:10px;flex:1;min-width:0">' +
+          '<span style="font-size:22px;font-weight:800;color:var(--green);letter-spacing:-0.5px">#' + order.id + '</span>' +
+          '<span style="font-size:16px;font-weight:600;color:var(--text)">Pedido</span>' +
+          '<span style="font-size:13px;color:var(--muted2);margin-left:4px">' + dateStr + '</span>' +
         '</div>' +
-        '<span class="order-status-badge ' + statusClass + '">' + statusLabel + '</span>' +
+        '<span class="order-status-badge ' + statusClass + '" style="font-size:12px;white-space:nowrap">' + statusLabel + '</span>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;margin:4px 0 2px;font-size:13px;color:var(--muted2)">' +
+        '<span>' + methodLabel + '</span>' +
+        '<span style="margin-left:auto;font-size:14px;font-weight:700;color:var(--text)">Total: ' + formatPrice(order.totalPrice) + '</span>' +
       '</div>' +
       itemsHtml +
-      '<div class="order-footer">' +
-        '<span class="order-method-tag">' + methodLabel + '</span>' +
-        '<span class="order-total-val">Total: ' + formatPrice(order.totalPrice) + '</span>' +
-      '</div>' +
       payBtnHtml;
 
     list.appendChild(card);
