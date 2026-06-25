@@ -91,10 +91,8 @@ var MESSAGE_TYPE_INFO = IS_FREELANCER ? FREELANCER_MESSAGE_TYPE_INFO : CLIENT_ME
   if (!IS_FREELANCER) {
     document.getElementById('quickReplies').style.display = 'none';
     document.getElementById('btnAttachDelivery').style.display = 'none';
-    document.getElementById('navCartLink').style.display = '';
-  } else {
-    document.getElementById('navCartLink').style.display = 'none';
   }
+  document.getElementById('navCartLink').style.display = '';
 })();
 
 /* ── Sidebar ──────────────────────────────────────────────────────── */

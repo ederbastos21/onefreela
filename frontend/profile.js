@@ -47,7 +47,6 @@ function initProfile() {
   var chatLink = document.getElementById('navChatLink');
   if (chatLink) chatLink.href = 'chatScreen.html';
 
-  // Client only: orders
   if (!isFreelancer) {
     show('sidebarPedidos');
     show('pedidos');
@@ -57,11 +56,29 @@ function initProfile() {
     buildReportsFilterButtons();
     loadMyReports();
   } else {
-    hide('sidebarPedidos');
-    hide('pedidos');
+    // Pedidos recebidos (clientes compraram do freelancer)
     show('sidebarPedidosAtivos');
     show('pedidosAtivos');
+    var recTitle = document.querySelector('#pedidosAtivos .block-title');
+    if (recTitle) {
+      recTitle.style.fontSize = '22px';
+      recTitle.innerHTML =
+        'Pedidos Recebidos' +
+        '<div style="font-size:14px;font-weight:400;color:var(--muted2);margin-top:4px">Serviços comprados pelos clientes de você</div>';
+    }
     loadFreelancerOrders();
+
+    // Pedidos feitos (o freelancer comprou de outros)
+    show('sidebarPedidos');
+    show('pedidos');
+    var myTitle = document.querySelector('#pedidos .block-title');
+    if (myTitle) {
+      myTitle.style.fontSize = '22px';
+      myTitle.innerHTML =
+        'Meus Pedidos' +
+        '<div style="font-size:14px;font-weight:400;color:var(--muted2);margin-top:4px">Serviços que você comprou de outros freelancers</div>';
+    }
+    loadOrders();
   }
 
   // Client-only settings fields
@@ -421,6 +438,7 @@ function renderFreelancerOrders(items) {
 
     var card = document.createElement('div');
     card.className = 'order-card';
+    card.style.borderLeft = '3px solid var(--green)';
     card.innerHTML =
       '<div class="order-card-header" style="align-items:center;gap:12px">' +
         '<div style="display:flex;align-items:baseline;gap:10px;flex:1;min-width:0">' +
