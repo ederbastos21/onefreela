@@ -20,7 +20,7 @@ import java.util.List;
 @Service
 public class PaymentService {
 
-    private static final double PLATFORM_FEE_RATE = 0.15;
+    private static final double PLATFORM_FEE_RATE = 0.085;
 
     private final PaymentRepository paymentRepository;
     private final OrderService orderService;
