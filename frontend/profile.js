@@ -54,6 +54,10 @@ function initProfile() {
     show('sidebarPedidos');
     show('pedidos');
     loadOrders();
+    show('sidebarDenuncias');
+    show('denuncias');
+    buildReportsFilterButtons();
+    loadMyReports();
   } else {
     hide('sidebarPedidos');
     hide('pedidos');
@@ -520,6 +524,138 @@ function renderOrders(orders) {
 
 function escHtml(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* ── Client: minhas denúncias ─────────────────────────────────────── */
+
+var myReports          = [];
+var myReportsFilter     = 'all';
+
+var REPORT_NATURE_LABELS = {
+  USER_BEHAVIOR:         'Comportamento de usuário',
+  FRAUD:                 'Fraude',
+  INAPPROPRIATE_CONTENT: 'Conteúdo inadequado',
+  PAYMENT:               'Problema de pagamento',
+  SERVICE:               'Problema com serviço',
+  SECURITY:              'Segurança',
+  OTHER:                 'Outro'
+};
+
+var REPORT_STATUS_LABELS = {
+  PENDING:      'Pendente',
+  UNDER_REVIEW: 'Em análise',
+  RESOLVED:     'Resolvida',
+  REJECTED:     'Rejeitada'
+};
+
+var REPORT_FILTER_CONFIG = [
+  { id: 'all',          label: 'Todas' },
+  { id: 'PENDING',      label: 'Pendentes' },
+  { id: 'UNDER_REVIEW', label: 'Em análise' },
+  { id: 'RESOLVED',     label: 'Resolvidas' },
+  { id: 'REJECTED',     label: 'Rejeitadas' }
+];
+
+function buildReportsFilterButtons() {
+  var wrap = document.getElementById('reportsFilterWrap');
+  if (!wrap) return;
+  wrap.innerHTML = REPORT_FILTER_CONFIG.map(function (f) {
+    return '<button class="rf-btn ' + (myReportsFilter === f.id ? 'active' : '') + '" data-filter="' + f.id + '">' + f.label + '</button>';
+  }).join('');
+
+  wrap.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-filter]');
+    if (!btn) return;
+    myReportsFilter = btn.dataset.filter;
+    wrap.querySelectorAll('.rf-btn').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderMyReports();
+  });
+}
+
+async function loadMyReports() {
+  var list = document.getElementById('myReportsList');
+  if (list) list.innerHTML = '<div class="reports-loading">Carregando denúncias...</div>';
+
+  try {
+    var res = await fetch(API_BASE + '/reports/myReports', { headers: authHeader() });
+    if (!res.ok) throw new Error();
+    myReports = await res.json();
+    renderMyReports();
+
+    var badge = document.getElementById('myReportsBadge');
+    if (badge) {
+      badge.textContent   = myReports.length;
+      badge.style.display = myReports.length > 0 ? '' : 'none';
+    }
+  } catch (e) {
+    if (list) list.innerHTML = '<div class="reports-loading" style="color:#ef4444">Erro ao carregar denúncias.</div>';
+  }
+}
+
+function renderMyReports() {
+  var list = document.getElementById('myReportsList');
+  if (!list) return;
+
+  var visible = myReportsFilter === 'all'
+    ? myReports
+    : myReports.filter(function (r) { return r.status === myReportsFilter; });
+
+  if (!visible.length) {
+    list.innerHTML =
+      '<div class="reports-empty">' +
+        '<div class="reports-empty-icon">📋</div>' +
+        '<div class="reports-empty-title">' + (myReportsFilter === 'all' ? 'Nenhuma denúncia registrada' : 'Nenhuma denúncia com este status') + '</div>' +
+        '<div class="reports-empty-sub">' + (myReportsFilter === 'all' ? 'Denuncie um serviço a partir da página dele para começar.' : 'Altere o filtro para ver outras denúncias.') + '</div>' +
+      '</div>';
+    return;
+  }
+
+  list.innerHTML = visible
+    .slice()
+    .sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); })
+    .map(tplMyReportCard)
+    .join('');
+}
+
+function tplMyReportCard(r) {
+  var natureLbl  = REPORT_NATURE_LABELS[r.nature] || r.nature;
+  var statusLbl  = REPORT_STATUS_LABELS[r.status] || r.status;
+  var createdAt  = r.createdAt  ? fmtReportDate(r.createdAt)  : '—';
+  var reviewedAt = r.reviewedAt ? ' · Analisada em ' + fmtReportDate(r.reviewedAt) : '';
+  var workHtml   = r.workTitle ? '<div class="report-card-work">🚩 Serviço: ' + escHtml(r.workTitle) + '</div>' : '';
+
+  var adminNotesHtml = r.adminNotes
+    ? '<div class="report-admin-notes"><div class="report-admin-notes-label">Notas do administrador</div>' + escHtml(r.adminNotes) + '</div>'
+    : '';
+
+  var attachCount = (r.attachments && r.attachments.length)
+    ? '<span style="font-size:11px;color:var(--muted2)">📎 ' + r.attachments.length + ' anexo' + (r.attachments.length > 1 ? 's' : '') + '</span>'
+    : '';
+
+  return (
+    '<div class="report-card">' +
+      '<div class="report-card-top">' +
+        '<div>' +
+          '<div class="report-card-title">' + escHtml(r.title) + '</div>' +
+          '<div class="report-card-nature">' + natureLbl + '</div>' +
+          workHtml +
+        '</div>' +
+        '<span class="rs-badge rs-' + r.status + '">' + statusLbl + '</span>' +
+      '</div>' +
+      '<div class="report-card-desc">' + escHtml(r.description) + '</div>' +
+      adminNotesHtml +
+      '<div class="report-card-footer">' +
+        '<span class="report-card-date">Registrada em ' + createdAt + reviewedAt + '</span>' +
+        attachCount +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function fmtReportDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 /* ── Client: payment modal ───────────────────────────────────────────── */

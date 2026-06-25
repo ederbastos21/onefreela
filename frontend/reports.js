@@ -232,6 +232,10 @@ function tplReportCard(r) {
   const createdAt  = r.createdAt ? fmtDate(r.createdAt) : '—';
   const reviewedAt = r.reviewedAt ? ` · Analisada em ${fmtDate(r.reviewedAt)}` : '';
 
+  const workHtml = r.workTitle
+    ? `<div class="report-card-work">🚩 Serviço: ${escHtml(r.workTitle)}</div>`
+    : '';
+
   const adminNotesHtml = r.adminNotes
     ? `<div class="report-admin-notes">
          <div class="report-admin-notes-label">Notas do administrador</div>
@@ -249,6 +253,7 @@ function tplReportCard(r) {
         <div>
           <div class="report-card-title">${escHtml(r.title)}</div>
           <div class="report-card-nature">${natureLbl}</div>
+          ${workHtml}
         </div>
         <span class="rs-badge rs-${r.status}">${statusLbl}</span>
       </div>

@@ -225,7 +225,166 @@ async function checkIfFavorited(workId) {
     populateWork(w);
     _currentWorkId = w.id;
     checkIfFavorited(w.id);
+
+    const reportBtn = document.getElementById('reportServiceBtn');
+    if (reportBtn && OFAuth.isLoggedIn() && OFAuth.getType() !== 'freelancer') {
+      reportBtn.style.display = '';
+    }
+    const titleEl = document.getElementById('reportModalWorkTitle');
+    if (titleEl) titleEl.textContent = w.title || 'este serviço';
   } catch (e) {
     console.error('Erro ao carregar serviço:', e);
   }
 })();
+
+/* ── Denunciar serviço ───────────────────────────────────────────── */
+
+const REPORT_NATURE_LABELS = {
+  USER_BEHAVIOR:         'Comportamento de usuário',
+  FRAUD:                 'Fraude',
+  INAPPROPRIATE_CONTENT: 'Conteúdo inadequado',
+  PAYMENT:               'Problema de pagamento',
+  SERVICE:               'Problema com serviço',
+  SECURITY:              'Segurança',
+  OTHER:                 'Outro'
+};
+
+let srSelectedFiles = [];
+
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function populateReportNatureSelect() {
+  const sel = document.getElementById('srNature');
+  if (!sel || sel.options.length) return;
+  Object.entries(REPORT_NATURE_LABELS).forEach(([value, label]) => {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    sel.appendChild(opt);
+  });
+  sel.value = 'SERVICE';
+}
+
+function openReportModal() {
+  if (!OFAuth.isLoggedIn()) { window.location.href = 'loginScreen.html'; return; }
+  if (!_currentWorkId) return;
+
+  populateReportNatureSelect();
+
+  document.getElementById('srTitle').value = '';
+  document.getElementById('srDesc').value  = '';
+  ['srNatureWrap', 'srTitleWrap', 'srDescWrap'].forEach(id => document.getElementById(id).classList.remove('error'));
+  ['srNatureErr', 'srTitleErr', 'srDescErr'].forEach(id => document.getElementById(id).classList.remove('show'));
+
+  srSelectedFiles = [];
+  renderSrAttachPreview();
+
+  const feedback = document.getElementById('srFeedback');
+  feedback.textContent = '';
+  feedback.className   = 'form-feedback';
+
+  const btn = document.getElementById('srSubmitBtn');
+  btn.disabled    = false;
+  btn.textContent = 'Registrar Denúncia';
+
+  document.getElementById('reportModal').classList.add('show');
+}
+
+function closeReportModal() {
+  document.getElementById('reportModal').classList.remove('show');
+}
+
+function renderSrAttachPreview() {
+  const preview = document.getElementById('srAttachPreview');
+  preview.innerHTML = srSelectedFiles.map((f, i) =>
+    `<div class="attach-chip">
+       <span style="overflow:hidden;text-overflow:ellipsis">${escHtml(f.name)}</span>
+       <span class="attach-chip-remove" data-idx="${i}">×</span>
+     </div>`
+  ).join('');
+
+  preview.querySelectorAll('[data-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      srSelectedFiles.splice(Number(btn.dataset.idx), 1);
+      renderSrAttachPreview();
+    });
+  });
+}
+
+document.getElementById('srFiles').addEventListener('change', function () {
+  Array.from(this.files).forEach(f => {
+    if (srSelectedFiles.find(s => s.name === f.name && s.size === f.size)) return;
+    srSelectedFiles.push(f);
+  });
+  this.value = '';
+  renderSrAttachPreview();
+});
+
+document.getElementById('reportModal').addEventListener('click', function (e) {
+  if (e.target === this) closeReportModal();
+});
+
+async function submitServiceReport() {
+  const nature = document.getElementById('srNature').value.trim();
+  const title  = document.getElementById('srTitle').value.trim();
+  const desc   = document.getElementById('srDesc').value.trim();
+
+  let valid = true;
+  function setErr(wrapId, errId, show) {
+    document.getElementById(wrapId).classList.toggle('error', show);
+    document.getElementById(errId).classList.toggle('show', show);
+    if (show) valid = false;
+  }
+  setErr('srNatureWrap', 'srNatureErr', !nature);
+  setErr('srTitleWrap',  'srTitleErr',  title.length < 5);
+  setErr('srDescWrap',   'srDescErr',   desc.length < 20);
+  if (!valid) return;
+
+  const btn      = document.getElementById('srSubmitBtn');
+  const feedback = document.getElementById('srFeedback');
+  btn.disabled    = true;
+  btn.textContent = 'Enviando...';
+  feedback.textContent = '';
+  feedback.className   = 'form-feedback';
+
+  try {
+    const dto  = { nature, title, description: desc, workId: _currentWorkId };
+    const blob = new Blob([JSON.stringify(dto)], { type: 'application/json' });
+    const form = new FormData();
+    form.append('report', blob);
+    srSelectedFiles.forEach(f => form.append('attachments', f));
+
+    const res = await fetch(`${API_BASE}/reports/register`, {
+      method:  'POST',
+      headers: { Authorization: OFAuth.getToken() },
+      body:    form
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(e => e.message).join(' | ')
+        : 'Erro ao registrar denúncia.';
+      feedback.textContent = msg;
+      feedback.className   = 'form-feedback error';
+      btn.disabled    = false;
+      btn.textContent = 'Registrar Denúncia';
+      return;
+    }
+
+    feedback.textContent = '✓ Denúncia registrada. Você pode acompanhar o andamento no seu perfil.';
+    feedback.className   = 'form-feedback success';
+    btn.textContent = 'Enviada ✓';
+    showToast('Denúncia registrada!');
+
+  } catch (e) {
+    feedback.textContent = 'Erro de conexão. Verifique sua internet.';
+    feedback.className   = 'form-feedback error';
+    btn.disabled    = false;
+    btn.textContent = 'Registrar Denúncia';
+  }
+}

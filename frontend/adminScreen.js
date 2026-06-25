@@ -718,6 +718,7 @@ function renderReports() {
       var reporter  = r.reporterName || 'Usuário #' + r.reporterId;
       var createdAt = r.createdAt ? new Date(r.createdAt).toLocaleDateString('pt-BR') : '—';
       var initials  = OFAuth.getInitials(reporter);
+      var workInfo  = r.workTitle ? ' · Serviço: ' + escHtmlAdmin(r.workTitle) : '';
 
       var attachBadge = (r.attachments && r.attachments.length)
         ? '<span class="admin-badge" style="background:rgba(255,255,255,.06);color:var(--muted2);border:1px solid var(--border)">📎 ' + r.attachments.length + '</span>'
@@ -727,7 +728,7 @@ function renderReports() {
         '<div class="admin-user-avatar">' + initials + '</div>' +
         '<div class="admin-user-info">' +
           '<div class="admin-user-name">' + escHtmlAdmin(r.title) + '</div>' +
-          '<div class="admin-user-email">' + natureLbl + ' · Denunciante: ' + escHtmlAdmin(reporter) + '</div>' +
+          '<div class="admin-user-email">' + natureLbl + ' · Denunciante: ' + escHtmlAdmin(reporter) + workInfo + '</div>' +
         '</div>' +
         '<div class="admin-user-meta">' +
           attachBadge +
@@ -771,6 +772,7 @@ function openReportModal(reportId) {
       '<div class="detail-label">Registrada em</div>' +
       '<div class="detail-value">' + createdAt + '</div>' +
     '</div>' +
+    (r.workTitle ? '<div><div class="detail-label">Serviço denunciado</div><div class="detail-value">' + escHtmlAdmin(r.workTitle) + '</div></div>' : '') +
     '<div class="detail-full">' +
       '<div class="detail-label">Descrição</div>' +
       '<div class="detail-value" style="white-space:pre-wrap;line-height:1.6">' + escHtmlAdmin(r.description) + '</div>' +
