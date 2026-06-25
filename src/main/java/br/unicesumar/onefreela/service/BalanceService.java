@@ -95,6 +95,25 @@ public class BalanceService {
     }
 
     @Transactional
+    public BigDecimal withdrawPlatformAvailable(User admin) {
+        PlatformBalance balance = getPlatformBalance();
+
+        if (balance.getAvailableBalance().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ValidationException(List.of(
+                    new ErrorDetail(ErrorCode.NO_BALANCE_TO_WITHDRAW, "balance",
+                            "Não há saldo ativo disponível para resgatar")
+            ));
+        }
+
+        BigDecimal withdrawnAmount = balance.getAvailableBalance();
+        balance.setAvailableBalance(BigDecimal.ZERO);
+        platformBalanceRepository.save(balance);
+        recordTransaction(TransactionType.WITHDRAWAL, withdrawnAmount,
+                "Resgate do saldo ativo da plataforma", null, null, admin);
+        return withdrawnAmount;
+    }
+
+    @Transactional
     public void addToPlatformPending(BigDecimal amount, Order order) {
         PlatformBalance balance = getPlatformBalance();
         balance.setPendingBalance(balance.getPendingBalance().add(amount));

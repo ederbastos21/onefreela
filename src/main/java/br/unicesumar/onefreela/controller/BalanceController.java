@@ -43,4 +43,12 @@ public class BalanceController {
         authService.checkAdmin(request, admin);
         return ResponseEntity.ok(PlatformBalanceResponse.fromEntity(balanceService.getPlatformBalance()));
     }
+
+    @PostMapping("/platform/withdraw")
+    public ResponseEntity<WithdrawResponse> withdrawPlatformAvailable(HttpServletRequest request) {
+        User admin = authService.getAuthenticatedUser(request);
+        authService.checkAdmin(request, admin);
+        BigDecimal withdrawnAmount = balanceService.withdrawPlatformAvailable(admin);
+        return ResponseEntity.ok(new WithdrawResponse(withdrawnAmount, BigDecimal.ZERO));
+    }
 }

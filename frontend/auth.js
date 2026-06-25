@@ -31,85 +31,135 @@
     return { Authorization: localStorage.getItem('of_token') || '' };
   }
 
+  /* Toast autocontido — não depende de cada página já ter um <div id="toast">
+     (várias páginas que chamam loadNav() não têm esse elemento). */
+  function showAuthToast(msg) {
+    var t = document.getElementById('ofAuthToast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'ofAuthToast';
+      t.className = 'toast';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._hideTimer);
+    t._hideTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
+  }
+
   /* ── Saldo no header ───────────────────────────────────────────────
      Injeta a pílula de saldo em qualquer página que chame loadNav() e
      tenha um elemento .nav-right — sem precisar editar cada HTML.
+     Mesmo componente (chip + botão "Resgatar") usado tanto pro saldo
+     do usuário comum quanto pelos saldos do admin, pra manter o
+     visual idêntico entre os dois.
      ────────────────────────────────────────────────────────────────── */
+  function buildChip(label, tone) {
+    var chip = document.createElement('div');
+    chip.className = 'nav-balance-chip' + (tone ? ' tone-' + tone : '');
+    chip.innerHTML = '<span class="nav-balance-chip-label">' + label + '</span><span class="nav-balance-chip-value">—</span>';
+    return chip;
+  }
+
+  function buildWithdrawBtn() {
+    var btn = document.createElement('button');
+    btn.className = 'btn-withdraw';
+    btn.textContent = 'Resgatar';
+    btn.disabled = true;
+    return btn;
+  }
+
+  function wireWithdraw(btn, valueEl, endpoint) {
+    btn.addEventListener('click', function () {
+      if (btn.disabled) return;
+      btn.disabled = true;
+      fetch(API_BASE + endpoint, { method: 'POST', headers: authHdr() })
+        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (res) {
+          if (res.ok) {
+            valueEl.textContent = formatMoney(res.data.newBalance);
+            showAuthToast('Resgatado: ' + formatMoney(res.data.withdrawnAmount));
+          } else {
+            var errMsg = (Array.isArray(res.data.errors) && res.data.errors.length) ? res.data.errors[0].message : 'Erro ao resgatar saldo.';
+            showAuthToast(errMsg);
+            btn.disabled = false;
+          }
+        })
+        .catch(function () { showAuthToast('Erro de conexão.'); btn.disabled = false; });
+    });
+  }
+
+  function loadChipValue(chip, endpoint, field) {
+    return fetch(API_BASE + endpoint, { headers: authHdr() })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var amount = data ? Number(data[field]) : 0;
+        chip.querySelector('.nav-balance-chip-value').textContent = formatMoney(amount);
+        return amount;
+      }).catch(function () { return 0; });
+  }
+
   function renderBalance() {
     var navRight = document.querySelector('.nav-right');
     if (!navRight) return;
 
-    var existing = navRight.querySelector('.nav-balance, .nav-balance-admin');
+    var existing = navRight.querySelector('.nav-balance-group');
     if (existing) existing.remove();
 
-    var isAdmin = window.OFAuth.isAdmin();
-    var navUser = navRight.querySelector('.nav-user');
+    var group = document.createElement('div');
+    group.className = 'nav-balance-group';
 
-    if (isAdmin) {
-      var wrap = document.createElement('div');
-      wrap.className = 'nav-balance-admin';
-      wrap.innerHTML =
-        '<div class="nav-balance-chip" id="navBalanceChipUser"><div class="nav-balance-chip-label">Seu saldo</div><div class="nav-balance-chip-value">—</div></div>' +
-        '<div class="nav-balance-chip tone-green" id="navBalanceChipAvailable"><div class="nav-balance-chip-label">Ativo plataforma</div><div class="nav-balance-chip-value">—</div></div>' +
-        '<div class="nav-balance-chip tone-amber" id="navBalanceChipPending"><div class="nav-balance-chip-label">Pendente plataforma</div><div class="nav-balance-chip-value">—</div></div>';
+    if (window.OFAuth.isAdmin()) {
+      var ownChip    = buildChip('Seu saldo');
+      var ownBtn     = buildWithdrawBtn();
+      var activeChip = buildChip('Ativo', 'green');
+      var activeBtn  = buildWithdrawBtn();
+      var pendingChip = buildChip('Pendente', 'amber');
 
-      if (navUser) navRight.insertBefore(wrap, navUser); else navRight.appendChild(wrap);
+      var ownPair = document.createElement('div');
+      ownPair.className = 'nav-balance-pair';
+      ownPair.appendChild(ownChip);
+      ownPair.appendChild(ownBtn);
 
-      fetch(API_BASE + '/balance/me', { headers: authHdr() })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (data) {
-          var el = document.getElementById('navBalanceChipUser');
-          if (el && data) el.querySelector('.nav-balance-chip-value').textContent = formatMoney(data.balance);
-        }).catch(function () {});
+      var activePair = document.createElement('div');
+      activePair.className = 'nav-balance-pair';
+      activePair.appendChild(activeChip);
+      activePair.appendChild(activeBtn);
 
+      group.appendChild(ownPair);
+      group.appendChild(activePair);
+      group.appendChild(pendingChip);
+
+      loadChipValue(ownChip, '/balance/me', 'balance').then(function (amount) {
+        ownBtn.disabled = !(amount > 0);
+      });
       fetch(API_BASE + '/balance/platform', { headers: authHdr() })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (data) {
           if (!data) return;
-          var avail = document.getElementById('navBalanceChipAvailable');
-          var pend  = document.getElementById('navBalanceChipPending');
-          if (avail) avail.querySelector('.nav-balance-chip-value').textContent = formatMoney(data.availableBalance);
-          if (pend)  pend.querySelector('.nav-balance-chip-value').textContent  = formatMoney(data.pendingBalance);
+          activeChip.querySelector('.nav-balance-chip-value').textContent  = formatMoney(data.availableBalance);
+          pendingChip.querySelector('.nav-balance-chip-value').textContent = formatMoney(data.pendingBalance);
+          activeBtn.disabled = !(Number(data.availableBalance) > 0);
         }).catch(function () {});
+
+      wireWithdraw(ownBtn, ownChip.querySelector('.nav-balance-chip-value'), '/balance/withdraw');
+      wireWithdraw(activeBtn, activeChip.querySelector('.nav-balance-chip-value'), '/balance/platform/withdraw');
 
     } else {
-      var pill = document.createElement('div');
-      pill.className = 'nav-balance';
-      pill.innerHTML =
-        '<div class="nav-balance-text"><span class="nav-balance-label">Saldo</span><span class="nav-balance-value" id="navBalanceValue">—</span></div>' +
-        '<button class="btn-nav-withdraw" id="navWithdrawBtn" disabled>Resgatar</button>';
+      var chip = buildChip('Saldo', 'green');
+      var btn  = buildWithdrawBtn();
+      group.appendChild(chip);
+      group.appendChild(btn);
 
-      if (navUser) navRight.insertBefore(pill, navUser); else navRight.appendChild(pill);
-
-      var btn = pill.querySelector('#navWithdrawBtn');
-      btn.addEventListener('click', function () {
-        if (!window.confirm('Resgatar todo o saldo disponível?')) return;
-        btn.disabled = true;
-        fetch(API_BASE + '/balance/withdraw', { method: 'POST', headers: authHdr() })
-          .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
-          .then(function (res) {
-            var valueEl = document.getElementById('navBalanceValue');
-            if (res.ok) {
-              if (valueEl) valueEl.textContent = formatMoney(res.data.newBalance);
-              var msg = 'Saldo de ' + formatMoney(res.data.withdrawnAmount) + ' resgatado com sucesso!';
-              if (typeof window.showToast === 'function') window.showToast(msg); else alert(msg);
-            } else {
-              var errMsg = (Array.isArray(res.data.errors) && res.data.errors.length) ? res.data.errors[0].message : 'Erro ao resgatar saldo.';
-              alert(errMsg);
-              btn.disabled = false;
-            }
-          })
-          .catch(function () { alert('Erro de conexão.'); btn.disabled = false; });
+      loadChipValue(chip, '/balance/me', 'balance').then(function (amount) {
+        btn.disabled = !(amount > 0);
       });
 
-      fetch(API_BASE + '/balance/me', { headers: authHdr() })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (data) {
-          var valueEl = document.getElementById('navBalanceValue');
-          if (valueEl && data) valueEl.textContent = formatMoney(data.balance);
-          if (data && Number(data.balance) > 0) btn.disabled = false;
-        }).catch(function () {});
+      wireWithdraw(btn, chip.querySelector('.nav-balance-chip-value'), '/balance/withdraw');
     }
+
+    var navUser = navRight.querySelector('.nav-user');
+    if (navUser) navRight.insertBefore(group, navUser); else navRight.appendChild(group);
   }
 
   window.OFAuth = {
@@ -169,6 +219,9 @@
 
       var adminBtn = document.getElementById('adminAreaBtn');
       if (adminBtn && this.isAdmin()) adminBtn.style.display = 'flex';
+
+      var navLogo = document.querySelector('.nav-logo');
+      if (navLogo) navLogo.setAttribute('href', 'exploreFreelancers.html');
 
       if (this.isLoggedIn()) renderBalance();
     },

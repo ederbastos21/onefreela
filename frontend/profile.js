@@ -30,10 +30,8 @@ function initProfile() {
   document.getElementById('profileType').textContent = typeLabel;
   document.getElementById('editProfileLink').href    = isFreelancer ? 'freelancerEditProfile.html' : 'clientEditProfile.html';
 
-  // Nav logo and home links
+  // Sidebar "Página Inicial" link (o logo da navbar é fixado por OFAuth.loadNav)
   const homeUrl = isFreelancer ? 'exploreFreelancers.html' : 'index.html';
-  const navLogo = document.getElementById('navLogoLink');
-  if (navLogo) navLogo.href = homeUrl;
   const sidebarHome = document.getElementById('sidebarHome');
   if (sidebarHome) sidebarHome.href = homeUrl;
 

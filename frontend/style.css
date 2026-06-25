@@ -353,56 +353,49 @@ nav.nav-app {
 }
 .nav-admin-btn:hover { background: var(--green); color: #000; }
 
-/* ── Saldo no header (injetado via OFAuth.loadNav) ───────────────── */
-.nav-balance {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 10px;
-  background: var(--gdim);
-  border: 1px solid rgba(127,255,0,.25);
-  white-space: nowrap;
-}
-.nav-balance-text { display: flex; flex-direction: column; line-height: 1.2; }
-.nav-balance-label { font-size: 8px; color: var(--muted2); text-transform: uppercase; letter-spacing: .4px; }
-.nav-balance-value { font-size: 12px; font-weight: 800; color: var(--green); font-family: var(--font-display); letter-spacing: .3px; }
-.btn-nav-withdraw {
-  background: none;
-  border: 1px solid rgba(127,255,0,.4);
-  border-radius: 7px;
-  padding: 3px 9px;
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-  color: var(--green);
-  cursor: pointer;
-  font-family: inherit;
-  transition: background .15s, color .15s;
-}
-.btn-nav-withdraw:hover:not(:disabled) { background: var(--green); color: #000; }
-.btn-nav-withdraw:disabled { opacity: .35; cursor: not-allowed; }
+/* ── Saldo no header (injetado via OFAuth.loadNav) ─────────────────
+   Um único componente de "pílula" reaproveitado tanto pro saldo do
+   usuário comum (cliente/freelancer) quanto pros saldos do admin —
+   garante visual idêntico entre os dois.
+   ────────────────────────────────────────────────────────────────── */
+.nav-balance-group { display: flex; align-items: center; gap: 12px; }
+.nav-balance-pair  { display: flex; align-items: center; gap: 6px; }
 
-/* Admin: múltiplas pílulas de saldo (usuário / plataforma ativo / plataforma pendente) */
-.nav-balance-admin { display: flex; align-items: center; gap: 8px; }
 .nav-balance-chip {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 34px;
-  padding: 0 10px;
-  border-radius: 10px;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
   background: var(--card);
   border: 1px solid var(--border);
-  min-width: 84px;
+  white-space: nowrap;
 }
-.nav-balance-chip-label { font-size: 8px; color: var(--muted2); text-transform: uppercase; letter-spacing: .3px; }
-.nav-balance-chip-value { font-size: 12px; font-weight: 800; color: var(--text); font-family: var(--font-display); }
-.nav-balance-chip.tone-green .nav-balance-chip-value  { color: var(--green); }
-.nav-balance-chip.tone-amber .nav-balance-chip-value  { color: #eab308; }
+.nav-balance-chip-label { font-size: 12px; font-weight: 600; color: var(--muted2); }
+.nav-balance-chip-value { font-size: 15px; font-weight: 800; color: var(--text); font-family: var(--font-display); letter-spacing: .3px; }
+
+.nav-balance-chip.tone-green { background: var(--gdim); border-color: rgba(127,255,0,.25); }
+.nav-balance-chip.tone-green .nav-balance-chip-value { color: var(--green); }
+.nav-balance-chip.tone-amber { background: rgba(234,179,8,.1); border-color: rgba(234,179,8,.3); }
+.nav-balance-chip.tone-amber .nav-balance-chip-value { color: #eab308; }
+
+.btn-withdraw {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: none;
+  background: var(--green);
+  color: #000;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity .15s;
+}
+.btn-withdraw:hover:not(:disabled) { opacity: .82; }
+.btn-withdraw:disabled { background: var(--card2); color: var(--muted2); opacity: .55; cursor: not-allowed; }
 
 /* ── Filter Bar ────────────────────────────────────────── */
 
