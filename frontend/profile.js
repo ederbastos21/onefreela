@@ -175,6 +175,14 @@ function initProfile() {
   var chatLink = document.getElementById('navChatLink');
   if (chatLink) chatLink.href = 'chatScreen.html';
 
+  // Handle ?newWork=1 deep-link from nav button on other pages
+  if (new URLSearchParams(window.location.search).get('newWork') === '1') {
+    switchSection('servicos');
+    setTimeout(function () { openWorkModal(null); }, 300);
+    history.replaceState(null, '', window.location.pathname);
+    return;
+  }
+
   // Start on settings section (lazy-loads other sections on demand)
   switchSection('configGroup');
 }

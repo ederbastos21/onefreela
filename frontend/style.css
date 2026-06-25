@@ -353,6 +353,27 @@ nav.nav-app {
 }
 .nav-admin-btn:hover { background: var(--green); color: #000; }
 
+.nav-new-service-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: var(--green);
+  border: none;
+  color: #000;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity .2s, transform .2s;
+  white-space: nowrap;
+}
+.nav-new-service-btn:hover { opacity: .85; transform: translateY(-1px); }
+
 /* ── Saldo no header (injetado via OFAuth.loadNav) ─────────────────
    Um único componente de "pílula" reaproveitado tanto pro saldo do
    usuário comum (cliente/freelancer) quanto pros saldos do admin —

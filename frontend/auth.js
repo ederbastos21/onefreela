@@ -223,6 +223,23 @@
       var favLink = document.getElementById('navFavoritesLink');
       if (favLink && type !== 'freelancer') favLink.style.display = 'flex';
 
+      if (type === 'freelancer') {
+        var newServiceBtn = document.getElementById('navNovoServico');
+        if (newServiceBtn) {
+          newServiceBtn.style.display = 'flex';
+          var onProfile = window.location.pathname.endsWith('profile.html') || window.location.pathname.endsWith('profile');
+          newServiceBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (onProfile && typeof switchSection === 'function' && typeof openWorkModal === 'function') {
+              switchSection('servicos');
+              openWorkModal(null);
+            } else {
+              window.location.href = 'profile.html?newWork=1';
+            }
+          });
+        }
+      }
+
       var navLogo = document.querySelector('.nav-logo');
       if (navLogo) navLogo.setAttribute('href', 'exploreFreelancers.html');
 

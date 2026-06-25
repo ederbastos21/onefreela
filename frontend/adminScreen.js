@@ -143,28 +143,59 @@ function updateStats() {
   var badge = document.getElementById('usersBadge');
   if (badge) { badge.textContent = total; badge.style.display = total > 0 ? '' : 'none'; }
 
+  // Serviços: total + pending review highlight
   var statWorks = document.getElementById('statWorks');
   if (statWorks) statWorks.textContent = allWorks.length || '—';
+  var worksPending = allWorks.filter(function (w) { return w.status === 'PENDING_REVIEW'; }).length;
+  var statWorksPendingRow = document.getElementById('statWorksPendingRow');
+  var statWorksPendingEl  = document.getElementById('statWorksPending');
+  if (statWorksPendingRow && statWorksPendingEl) {
+    if (worksPending > 0) {
+      statWorksPendingEl.textContent     = worksPending + ' aguardando revisão';
+      statWorksPendingRow.style.display  = '';
+    } else {
+      statWorksPendingRow.style.display  = 'none';
+    }
+  }
 
-  var statReportsPending = document.getElementById('statReportsPending');
-  if (statReportsPending) {
-    var pending = allReports.filter(function (r) { return r.status === 'PENDING'; }).length;
-    statReportsPending.textContent = pending || '0';
+  // Denúncias: total + pending/under_review highlight
+  var statReportsTotal = document.getElementById('statReportsTotal');
+  if (statReportsTotal) statReportsTotal.textContent = allReports.length || '—';
+  var reportsPending = allReports.filter(function (r) { return r.status === 'PENDING' || r.status === 'UNDER_REVIEW'; }).length;
+  var statReportsPendingRow = document.getElementById('statReportsPendingRow');
+  var statReportsPendingEl  = document.getElementById('statReportsPending');
+  if (statReportsPendingRow && statReportsPendingEl) {
+    if (reportsPending > 0) {
+      statReportsPendingEl.textContent    = reportsPending + ' pendente' + (reportsPending > 1 ? 's' : '');
+      statReportsPendingRow.style.display = '';
+    } else {
+      statReportsPendingRow.style.display = 'none';
+    }
   }
 
   var reportsBadge = document.getElementById('reportsBadge');
   if (reportsBadge) {
-    var pendingCount = allReports.filter(function (r) { return r.status === 'PENDING' || r.status === 'UNDER_REVIEW'; }).length;
-    reportsBadge.textContent = pendingCount;
-    reportsBadge.style.display = pendingCount > 0 ? '' : 'none';
+    reportsBadge.textContent   = reportsPending;
+    reportsBadge.style.display = reportsPending > 0 ? '' : 'none';
   }
 
+  // Disputas: total + em aberto
   var statDisputes = document.getElementById('statDisputes');
-  if (statDisputes) statDisputes.textContent = allDisputes.length || '0';
+  if (statDisputes) statDisputes.textContent = allDisputes.length || '—';
+  var statDisputesPendingRow = document.getElementById('statDisputesPendingRow');
+  var statDisputesPendingEl  = document.getElementById('statDisputesPending');
+  if (statDisputesPendingRow && statDisputesPendingEl) {
+    if (allDisputes.length > 0) {
+      statDisputesPendingEl.textContent    = allDisputes.length + ' em aberto';
+      statDisputesPendingRow.style.display = '';
+    } else {
+      statDisputesPendingRow.style.display = 'none';
+    }
+  }
 
   var disputesBadge = document.getElementById('disputesBadge');
   if (disputesBadge) {
-    disputesBadge.textContent = allDisputes.length;
+    disputesBadge.textContent   = allDisputes.length;
     disputesBadge.style.display = allDisputes.length > 0 ? '' : 'none';
   }
 }

@@ -20,6 +20,16 @@
     .stat-icon-freelancer { background: var(--gdim); color: var(--green); }
     .stat-icon-client     { background: rgba(255,255,255,.06); color: var(--muted2); }
     .stat-icon-admin      { background: rgba(168,85,247,.12); color: #a855f7; }
+    .stat-pending-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 700; letter-spacing: .3px;
+      padding: 3px 9px; border-radius: 20px; line-height: 1.5;
+    }
+    .stat-pending-pill::before { content: '●'; font-size: 7px; line-height: 1; }
+    .stat-pending-warn   { background: rgba(251,191,36,.12); color: #fbbf24; border: 1px solid rgba(251,191,36,.3); }
+    .stat-pending-danger { background: rgba(239,68,68,.12);  color: #ef4444; border: 1px solid rgba(239,68,68,.3); }
+    .stat-pending-orange { background: rgba(251,146,60,.12); color: #fb923c; border: 1px solid rgba(251,146,60,.3); }
+    .stat-card-sub { font-size: 11px; color: var(--muted2); margin-top: 2px; }
 
     /* ── Toolbar ─────────────────────────────────── */
     .admin-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -226,24 +236,33 @@
               </div>
             </div>
             <div class="stat-card-value" id="statWorks">—</div>
+            <div id="statWorksPendingRow" style="display:none">
+              <span class="stat-pending-pill stat-pending-warn" id="statWorksPending"></span>
+            </div>
           </div>
           <div class="stat-card">
             <div class="stat-card-top">
-              <span class="stat-card-label">Denúncias Pendentes</span>
+              <span class="stat-card-label">Denúncias</span>
               <div class="stat-card-icon" style="background:rgba(239,68,68,.1);color:#ef4444;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               </div>
             </div>
-            <div class="stat-card-value" id="statReportsPending">—</div>
+            <div class="stat-card-value" id="statReportsTotal">—</div>
+            <div id="statReportsPendingRow" style="display:none">
+              <span class="stat-pending-pill stat-pending-danger" id="statReportsPending"></span>
+            </div>
           </div>
           <div class="stat-card">
             <div class="stat-card-top">
-              <span class="stat-card-label">Disputas Abertas</span>
+              <span class="stat-card-label">Disputas</span>
               <div class="stat-card-icon" style="background:rgba(251,146,60,.1);color:#fb923c;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
               </div>
             </div>
             <div class="stat-card-value" id="statDisputes">—</div>
+            <div id="statDisputesPendingRow" style="display:none">
+              <span class="stat-pending-pill stat-pending-orange" id="statDisputesPending"></span>
+            </div>
           </div>
         </div>
       </div>
