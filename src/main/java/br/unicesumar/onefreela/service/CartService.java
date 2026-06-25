@@ -1,16 +1,15 @@
 package br.unicesumar.onefreela.service;
 
 import br.unicesumar.onefreela.dto.AddCartItemDTO;
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.entity.*;
+import br.unicesumar.onefreela.enums.WorkStatus;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.CartItemRepository;
 import br.unicesumar.onefreela.repository.CartRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +30,14 @@ public class CartService {
         Cart cart = new Cart();
         cart.setUser(user);
         cartRepository.save(cart);
+    }
+
+    @Transactional
+    public void deleteCartForUser(User user){
+        Cart cart = user.getCart();
+        if (cart != null){
+            cartRepository.delete(cart);
+        }
     }
 
     public List<CartItem> findAllCartItems(){

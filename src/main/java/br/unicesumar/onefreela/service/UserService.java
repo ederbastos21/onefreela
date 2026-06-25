@@ -1,14 +1,14 @@
 package br.unicesumar.onefreela.service;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
+import br.unicesumar.onefreela.dto.AdminUserUpdateDTO;
 import br.unicesumar.onefreela.dto.UserRegisterDTO;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.UserRepository;
 import br.unicesumar.onefreela.service.mapper.UserMapper;
 import br.unicesumar.onefreela.service.validator.UserValidator;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,8 +52,61 @@ public class UserService {
         return repository.findByEmail(email);
     }
 
+    @Transactional
+    public void deleteById(Long id){
+        User user = repository.findById(id).orElse(null);
+        if (user != null){
+            cartService.deleteCartForUser(user);
+        }
+        repository.deleteById(id);
+    }
+
     public Boolean existsByEmail (String email){
         return repository.existsByEmail(email);
+    }
+
+    public User makeAdmin(Long userId){
+        User user = findById(userId).orElseThrow();
+        user.setAdmin(true);
+        return save(user);
+    }
+
+    public User removeAdmin(Long userId){
+        User user = findById(userId).orElseThrow();
+        user.setAdmin(false);
+        return save(user);
+    }
+
+    public User blockUser(Long userId){
+        User user = findById(userId).orElseThrow();
+        user.setBlocked(true);
+        return save(user);
+    }
+
+    public User unblockUser(Long userId){
+        User user = findById(userId).orElseThrow();
+        user.setBlocked(false);
+        return save(user);
+    }
+
+    @Transactional
+    public User adminUpdateUser(Long userId, AdminUserUpdateDTO dto){
+        List<ErrorDetail> errors = new ArrayList<>();
+        User user = findById(userId).orElse(null);
+
+        if (user == null){
+            errors.add(new ErrorDetail(ErrorCode.USER_NOT_FOUND, "user", "usuário não encontrado"));
+            throw new ValidationException(errors);
+        }
+
+        if (!user.getEmail().equals(dto.getEmail()) && repository.findByEmail(dto.getEmail()) != null){
+            errors.add(new ErrorDetail(ErrorCode.EMAIL_ALREADY_EXISTS, "email", "o email inserido ja existe no sistema"));
+            throw new ValidationException(errors);
+        }
+
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        return save(user);
     }
 
     @Transactional

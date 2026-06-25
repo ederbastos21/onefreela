@@ -8,10 +8,12 @@ let detailUserId  = null;
 let allWorks        = [];
 let currentWorksFilter = 'all';
 
-let allCarts = [];
+let allReports         = [];
+let currentReportsFilter = 'all';
+let reviewingReportId    = null;
 
-let allOrders         = [];
-let currentOrdersFilter = 'all';
+let allDisputes        = [];
+let reviewingDisputeId = null;
 
 function authHeader() {
   return { 'Authorization': OFAuth.getToken() };
@@ -27,8 +29,8 @@ function initAdmin() {
   }
   loadUsers();
   loadWorks();
-  loadCarts();
-  loadOrders();
+  loadReports();
+  loadDisputes();
 }
 
 /* ── Load & render users ──────────────────────────────────────────── */
@@ -69,8 +71,27 @@ function updateStats() {
   var statWorks = document.getElementById('statWorks');
   if (statWorks) statWorks.textContent = allWorks.length || '—';
 
-  var statOrders = document.getElementById('statOrders');
-  if (statOrders) statOrders.textContent = allOrders.length || '—';
+  var statReportsPending = document.getElementById('statReportsPending');
+  if (statReportsPending) {
+    var pending = allReports.filter(function (r) { return r.status === 'PENDING'; }).length;
+    statReportsPending.textContent = pending || '0';
+  }
+
+  var reportsBadge = document.getElementById('reportsBadge');
+  if (reportsBadge) {
+    var pendingCount = allReports.filter(function (r) { return r.status === 'PENDING' || r.status === 'UNDER_REVIEW'; }).length;
+    reportsBadge.textContent = pendingCount;
+    reportsBadge.style.display = pendingCount > 0 ? '' : 'none';
+  }
+
+  var statDisputes = document.getElementById('statDisputes');
+  if (statDisputes) statDisputes.textContent = allDisputes.length || '0';
+
+  var disputesBadge = document.getElementById('disputesBadge');
+  if (disputesBadge) {
+    disputesBadge.textContent = allDisputes.length;
+    disputesBadge.style.display = allDisputes.length > 0 ? '' : 'none';
+  }
 }
 
 function setFilter(filter) {
@@ -142,11 +163,12 @@ function renderUsers() {
       '<div class="admin-user-meta">' +
         '<span class="admin-badge admin-badge-' + roleKey + '">' + roleLabel + '</span>' +
         (u.verified ? '<span class="admin-badge admin-badge-verified">Verificado</span>' : '') +
+        (u.blocked  ? '<span class="admin-badge admin-badge-blocked">Bloqueado</span>'    : '') +
         '<span class="admin-user-date">' + dateText + '</span>' +
       '</div>' +
       '<div class="admin-user-actions">' +
         '<button class="btn-row"            onclick="openEditModal('   + uid + ')">Editar</button>' +
-        '<button class="btn-row btn-row-danger" onclick="confirmDeleteUser(' + uid + ')">Excluir</button>' +
+        '<button class="btn-row btn-row-danger" onclick="toggleBlockUser(' + uid + ')">' + (u.blocked ? 'Desbloquear' : 'Bloquear') + '</button>' +
       '</div>';
 
     list.appendChild(row);
@@ -180,7 +202,20 @@ function openDetailModal(userId) {
   badgesEl.innerHTML =
     '<span class="admin-badge admin-badge-' + roleKey + '">' + roleLabel + '</span>' +
     (u.verified ? '<span class="admin-badge admin-badge-verified">Verificado</span>' : '') +
-    (u.admin && !isAdminU ? '' : '');
+    (u.blocked  ? '<span class="admin-badge admin-badge-blocked">Bloqueado</span>'    : '');
+
+  var toggleBtn = document.getElementById('detailToggleAdminBtn');
+  if (toggleBtn) {
+    toggleBtn.textContent = isAdminU ? 'Remover Admin' : 'Tornar Admin';
+    toggleBtn.className   = isAdminU
+      ? 'btn-detail-delete'
+      : 'btn-detail-edit';
+  }
+
+  var blockBtn = document.getElementById('detailToggleBlockBtn');
+  if (blockBtn) {
+    blockBtn.textContent = u.blocked ? 'Desbloquear' : 'Bloquear';
+  }
 
   document.getElementById('detailModal').classList.add('show');
 }
@@ -196,10 +231,44 @@ function openEditFromDetail() {
   openEditModal(id);
 }
 
-function deleteFromDetail() {
+function toggleUserBlock() {
   var id = detailUserId;
   closeDetailModal();
-  confirmDeleteUser(id);
+  toggleBlockUser(id);
+}
+
+async function toggleUserAdmin() {
+  var u = allUsers.find(function (x) { return x.id === detailUserId; });
+  if (!u) return;
+
+  var isAdmin  = !!u.admin;
+  var endpoint = isAdmin
+    ? '/admin/removeUserAdmin/' + detailUserId
+    : '/admin/makeUserAdmin/'   + detailUserId;
+
+  var btn = document.getElementById('detailToggleAdminBtn');
+  btn.disabled    = true;
+  btn.textContent = '...';
+
+  try {
+    var res = await fetch(API_BASE + endpoint, { method: 'POST', headers: authHeader() });
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var msg  = (Array.isArray(data.errors) && data.errors.length)
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao alterar permissão.';
+      alert(msg);
+      btn.disabled    = false;
+      btn.textContent = isAdmin ? 'Remover Admin' : 'Tornar Admin';
+      return;
+    }
+    closeDetailModal();
+    await loadUsers();
+  } catch (_) {
+    alert('Erro de conexão.');
+    btn.disabled    = false;
+    btn.textContent = isAdmin ? 'Remover Admin' : 'Tornar Admin';
+  }
 }
 
 document.getElementById('detailModal').addEventListener('click', function (e) {
@@ -280,26 +349,44 @@ async function submitUserForm() {
   btn.disabled    = true;
   btn.textContent = 'SALVANDO...';
 
-  var payload = { name: name, email: email, freelancer: type === 'freelancer', admin: isAdminF };
-  if (!isEdit) payload.password = password;
-
-  var url    = isEdit ? `${API_BASE}/admin/users/${editingUserId}` : `${API_BASE}/admin/users`;
-  var method = isEdit ? 'PUT' : 'POST';
-
   try {
-    var res = await fetch(url, {
-      method: method,
-      headers: { ...authHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    if (isEdit) {
+      var res = await fetch(API_BASE + '/admin/users/' + editingUserId, {
+        method: 'PUT',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email })
+      });
 
-    if (!res.ok) {
-      var data = await res.json().catch(function () { return {}; });
-      var msg  = Array.isArray(data.errors) && data.errors.length
-        ? data.errors.map(function (e) { return e.message; }).join(' • ')
-        : 'Erro ao salvar usuário.';
-      setUserFormMsg(msg, 'error');
-      return;
+      if (!res.ok) {
+        var data = await res.json().catch(function () { return {}; });
+        var msg  = Array.isArray(data.errors) && data.errors.length
+          ? data.errors.map(function (e) { return e.message; }).join(' • ')
+          : 'Erro ao salvar alterações.';
+        setUserFormMsg(msg, 'error');
+        return;
+      }
+
+      var original = allUsers.find(function (x) { return x.id === editingUserId; });
+      if (original && !!original.admin !== isAdminF) {
+        var toggleEndpoint = isAdminF ? '/admin/makeUserAdmin/' : '/admin/removeUserAdmin/';
+        await fetch(API_BASE + toggleEndpoint + editingUserId, { method: 'POST', headers: authHeader() });
+      }
+    } else {
+      var payload = { name, email, password, cpf: '00000000000', birthday: '2000-01-01', phoneNumber: '00000000000', freelancer: type === 'freelancer' };
+      var res = await fetch(API_BASE + '/users/register', {
+        method: 'POST',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        var data = await res.json().catch(function () { return {}; });
+        var msg  = Array.isArray(data.errors) && data.errors.length
+          ? data.errors.map(function (e) { return e.message; }).join(' • ')
+          : 'Erro ao cadastrar usuário.';
+        setUserFormMsg(msg, 'error');
+        return;
+      }
     }
 
     closeUserFormModal();
@@ -312,32 +399,30 @@ async function submitUserForm() {
   }
 }
 
-/* ── Delete ──────────────────────────────────────────────────────── */
+/* ── Block / Unblock ─────────────────────────────────────────────── */
 
-async function confirmDeleteUser(userId) {
-  var u    = allUsers.find(function (x) { return x.id === userId; });
-  var name = u ? '"' + (u.name || 'este usuário') + '"' : 'este usuário';
+async function toggleBlockUser(userId) {
+  var u = allUsers.find(function (x) { return x.id === userId; });
+  if (!u) return;
 
-  if (!confirm('Excluir ' + name + '? Esta ação não pode ser desfeita.')) return;
+  var isBlocked = !!u.blocked;
+  var endpoint  = isBlocked ? '/admin/unblockUser/' + userId : '/admin/blockUser/' + userId;
 
   try {
-    var res = await fetch(`${API_BASE}/admin/users/${userId}`, {
-      method: 'DELETE',
-      headers: authHeader()
-    });
+    var res = await fetch(API_BASE + endpoint, { method: 'POST', headers: authHeader() });
 
     if (!res.ok) {
       var data = await res.json().catch(function () { return {}; });
       var msg  = Array.isArray(data.errors) && data.errors.length
         ? data.errors.map(function (e) { return e.message; }).join(' • ')
-        : 'Erro ao excluir usuário.';
+        : 'Erro ao alterar bloqueio do usuário.';
       alert(msg);
       return;
     }
 
     await loadUsers();
   } catch (e) {
-    alert('Erro de conexão ao excluir.');
+    alert('Erro de conexão.');
   }
 }
 
@@ -363,10 +448,31 @@ async function loadWorks() {
   }
 }
 
+var WORK_STATUS_LABELS = {
+  ACTIVE:         'Ativo',
+  INACTIVE:       'Pausado',
+  PENDING_REVIEW: 'Pendente',
+  REJECTED:       'Rejeitado',
+  BLOCKED:        'Bloqueado'
+};
+
+var WORK_STATUS_BADGE = {
+  ACTIVE:         'admin-badge-order-paid',
+  INACTIVE:       'admin-badge-work-inactive',
+  PENDING_REVIEW: 'admin-badge-order-not_paid',
+  REJECTED:       'admin-badge-order-refunded',
+  BLOCKED:        'admin-badge-blocked'
+};
+
 function setWorksFilter(filter) {
   currentWorksFilter = filter;
   document.querySelectorAll('#servicos .filter-btn').forEach(function (b) { b.classList.remove('active'); });
-  var map = { all: 'filterWorksAll', active: 'filterWorksActive', inactive: 'filterWorksInactive' };
+  var map = {
+    all:            'filterWorksAll',
+    active:         'filterWorksActive',
+    inactive:       'filterWorksInactive',
+    pending_review: 'filterWorksPending'
+  };
   var btn = document.getElementById(map[filter]);
   if (btn) btn.classList.add('active');
   renderWorks();
@@ -378,9 +484,10 @@ function getFilteredWorks() {
   var query = (document.getElementById('searchWorksInput').value || '').toLowerCase().trim();
   return allWorks.filter(function (w) {
     var matchFilter =
-      currentWorksFilter === 'all'      ? true :
-      currentWorksFilter === 'active'   ? (w.status === 'ACTIVE') :
-      currentWorksFilter === 'inactive' ? (w.status === 'INACTIVE') : true;
+      currentWorksFilter === 'all'            ? true :
+      currentWorksFilter === 'active'         ? (w.status === 'ACTIVE') :
+      currentWorksFilter === 'inactive'       ? (w.status === 'INACTIVE') :
+      currentWorksFilter === 'pending_review' ? (w.status === 'PENDING_REVIEW') : true;
 
     var matchSearch = !query ||
       (w.title    && w.title.toLowerCase().includes(query)) ||
@@ -396,6 +503,9 @@ function renderWorks() {
   var filtered = getFilteredWorks();
 
   if (countEl) {
+    var pendingCount = allWorks.filter(function (w) { return w.status === 'PENDING_REVIEW'; }).length;
+    var pendingBadge = document.getElementById('filterWorksPendingCount');
+    if (pendingBadge) pendingBadge.textContent = pendingCount > 0 ? ' (' + pendingCount + ')' : '';
     countEl.textContent = filtered.length + ' serviço' + (filtered.length !== 1 ? 's' : '') + ' encontrado' + (filtered.length !== 1 ? 's' : '');
   }
 
@@ -407,181 +517,666 @@ function renderWorks() {
   }
 
   filtered.forEach(function (w) {
-    var isActive  = w.status === 'ACTIVE';
-    var statusKey = isActive ? 'active' : 'inactive';
-    var statusLabel = isActive ? 'Ativo' : 'Inativo';
-    var ownerName = (w.owner && w.owner.name) ? w.owner.name : '—';
-    var price     = w.price != null ? 'R$ ' + Number(w.price).toFixed(2).replace('.', ',') : '—';
-    var date      = w.createdAt ? w.createdAt.split('T')[0] : '—';
+    var statusLbl  = WORK_STATUS_LABELS[w.status] || w.status;
+    var badgeCls   = WORK_STATUS_BADGE[w.status]  || 'admin-badge';
+    var isPending  = w.status === 'PENDING_REVIEW';
+    var isBlocked  = w.status === 'BLOCKED';
+    var pauseLabel = w.status === 'ACTIVE' ? 'Pausar' : 'Reativar';
+    var ownerName  = (w.owner && w.owner.name) ? w.owner.name : '—';
+    var price      = w.price != null ? 'R$ ' + Number(w.price).toFixed(2).replace('.', ',') : '—';
+    var date       = w.createdAt ? w.createdAt.split('T')[0] : '—';
 
     var row = document.createElement('div');
-    row.className = 'admin-work-row';
+    row.className = 'admin-user-row';
     row.innerHTML =
-      '<div class="admin-work-icon status-' + statusKey + '">' +
+      '<div class="admin-work-icon">' +
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>' +
       '</div>' +
-      '<div class="admin-work-info">' +
-        '<div class="admin-work-title">' + (w.title || 'Sem título') + '</div>' +
-        '<div class="admin-work-meta">' + (w.category || '—') + ' · ' + ownerName + '</div>' +
+      '<div class="admin-user-info">' +
+        '<div class="admin-user-name">' + escHtmlAdmin(w.title || 'Sem título') + '</div>' +
+        '<div class="admin-user-email">' + escHtmlAdmin(w.category || '—') + ' · ' + escHtmlAdmin(ownerName) + '</div>' +
       '</div>' +
       '<div class="admin-user-meta">' +
-        '<span class="admin-badge admin-badge-work-' + statusKey + '">' + statusLabel + '</span>' +
+        '<span class="admin-badge ' + badgeCls + '">' + statusLbl + '</span>' +
         '<span class="admin-user-date">' + price + '</span>' +
         '<span class="admin-user-date">' + date + '</span>' +
+        '<div class="admin-user-actions">' +
+          (isPending ? '<button class="btn-row" onclick="openWorkReviewModal(' + w.id + ')">Revisar</button>' : '') +
+          (!isPending && !isBlocked ? '<button class="btn-row" onclick="pauseWork(' + w.id + ')">' + pauseLabel + '</button>' : '') +
+          (!isPending && !isBlocked ? '<button class="btn-row btn-row-danger" onclick="blockWork(' + w.id + ')">Bloquear</button>' : '') +
+          (isBlocked ? '<button class="btn-row" onclick="unblockWork(' + w.id + ')">Desbloquear</button>' : '') +
+          '<button class="btn-row btn-row-danger" onclick="deleteWork(' + w.id + ')">Excluir</button>' +
+        '</div>' +
       '</div>';
 
     list.appendChild(row);
   });
 }
 
-/* ── Carts ───────────────────────────────────────────────────────── */
+/* ── Work review modal ───────────────────────────────────────────── */
 
-async function loadCarts() {
-  var list = document.getElementById('adminCartList');
-  list.innerHTML = '<p class="admin-list-loading">Carregando carrinhos...</p>';
+var reviewingWorkId = null;
 
-  try {
-    var res = await fetch(API_BASE + '/admin/carts', { headers: authHeader() });
-    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+function openWorkReviewModal(workId) {
+  var w = allWorks.find(function (x) { return x.id === workId; });
+  if (!w) return;
+  reviewingWorkId = workId;
 
-    allCarts = await res.json();
-    var badge = document.getElementById('cartsBadge');
-    if (badge) { badge.textContent = allCarts.length; badge.style.display = allCarts.length > 0 ? '' : 'none'; }
-    renderCarts();
-  } catch (e) {
-    console.error('loadCarts:', e);
-    list.innerHTML = '<p class="admin-list-error">Erro ao carregar carrinhos.</p>';
-  }
+  document.getElementById('wrWorkTitle').textContent = w.title || 'Sem título';
+  document.getElementById('wrNotes').value           = '';
+  document.getElementById('wrMsg').textContent       = '';
+  document.getElementById('wrMsg').className         = 'admin-form-msg';
+  document.getElementById('workReviewModal').classList.add('show');
 }
 
-function renderCarts() {
-  var list    = document.getElementById('adminCartList');
-  var countEl = document.getElementById('adminCartsCount');
+function closeWorkReviewModal() {
+  document.getElementById('workReviewModal').classList.remove('show');
+  reviewingWorkId = null;
+}
 
-  if (countEl) {
-    countEl.textContent = allCarts.length + ' carrinho' + (allCarts.length !== 1 ? 's' : '') + ' cadastrado' + (allCarts.length !== 1 ? 's' : '');
-  }
+async function submitWorkReview(status) {
+  if (!reviewingWorkId) return;
 
-  list.innerHTML = '';
+  var notes = document.getElementById('wrNotes').value.trim();
+  var msg   = document.getElementById('wrMsg');
+  var btnA  = document.getElementById('wrApproveBtn');
+  var btnR  = document.getElementById('wrRejectBtn');
 
-  if (allCarts.length === 0) {
-    list.innerHTML = '<p class="admin-list-empty">Nenhum carrinho encontrado.</p>';
-    return;
-  }
+  btnA.disabled = true;
+  btnR.disabled = true;
+  msg.textContent = 'Processando...';
+  msg.className   = 'admin-form-msg';
 
-  allCarts.forEach(function (c) {
-    var items     = (c.cartItemList && c.cartItemList.length) ? c.cartItemList.length : 0;
-    var totalAmt  = 0;
-    if (c.cartItemList) {
-      c.cartItemList.forEach(function (i) { totalAmt += (i.amount || 0); });
+  try {
+    var res = await fetch(API_BASE + '/admin/works/reviewWork/' + reviewingWorkId, {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ status: status, adminNotes: notes || null })
+    });
+
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var errMsg = (Array.isArray(data.errors) && data.errors.length)
+        ? data.errors.map(function (e) { return e.message; }).join(' | ')
+        : 'Erro ao revisar serviço.';
+      msg.textContent = errMsg;
+      msg.className   = 'admin-form-msg admin-form-msg-error';
+      btnA.disabled   = false;
+      btnR.disabled   = false;
+      return;
     }
 
-    var row = document.createElement('div');
-    row.className = 'admin-cart-row';
-    row.innerHTML =
-      '<div class="admin-cart-icon">' +
-        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' +
-      '</div>' +
-      '<div class="admin-cart-info">' +
-        '<div class="admin-cart-id">Carrinho #' + c.id + '</div>' +
-        '<div class="admin-cart-sub">' + items + ' item' + (items !== 1 ? 's' : '') + ' · ' + totalAmt + ' unidade' + (totalAmt !== 1 ? 's' : '') + '</div>' +
-      '</div>';
+    msg.textContent = status === 'ACTIVE' ? '✓ Serviço aprovado.' : '✓ Serviço rejeitado.';
+    msg.className   = 'admin-form-msg admin-form-msg-success';
+    await loadWorks();
+    setTimeout(closeWorkReviewModal, 700);
 
-    list.appendChild(row);
-  });
+  } catch (_) {
+    msg.textContent = 'Erro de conexão.';
+    msg.className   = 'admin-form-msg admin-form-msg-error';
+    btnA.disabled   = false;
+    btnR.disabled   = false;
+  }
 }
 
-/* ── Orders ──────────────────────────────────────────────────────── */
+async function pauseWork(workId) {
+  try {
+    var res = await fetch(API_BASE + '/admin/works/pauseWork/' + workId, {
+      method: 'POST', headers: authHeader()
+    });
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao alterar status do serviço.';
+      alert(msg);
+      return;
+    }
+    await loadWorks();
+  } catch (_) { alert('Erro de conexão.'); }
+}
 
-async function loadOrders() {
-  var list = document.getElementById('adminOrderList');
-  list.innerHTML = '<p class="admin-list-loading">Carregando pedidos...</p>';
+async function blockWork(workId) {
+  if (!confirm('Bloquear este serviço? Ele deixará de aparecer para o cliente e para o freelancer.')) return;
+  try {
+    var res = await fetch(API_BASE + '/admin/works/blockWork/' + workId, {
+      method: 'POST', headers: authHeader()
+    });
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao bloquear serviço.';
+      alert(msg);
+      return;
+    }
+    await loadWorks();
+  } catch (_) { alert('Erro de conexão.'); }
+}
+
+async function unblockWork(workId) {
+  try {
+    var res = await fetch(API_BASE + '/admin/works/unblockWork/' + workId, {
+      method: 'POST', headers: authHeader()
+    });
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao desbloquear serviço.';
+      alert(msg);
+      return;
+    }
+    await loadWorks();
+  } catch (_) { alert('Erro de conexão.'); }
+}
+
+async function deleteWork(workId) {
+  if (!confirm('Excluir este serviço? Esta ação não pode ser desfeita.')) return;
+  try {
+    var res = await fetch(API_BASE + '/admin/removeWork/' + workId, {
+      method: 'POST', headers: authHeader()
+    });
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao excluir serviço.';
+      alert(msg);
+      return;
+    }
+    await loadWorks();
+  } catch (_) { alert('Erro de conexão.'); }
+}
+
+document.getElementById('workReviewModal').addEventListener('click', function (e) {
+  if (e.target === this) closeWorkReviewModal();
+});
+
+/* ── Reports ─────────────────────────────────────────────────────── */
+
+var REPORT_NATURE_LABELS = {
+  USER_BEHAVIOR:         'Comportamento de usuário',
+  FRAUD:                 'Fraude',
+  INAPPROPRIATE_CONTENT: 'Conteúdo inadequado',
+  PAYMENT:               'Problema de pagamento',
+  SERVICE:               'Problema com serviço',
+  SECURITY:              'Segurança',
+  OTHER:                 'Outro'
+};
+
+var REPORT_STATUS_LABELS = {
+  PENDING:      'Pendente',
+  UNDER_REVIEW: 'Em análise',
+  RESOLVED:     'Resolvida',
+  REJECTED:     'Rejeitada'
+};
+
+var REPORT_STATUS_BADGE = {
+  PENDING:      'admin-badge-order-not_paid',
+  UNDER_REVIEW: 'admin-badge',
+  RESOLVED:     'admin-badge-order-paid',
+  REJECTED:     'admin-badge-order-refunded'
+};
+
+async function loadReports() {
+  var list = document.getElementById('adminReportList');
+  list.innerHTML = '<p class="admin-list-loading">Carregando denúncias...</p>';
 
   try {
-    var res = await fetch(API_BASE + '/admin/orders', { headers: authHeader() });
+    var res = await fetch(API_BASE + '/reports/admin/all', { headers: authHeader() });
     if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
     if (!res.ok) throw new Error('HTTP ' + res.status);
 
-    allOrders = await res.json();
-    var badge = document.getElementById('ordersBadge');
-    if (badge) { badge.textContent = allOrders.length; badge.style.display = allOrders.length > 0 ? '' : 'none'; }
+    allReports = await res.json();
     updateStats();
-    renderOrders();
+    renderReports();
   } catch (e) {
-    console.error('loadOrders:', e);
-    list.innerHTML = '<p class="admin-list-error">Erro ao carregar pedidos.</p>';
+    list.innerHTML = '<p class="admin-list-error">Erro ao carregar denúncias.</p>';
   }
 }
 
-function setOrdersFilter(filter) {
-  currentOrdersFilter = filter;
-  document.querySelectorAll('#pedidos .filter-btn').forEach(function (b) { b.classList.remove('active'); });
-  var map = { all: 'filterOrdersAll', NOT_PAID: 'filterOrdersNotPaid', PAID: 'filterOrdersPaid', REFUNDED: 'filterOrdersRefunded' };
-  var btn = document.getElementById(map[filter]);
+function setReportsFilter(filter) {
+  currentReportsFilter = filter;
+  document.querySelectorAll('#denuncias .filter-btn').forEach(function (b) { b.classList.remove('active'); });
+  var idMap = {
+    all:          'filterReportsAll',
+    PENDING:      'filterReportsPending',
+    UNDER_REVIEW: 'filterReportsUnder',
+    RESOLVED:     'filterReportsResolved',
+    REJECTED:     'filterReportsRejected'
+  };
+  var btn = document.getElementById(idMap[filter]);
   if (btn) btn.classList.add('active');
-  renderOrders();
+  renderReports();
 }
 
-function filterOrders() { renderOrders(); }
+function filterReports() {
+  renderReports();
+}
 
-function getFilteredOrders() {
-  var query = (document.getElementById('searchOrdersInput').value || '').toLowerCase().trim();
-  return allOrders.filter(function (o) {
-    var matchFilter = currentOrdersFilter === 'all' ? true : o.status === currentOrdersFilter;
-    var userName    = (o.user && o.user.name)  ? o.user.name.toLowerCase()  : '';
-    var userEmail   = (o.user && o.user.email) ? o.user.email.toLowerCase() : '';
-    var matchSearch = !query || userName.includes(query) || userEmail.includes(query);
+function renderReports() {
+  var search  = (document.getElementById('searchReportsInput') || {}).value || '';
+  var q       = search.toLowerCase().trim();
+  var list    = document.getElementById('adminReportList');
+
+  var visible = allReports.filter(function (r) {
+    var matchFilter = currentReportsFilter === 'all' || r.status === currentReportsFilter;
+    var matchSearch = !q ||
+      (r.title         && r.title.toLowerCase().includes(q)) ||
+      (r.reporterName  && r.reporterName.toLowerCase().includes(q)) ||
+      (r.description   && r.description.toLowerCase().includes(q));
     return matchFilter && matchSearch;
   });
-}
 
-var ORDER_STATUS_LABEL = { NOT_PAID: 'Não pago', PAID: 'Pago', REFUNDED: 'Reembolsado' };
+  var count = document.getElementById('adminReportsCount');
+  if (count) count.textContent = visible.length + ' denúncia' + (visible.length !== 1 ? 's' : '');
 
-function renderOrders() {
-  var list     = document.getElementById('adminOrderList');
-  var countEl  = document.getElementById('adminOrdersCount');
-  var filtered = getFilteredOrders();
-
-  if (countEl) {
-    countEl.textContent = filtered.length + ' pedido' + (filtered.length !== 1 ? 's' : '') + ' encontrado' + (filtered.length !== 1 ? 's' : '');
-  }
-
-  list.innerHTML = '';
-
-  if (filtered.length === 0) {
-    list.innerHTML = '<p class="admin-list-empty">Nenhum pedido encontrado.</p>';
+  if (!visible.length) {
+    list.innerHTML = '<p class="admin-list-empty">Nenhuma denúncia encontrada.</p>';
     return;
   }
 
-  filtered.forEach(function (o) {
-    var statusKey   = (o.status || 'NOT_PAID').toLowerCase();
-    var statusLabel = ORDER_STATUS_LABEL[o.status] || o.status || '—';
-    var userName    = (o.user && o.user.name)  ? o.user.name  : '—';
-    var userEmail   = (o.user && o.user.email) ? o.user.email : '';
-    var total       = o.totalPrice != null ? 'R$ ' + Number(o.totalPrice).toFixed(2).replace('.', ',') : '—';
-    var date        = o.createdAt || '—';
-    var items       = (o.orderItemlist && o.orderItemlist.length) ? o.orderItemlist.length : 0;
+  list.innerHTML = '';
+  visible
+    .slice()
+    .sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); })
+    .forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'admin-user-row';
+      row.style.cursor = 'pointer';
 
+      var natureLbl = REPORT_NATURE_LABELS[r.nature]  || r.nature  || '—';
+      var statusLbl = REPORT_STATUS_LABELS[r.status]  || r.status  || '—';
+      var badgeCls  = REPORT_STATUS_BADGE[r.status]   || 'admin-badge';
+      var reporter  = r.reporterName || 'Usuário #' + r.reporterId;
+      var createdAt = r.createdAt ? new Date(r.createdAt).toLocaleDateString('pt-BR') : '—';
+      var initials  = OFAuth.getInitials(reporter);
+      var workInfo  = r.workTitle ? ' · Serviço: ' + escHtmlAdmin(r.workTitle) : '';
+
+      var attachBadge = (r.attachments && r.attachments.length)
+        ? '<span class="admin-badge" style="background:rgba(255,255,255,.06);color:var(--muted2);border:1px solid var(--border)">📎 ' + r.attachments.length + '</span>'
+        : '';
+
+      row.innerHTML =
+        '<div class="admin-user-avatar">' + initials + '</div>' +
+        '<div class="admin-user-info">' +
+          '<div class="admin-user-name">' + escHtmlAdmin(r.title) + '</div>' +
+          '<div class="admin-user-email">' + natureLbl + ' · Denunciante: ' + escHtmlAdmin(reporter) + workInfo + '</div>' +
+        '</div>' +
+        '<div class="admin-user-meta">' +
+          attachBadge +
+          '<span class="admin-badge ' + badgeCls + '">' + statusLbl + '</span>' +
+          '<span class="admin-user-date">' + createdAt + '</span>' +
+          '<div class="admin-user-actions">' +
+            '<button class="btn-row" onclick="openReportModal(' + r.id + ');event.stopPropagation()">Revisar</button>' +
+          '</div>' +
+        '</div>';
+
+      row.addEventListener('click', function () { openReportModal(r.id); });
+      list.appendChild(row);
+    });
+}
+
+function openReportModal(reportId) {
+  var r = allReports.find(function (x) { return x.id === reportId; });
+  if (!r) return;
+
+  reviewingReportId = reportId;
+
+  var natureLbl = REPORT_NATURE_LABELS[r.nature] || r.nature || '—';
+  var reporter  = r.reporterName || 'Usuário #' + r.reporterId;
+  var createdAt = r.createdAt ? new Date(r.createdAt).toLocaleString('pt-BR') : '—';
+  var reviewedAt = r.reviewedAt ? new Date(r.reviewedAt).toLocaleString('pt-BR') : '—';
+
+  document.getElementById('reportDetailGrid').innerHTML =
+    '<div>' +
+      '<div class="detail-label">Título</div>' +
+      '<div class="detail-value">' + escHtmlAdmin(r.title) + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Natureza</div>' +
+      '<div class="detail-value">' + natureLbl + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Denunciante</div>' +
+      '<div class="detail-value">' + escHtmlAdmin(reporter) + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Registrada em</div>' +
+      '<div class="detail-value">' + createdAt + '</div>' +
+    '</div>' +
+    (r.workTitle ? '<div><div class="detail-label">Serviço denunciado</div><div class="detail-value">' + escHtmlAdmin(r.workTitle) + '</div></div>' : '') +
+    '<div class="detail-full">' +
+      '<div class="detail-label">Descrição</div>' +
+      '<div class="detail-value" style="white-space:pre-wrap;line-height:1.6">' + escHtmlAdmin(r.description) + '</div>' +
+    '</div>' +
+    (r.reviewedByName ? '<div class="detail-full"><div class="detail-label">Última análise por</div><div class="detail-value">' + escHtmlAdmin(r.reviewedByName) + ' em ' + reviewedAt + '</div></div>' : '') +
+    (r.attachments && r.attachments.length ? '<div class="detail-full"><div class="detail-label">Anexos</div><div class="detail-value" style="color:var(--muted2)">' + r.attachments.length + ' arquivo(s) em anexo</div></div>' : '');
+
+  document.getElementById('rmStatus').value = r.status;
+  document.getElementById('rmNotes').value  = r.adminNotes || '';
+  document.getElementById('rmMsg').textContent = '';
+  document.getElementById('rmMsg').className   = 'admin-form-msg';
+
+  document.getElementById('reportModal').classList.add('show');
+}
+
+function closeReportModal() {
+  document.getElementById('reportModal').classList.remove('show');
+  reviewingReportId = null;
+}
+
+async function submitReportReview() {
+  if (!reviewingReportId) return;
+
+  var status = document.getElementById('rmStatus').value;
+  var notes  = document.getElementById('rmNotes').value.trim();
+  var msg    = document.getElementById('rmMsg');
+  var btn    = document.getElementById('rmSubmitBtn');
+
+  btn.disabled    = true;
+  btn.textContent = 'Salvando...';
+  msg.textContent = '';
+  msg.className   = 'admin-form-msg';
+
+  try {
+    var res = await fetch(API_BASE + '/reports/admin/updateStatus/' + reviewingReportId, {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ status: status, adminNotes: notes || null })
+    });
+
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var errMsg = (Array.isArray(data.errors) && data.errors.length)
+        ? data.errors.map(function (e) { return e.message; }).join(' | ')
+        : 'Erro ao salvar revisão.';
+      msg.textContent = errMsg;
+      msg.className   = 'admin-form-msg admin-form-msg-error';
+      return;
+    }
+
+    msg.textContent = '✓ Denúncia atualizada com sucesso.';
+    msg.className   = 'admin-form-msg admin-form-msg-success';
+
+    await loadReports();
+    setTimeout(closeReportModal, 800);
+
+  } catch (_) {
+    msg.textContent = 'Erro de conexão.';
+    msg.className   = 'admin-form-msg admin-form-msg-error';
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'SALVAR REVISÃO';
+  }
+}
+
+function escHtmlAdmin(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+document.getElementById('reportModal').addEventListener('click', function (e) {
+  if (e.target === this) closeReportModal();
+});
+
+/* ── Disputes ────────────────────────────────────────────────────── */
+
+async function loadDisputes() {
+  var list = document.getElementById('adminDisputeList');
+  if (list) list.innerHTML = '<p class="admin-list-loading">Carregando disputas...</p>';
+
+  try {
+    var res = await fetch(API_BASE + '/admin/disputes', { headers: authHeader() });
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    allDisputes = await res.json();
+    updateStats();
+    renderDisputes();
+  } catch (e) {
+    if (list) list.innerHTML = '<p class="admin-list-error">Erro ao carregar disputas.</p>';
+  }
+}
+
+function filterDisputes() {
+  renderDisputes();
+}
+
+function renderDisputes() {
+  var search = (document.getElementById('searchDisputesInput') || {}).value || '';
+  var q      = search.toLowerCase().trim();
+  var list   = document.getElementById('adminDisputeList');
+
+  var visible = allDisputes.filter(function (item) {
+    return !q || String(item.id).includes(q);
+  });
+
+  var count = document.getElementById('adminDisputesCount');
+  if (count) count.textContent = visible.length + ' disputa' + (visible.length !== 1 ? 's' : '');
+
+  if (!visible.length) {
+    list.innerHTML = '<p class="admin-list-empty">Nenhuma disputa em aberto. 🎉</p>';
+    return;
+  }
+
+  list.innerHTML = '';
+  visible.forEach(function (item) {
     var row = document.createElement('div');
-    row.className = 'admin-order-row';
+    row.className = 'admin-user-row';
+    row.style.cursor = 'pointer';
+
+    var price     = item.totalPrice != null ? ('R$ ' + Number(item.totalPrice).toLocaleString('pt-BR', {minimumFractionDigits:2})) : '—';
+    var tries     = item.deliveryTries != null ? item.deliveryTries + ' tentativa(s)' : '—';
+    var createdAt = item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : '—';
+
     row.innerHTML =
-      '<div class="admin-user-avatar" style="cursor:default">' +
-        OFAuth.getInitials(userName) +
-      '</div>' +
-      '<div class="admin-order-info">' +
-        '<div class="admin-order-id">Pedido #' + o.id + ' · ' + userName + '</div>' +
-        '<div class="admin-order-meta">' + (userEmail || '') + (items ? ' · ' + items + ' item' + (items !== 1 ? 's' : '') : '') + '</div>' +
+      '<div class="admin-user-avatar" style="background:rgba(251,146,60,.15);color:#fb923c;">⚖️</div>' +
+      '<div class="admin-user-info">' +
+        '<div class="admin-user-name">Pedido Item #' + item.id + '</div>' +
+        '<div class="admin-user-email">Valor: ' + escHtmlAdmin(price) + ' · ' + escHtmlAdmin(tries) + ' de entrega</div>' +
       '</div>' +
       '<div class="admin-user-meta">' +
-        '<span class="admin-badge admin-badge-order-' + statusKey + '">' + statusLabel + '</span>' +
-        '<span class="admin-user-date">' + total + '</span>' +
-        '<span class="admin-user-date">' + date + '</span>' +
+        '<span class="admin-badge" style="background:rgba(251,146,60,.12);color:#fb923c;border:1px solid rgba(251,146,60,.3)">EM DISPUTA</span>' +
+        '<span class="admin-user-date">' + createdAt + '</span>' +
+        '<div class="admin-user-actions">' +
+          '<button class="btn-row" onclick="openDisputeModal(' + item.id + ');event.stopPropagation()">Resolver</button>' +
+        '</div>' +
       '</div>';
 
+    row.addEventListener('click', function () { openDisputeModal(item.id); });
     list.appendChild(row);
   });
 }
+
+async function openDisputeModal(orderItemId) {
+  var item = allDisputes.find(function (x) { return x.id === orderItemId; });
+  if (!item) return;
+
+  reviewingDisputeId = orderItemId;
+
+  var price     = item.totalPrice != null ? ('R$ ' + Number(item.totalPrice).toLocaleString('pt-BR', {minimumFractionDigits:2})) : '—';
+  var createdAt = item.createdAt ? new Date(item.createdAt).toLocaleString('pt-BR') : '—';
+
+  document.getElementById('disputeDetailGrid').innerHTML =
+    '<div>' +
+      '<div class="detail-label">Item ID</div>' +
+      '<div class="detail-value">#' + item.id + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Valor em disputa</div>' +
+      '<div class="detail-value">' + escHtmlAdmin(price) + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Tentativas de entrega</div>' +
+      '<div class="detail-value">' + (item.deliveryTries || 0) + '</div>' +
+    '</div>' +
+    '<div>' +
+      '<div class="detail-label">Criado em</div>' +
+      '<div class="detail-value">' + createdAt + '</div>' +
+    '</div>';
+
+  var msgBox = document.getElementById('disputeMessages');
+  msgBox.innerHTML = '<em style="color:var(--muted)">Carregando mensagens...</em>';
+
+  document.getElementById('dmMsg').textContent = '';
+  document.getElementById('dmMsg').className   = 'admin-form-msg';
+  document.getElementById('dmFreelancerBtn').disabled = false;
+  document.getElementById('dmClientBtn').disabled     = false;
+
+  document.getElementById('disputeModal').classList.add('show');
+
+  try {
+    var res = await fetch(API_BASE + '/admin/disputes/' + orderItemId + '/messages', { headers: authHeader() });
+    if (!res.ok) throw new Error();
+    var messages = await res.json();
+
+    if (!messages || !messages.length) {
+      msgBox.innerHTML = '<em style="color:var(--muted)">Nenhuma mensagem ainda.</em>';
+    } else {
+      msgBox.innerHTML = messages.map(function (m) {
+        var TYPE_ICONS = {
+          TEXT:                          '💬',
+          ATTACHMENT:                    '📎',
+          DELIVERY:                      '📦',
+          DELIVERY_ACCEPTED:             '✅',
+          DELIVERY_REFUSED:              '❌',
+          ADJUSTMENT_ACCEPTED:           '🔄',
+          ADJUSTMENT_REFUSED:            '🚫',
+          DISPUTE_OPENED:                '⚖️',
+          DISPUTE_RESOLVED_FREELANCER:   '✓ Freelancer',
+          DISPUTE_RESOLVED_CLIENT:       '↩ Cliente',
+          DELIVERY_ACCEPTED_AFTER_FREEZE:'✅'
+        };
+        var TYPE_TONE_COLORS = {
+          DELIVERY_REFUSED:    '#ef4444',
+          ADJUSTMENT_REFUSED:  '#ef4444',
+          DISPUTE_OPENED:      '#a855f7',
+          DISPUTE_RESOLVED_FREELANCER: 'var(--green)',
+          DISPUTE_RESOLVED_CLIENT:     '#a855f7'
+        };
+        var icon = TYPE_ICONS[m.type] || '•';
+        var labelColor = TYPE_TONE_COLORS[m.type] || 'var(--text)';
+        var time = m.sentAt ? new Date(m.sentAt).toLocaleString('pt-BR') : '';
+        var attachHtml = '';
+        if (m.attachments && m.attachments.length) {
+          attachHtml = m.attachments.map(function (a) {
+            var url = API_BASE + '/admin/disputes/' + orderItemId + '/attachment/' + (a.source || 'MESSAGE') + '/' + a.id + '/download';
+            return '<div class="msg-file">' +
+              '<span class="msg-file-icon">📄</span>' +
+              '<div class="msg-file-info">' +
+                '<div class="msg-file-name">' + escHtmlAdmin(a.originalName || 'arquivo') + '</div>' +
+                '<div class="msg-file-size">' + formatFileSizeAdmin(a.fileSize) + '</div>' +
+              '</div>' +
+              '<button class="msg-file-download" data-url="' + escHtmlAdmin(url) + '" data-name="' + escHtmlAdmin(a.originalName || 'arquivo') + '" title="Baixar arquivo">⬇</button>' +
+            '</div>';
+          }).join('');
+        }
+        return '<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">' +
+          '<span style="color:' + labelColor + ';font-weight:600">' + escHtmlAdmin(icon + ' ' + (m.senderName || 'Sistema')) + '</span>' +
+          '<span style="color:var(--muted);margin-left:8px;font-size:11px">' + time + '</span>' +
+          '<div style="margin-top:4px">' + escHtmlAdmin(m.content || '') + '</div>' +
+          attachHtml +
+        '</div>';
+      }).join('');
+      msgBox.scrollTop = msgBox.scrollHeight;
+    }
+  } catch (_) {
+    msgBox.innerHTML = '<em style="color:#ef4444">Erro ao carregar mensagens.</em>';
+  }
+}
+
+function closeDisputeModal() {
+  document.getElementById('disputeModal').classList.remove('show');
+  reviewingDisputeId = null;
+}
+
+function formatFileSizeAdmin(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+async function downloadFileAdmin(url, filename) {
+  try {
+    var res = await fetch(url, { headers: authHeader() });
+    if (!res.ok) { alert('Erro ao baixar arquivo.'); return; }
+    var blob = await res.blob();
+    var blobUrl = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename || 'arquivo';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch (_) {
+    alert('Erro de conexão ao baixar arquivo.');
+  }
+}
+
+document.getElementById('disputeMessages').addEventListener('click', function (e) {
+  var btn = e.target.closest('.msg-file-download');
+  if (!btn) return;
+  downloadFileAdmin(btn.dataset.url, btn.dataset.name);
+});
+
+async function resolveDispute(side) {
+  if (!reviewingDisputeId) return;
+
+  var endpoint = side === 'freelancer'
+    ? '/admin/disputes/' + reviewingDisputeId + '/resolveForFreelancer'
+    : '/admin/disputes/' + reviewingDisputeId + '/resolveForClient';
+
+  var msg = document.getElementById('dmMsg');
+  var btnF = document.getElementById('dmFreelancerBtn');
+  var btnC = document.getElementById('dmClientBtn');
+
+  btnF.disabled = true;
+  btnC.disabled = true;
+  msg.textContent = 'Processando...';
+  msg.className   = 'admin-form-msg';
+
+  try {
+    var res = await fetch(API_BASE + endpoint, {
+      method:  'POST',
+      headers: authHeader()
+    });
+
+    if (!res.ok) {
+      var data = await res.json().catch(function () { return {}; });
+      var errMsg = (Array.isArray(data.errors) && data.errors.length)
+        ? data.errors.map(function (e) { return e.message; }).join(' | ')
+        : 'Erro ao resolver disputa.';
+      msg.textContent = errMsg;
+      msg.className   = 'admin-form-msg admin-form-msg-error';
+      btnF.disabled = false;
+      btnC.disabled = false;
+      return;
+    }
+
+    msg.textContent = side === 'freelancer'
+      ? '✓ Disputa resolvida em favor do freelancer. Pagamento liberado.'
+      : '✓ Disputa resolvida em favor do cliente. Reembolso processado.';
+    msg.className = 'admin-form-msg admin-form-msg-success';
+
+    await loadDisputes();
+    setTimeout(closeDisputeModal, 1200);
+
+  } catch (_) {
+    msg.textContent = 'Erro de conexão.';
+    msg.className   = 'admin-form-msg admin-form-msg-error';
+    btnF.disabled = false;
+    btnC.disabled = false;
+  }
+}
+
+document.getElementById('disputeModal').addEventListener('click', function (e) {
+  if (e.target === this) closeDisputeModal();
+});
 
 /* ── Boot ────────────────────────────────────────────────────────── */
 

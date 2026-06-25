@@ -47,10 +47,12 @@ function setMethod(method, el) {
   document.querySelectorAll('.method-opt').forEach(o => o.classList.remove('selected'));
   el.classList.add('selected');
 
-  const psPixForm  = document.getElementById('psPixForm');
-  const psCardForm = document.getElementById('psCardForm');
-  if (psPixForm)  psPixForm.style.display  = (method === 'pix')  ? '' : 'none';
-  if (psCardForm) psCardForm.style.display = (method === 'card') ? '' : 'none';
+  const psPixForm     = document.getElementById('psPixForm');
+  const psCardForm    = document.getElementById('psCardForm');
+  const psBalanceForm = document.getElementById('psBalanceForm');
+  if (psPixForm)     psPixForm.style.display     = (method === 'pix')     ? '' : 'none';
+  if (psCardForm)    psCardForm.style.display     = (method === 'card')    ? '' : 'none';
+  if (psBalanceForm) psBalanceForm.style.display  = (method === 'balance') ? '' : 'none';
 }
 
 /* ── Order items render ───────────────────────────────────── */
@@ -93,12 +95,10 @@ function updateTotals(snapshot) {
   (snapshot || []).forEach(item => {
     if (item._work) subtotal += Number(item._work.price) * (item.amount || 1);
   });
-  const fee   = subtotal * 0.10;
-  const total = subtotal + fee;
+  const total = subtotal;
   const count = (snapshot || []).length;
 
   const subLabel = document.getElementById('paySubtotalLabel');
-  if (subLabel) subLabel.textContent = 'Subtotal (' + count + ' serviço' + (count !== 1 ? 's' : '') + ')';
 
   const subVal = document.getElementById('paySubtotalVal');
   if (subVal)  subVal.textContent = formatMoney(subtotal);
@@ -156,12 +156,13 @@ async function loadCartSummary() {
 /* ── Confirm order ────────────────────────────────────────── */
 
 const METHOD_DISPLAY = {
-  pix:    '⚡ PIX',
-  card:   '💳 Cartão de Crédito',
-  boleto: '📄 Boleto Bancário'
+  pix:     '⚡ PIX',
+  card:    '💳 Cartão de Crédito',
+  boleto:  '📄 Boleto Bancário',
+  balance: '💰 Saldo OneFreela'
 };
 
-const METHOD_MAP = { pix: 'PIX', card: 'CARTAO', boleto: 'PIX' };
+const METHOD_MAP = { pix: 'PIX', card: 'CARTAO', boleto: 'PIX', balance: 'BALANCE' };
 
 async function confirmPayment() {
   const btn          = document.getElementById('confirmBtn');
@@ -173,13 +174,15 @@ async function confirmPayment() {
   const paymentMethod = METHOD_MAP[currentMethod] || 'PIX';
 
   try {
+    const cartItemIds = (cartSnapshot || []).map(function (item) { return item.id; });
+
     const res = await fetch(API_BASE + '/order/createOrder', {
       method:  'POST',
       headers: {
         'Authorization': OFAuth.getToken(),
         'Content-Type':  'application/json'
       },
-      body: JSON.stringify({ paymentMethod })
+      body: JSON.stringify({ cartItemIds, additionalsByCartItem: {}, paymentMethod })
     });
 
     if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
@@ -209,6 +212,45 @@ async function confirmPayment() {
       }
     } catch (_) {}
 
+    // Process payment based on selected method
+    let paymentCallOk = false;
+    if (backendOrderId) {
+      try {
+        if (currentMethod === 'balance') {
+          const r = await fetch(API_BASE + '/payment/makePaymentBalance/' + backendOrderId, {
+            method: 'POST', headers: { 'Authorization': OFAuth.getToken() }
+          });
+          paymentCallOk = r.ok;
+
+        } else if (currentMethod === 'pix') {
+          const cpf = (document.getElementById('psPixCpf').value || '').replace(/\D/g, '');
+          const r = await fetch(API_BASE + '/payment/makePaymentPix', {
+            method: 'POST',
+            headers: { 'Authorization': OFAuth.getToken(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: backendOrderId, cpf })
+          });
+          paymentCallOk = r.ok;
+
+        } else if (currentMethod === 'card') {
+          const cardNumber = (document.getElementById('psCardNumber').value || '').replace(/\s/g, '');
+          const name       = document.getElementById('psCardName').value || '';
+          const expiryStr  = document.getElementById('psCardExpiry').value || '';
+          const cvv        = document.getElementById('psCvv').value || '';
+          const cpf        = (document.getElementById('psCardCpf').value || '').replace(/\D/g, '');
+          const expMatch   = expiryStr.match(/^(\d{2})\/(\d{4})$/);
+          const expirationDate = expMatch ? (expMatch[2] + '-' + expMatch[1] + '-01') : null;
+          if (cardNumber && name && expirationDate && cvv && cpf) {
+            const r = await fetch(API_BASE + '/payment/makePaymentCard', {
+              method: 'POST',
+              headers: { 'Authorization': OFAuth.getToken(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId: backendOrderId, cardNumber, name, expirationDate, cvv, cpf })
+            });
+            paymentCallOk = r.ok;
+          }
+        }
+      } catch (_) {}
+    }
+
     /* build order record */
     const rand      = Math.floor(Math.random() * 90000) + 10000;
     const orderId   = '#OF-' + new Date().getFullYear() + '-' + rand;
@@ -237,7 +279,7 @@ async function confirmPayment() {
       paymentMethod,
       date:          orderDate,
       timestamp:     Date.now(),
-      status:        'NOT_PAID',
+      status:        paymentCallOk ? 'PAID' : 'NOT_PAID',
       items:         savedItems,
       total
     };

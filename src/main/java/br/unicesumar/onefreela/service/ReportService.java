@@ -1,13 +1,14 @@
 package br.unicesumar.onefreela.service;
 
-import br.unicesumar.onefreela.dto.ErrorCode;
+import br.unicesumar.onefreela.enums.ErrorCode;
 import br.unicesumar.onefreela.dto.ErrorDetail;
 import br.unicesumar.onefreela.dto.ReportRegisterDTO;
 import br.unicesumar.onefreela.dto.ReportResponse;
 import br.unicesumar.onefreela.dto.ReportReviewDTO;
 import br.unicesumar.onefreela.entity.Report;
 import br.unicesumar.onefreela.entity.ReportAttachment;
-import br.unicesumar.onefreela.entity.ReportStatus;
+import br.unicesumar.onefreela.entity.Work;
+import br.unicesumar.onefreela.enums.ReportStatus;
 import br.unicesumar.onefreela.entity.User;
 import br.unicesumar.onefreela.exception.ValidationException;
 import br.unicesumar.onefreela.repository.ReportRepository;
@@ -27,12 +28,14 @@ public class ReportService {
     private final ReportValidator reportValidator;
     private final ReportMapper reportMapper;
     private final ReportFileStorageService reportFileStorageService;
+    private final WorkService workService;
 
-    public ReportService(ReportRepository repository, ReportValidator reportValidator, ReportMapper reportMapper, ReportFileStorageService reportFileStorageService) {
+    public ReportService(ReportRepository repository, ReportValidator reportValidator, ReportMapper reportMapper, ReportFileStorageService reportFileStorageService, WorkService workService) {
         this.repository = repository;
         this.reportValidator = reportValidator;
         this.reportMapper = reportMapper;
         this.reportFileStorageService = reportFileStorageService;
+        this.workService = workService;
     }
 
     @Transactional
@@ -40,12 +43,21 @@ public class ReportService {
         List<ErrorDetail> errors = new ArrayList<>();
         errors.addAll(reportValidator.validateRegister(reportRegisterDTO, attachments));
 
+        Work work = null;
+        if (reportRegisterDTO.getWorkId() != null) {
+            work = workService.findById(reportRegisterDTO.getWorkId());
+            if (work == null) {
+                errors.add(new ErrorDetail(ErrorCode.WORK_NOT_FOUND, "workId", "Serviço não encontrado"));
+            }
+        }
+
         if (!errors.isEmpty()) {
             throw new ValidationException(errors);
         }
 
         Report report = reportMapper.toReport(reportRegisterDTO);
         report.setReporter(reporter);
+        report.setWork(work);
 
         if (attachments != null) {
             for (MultipartFile file : attachments) {
@@ -101,6 +113,11 @@ public class ReportService {
 
         if (report == null) {
             errors.add(new ErrorDetail(ErrorCode.REPORT_NOT_FOUND, "report", "Denúncia não encontrada"));
+            throw new ValidationException(errors);
+        }
+
+        if (report.getStatus() == ReportStatus.RESOLVED || report.getStatus() == ReportStatus.REJECTED) {
+            errors.add(new ErrorDetail(ErrorCode.REPORT_ALREADY_CLOSED, "report", "Esta denúncia já foi encerrada e não pode ser alterada"));
             throw new ValidationException(errors);
         }
 

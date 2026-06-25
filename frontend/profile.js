@@ -30,28 +30,38 @@ function initProfile() {
   document.getElementById('profileType').textContent = typeLabel;
   document.getElementById('editProfileLink').href    = isFreelancer ? 'freelancerEditProfile.html' : 'clientEditProfile.html';
 
-  // Nav logo and home links
+  // Sidebar "Página Inicial" link (o logo da navbar é fixado por OFAuth.loadNav)
   const homeUrl = isFreelancer ? 'exploreFreelancers.html' : 'index.html';
-  const navLogo = document.getElementById('navLogoLink');
-  if (navLogo) navLogo.href = homeUrl;
   const sidebarHome = document.getElementById('sidebarHome');
   if (sidebarHome) sidebarHome.href = homeUrl;
 
   // Sidebar items
   if (isFreelancer) show('sidebarServicos'); else hide('sidebarServicos');
   if (!isFreelancer) show('sidebarExplorar'); else hide('sidebarExplorar');
+  if (!isFreelancer) show('sidebarFavoritos'); else hide('sidebarFavoritos');
 
   // Main sections
   if (isFreelancer) show('servicos'); else hide('servicos');
+
+  // Chat nav link
+  var chatLink = document.getElementById('navChatLink');
+  if (chatLink) chatLink.href = 'chatScreen.html';
 
   // Client only: orders
   if (!isFreelancer) {
     show('sidebarPedidos');
     show('pedidos');
     loadOrders();
+    show('sidebarDenuncias');
+    show('denuncias');
+    buildReportsFilterButtons();
+    loadMyReports();
   } else {
     hide('sidebarPedidos');
     hide('pedidos');
+    show('sidebarPedidosAtivos');
+    show('pedidosAtivos');
+    loadFreelancerOrders();
   }
 
   // Client-only settings fields
@@ -132,8 +142,12 @@ function renderWorks() {
     badge.style.display = works.length > 0 ? '' : 'none';
   }
 
+  const STATUS_LABELS = { ACTIVE: 'Ativo', INACTIVE: 'Pausado', PENDING_REVIEW: 'Em análise', REJECTED: 'Rejeitado' };
+
   works.forEach(function (w) {
-    const isActive = w.status === 'ACTIVE';
+    const isActive    = w.status === 'ACTIVE';
+    const canTogglePause = w.status === 'ACTIVE' || w.status === 'INACTIVE';
+    const pauseLabel  = isActive ? 'Pausar' : 'Reativar';
     const card = document.createElement('div');
     card.className = 'service-card';
     card.innerHTML = `
@@ -144,10 +158,12 @@ function renderWorks() {
         ${w.category ? `<div class="service-cat-tag">${w.category}</div>` : ''}
       </div>
       <div class="service-right">
-        <span class="service-status ${isActive ? 'status-active' : 'status-paused'}">${isActive ? 'Ativo' : 'Inativo'}</span>
+        <span class="service-status ${isActive ? 'status-active' : 'status-paused'}">${STATUS_LABELS[w.status] || w.status}</span>
         <div class="service-price">${formatPrice(w.price)}</div>
         <div class="service-actions">
           <button class="btn-sm" onclick="openWorkModal(${w.id})">Editar</button>
+          ${canTogglePause ? `<button class="btn-sm" onclick="toggleWorkPause(${w.id})">${pauseLabel}</button>` : ''}
+          ${canTogglePause ? `<button class="btn-sm btn-sm-danger" onclick="confirmBlockWork(${w.id})">Bloquear</button>` : ''}
           <button class="btn-sm btn-sm-danger" onclick="confirmDeleteWork(${w.id})">Excluir</button>
         </div>
       </div>`;
@@ -258,6 +274,54 @@ async function submitWork() {
   }
 }
 
+async function toggleWorkPause(workId) {
+  try {
+    const res = await fetch(`${API_BASE}/works/${workId}/pause`, {
+      method: 'POST',
+      headers: authHeader()
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(function () { return {}; });
+      const msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao alterar status do serviço.';
+      alert(msg);
+      return;
+    }
+
+    await loadWorks();
+  } catch (e) {
+    alert('Erro de conexão.');
+  }
+}
+
+async function confirmBlockWork(workId) {
+  const w    = works.find(function (x) { return x.id === workId; });
+  const name = w ? `"${w.title}"` : 'este serviço';
+  if (!confirm(`Bloquear ${name}? Ele vai desaparecer da sua lista de serviços e só um administrador poderá reverter isso.`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/works/${workId}/block`, {
+      method: 'POST',
+      headers: authHeader()
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(function () { return {}; });
+      const msg  = Array.isArray(data.errors) && data.errors.length
+        ? data.errors.map(function (e) { return e.message; }).join(' • ')
+        : 'Erro ao bloquear serviço.';
+      alert(msg);
+      return;
+    }
+
+    await loadWorks();
+  } catch (e) {
+    alert('Erro de conexão.');
+  }
+}
+
 async function confirmDeleteWork(workId) {
   const w    = works.find(function (x) { return x.id === workId; });
   const name = w ? `"${w.title}"` : 'este serviço';
@@ -288,46 +352,153 @@ document.getElementById('workModal').addEventListener('click', function (e) {
   if (e.target === this) closeWorkModal();
 });
 
+/* ── Freelancer: active orders ────────────────────────────────────── */
+
+var ITEM_FL_STATUS_LABELS = {
+  PENDING_DELIVERY:          '📦 Aguardando Entrega',
+  PENDING_DELIVERY_REVISION: '🔍 Aguardando Revisão',
+  ADJUSTMENT_REQUEST:        '🔄 Revisão Solicitada',
+  ON_DISPUTE:                '⚖️ Em Disputa',
+  FROZEN:                    '⏸️ Congelado',
+  COMPLETED:                 '✅ Concluído',
+  REFUNDED:                  '↩ Reembolsado'
+};
+
+var ITEM_FL_STATUS_CSS = {
+  PENDING_DELIVERY:          'item-status-pending',
+  PENDING_DELIVERY_REVISION: 'item-status-review',
+  ADJUSTMENT_REQUEST:        'item-status-adjust',
+  ON_DISPUTE:                'item-status-dispute',
+  FROZEN:                    'item-status-frozen',
+  COMPLETED:                 'item-status-done',
+  REFUNDED:                  'item-status-refunded'
+};
+
+async function loadFreelancerOrders() {
+  var list = document.getElementById('activeOrdersList');
+  if (list) list.innerHTML = '<div class="works-loading">Carregando pedidos ativos...</div>';
+
+  try {
+    var res = await fetch(API_BASE + '/delivery/myActiveItems', { headers: authHeader() });
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    var items = await res.json();
+    renderFreelancerOrders(items);
+  } catch (e) {
+    if (list) list.innerHTML = '<div class="works-error">Erro ao carregar pedidos ativos.</div>';
+  }
+}
+
+function renderFreelancerOrders(items) {
+  var list  = document.getElementById('activeOrdersList');
+  var badge = document.getElementById('activeOrdersBadge');
+
+  var active = items.filter(function (i) { return i.status !== 'COMPLETED' && i.status !== 'REFUNDED'; });
+
+  if (badge) {
+    badge.textContent   = active.length;
+    badge.style.display = active.length > 0 ? '' : 'none';
+  }
+
+  if (!items.length) {
+    list.innerHTML = '<div class="active-orders-empty">Nenhum pedido encontrado. Quando clientes comprarem seus serviços, eles aparecem aqui.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+
+  items.forEach(function (item) {
+    var stLabel  = ITEM_FL_STATUS_LABELS[item.status] || item.status;
+    var stClass  = ITEM_FL_STATUS_CSS[item.status]    || 'item-status-pending';
+    var price    = formatPrice(item.totalPrice);
+    var initials = item.clientName
+      ? item.clientName.trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase()
+      : '?';
+
+    var card = document.createElement('div');
+    card.className = 'active-order-card';
+    card.innerHTML =
+      '<div class="active-order-client-avatar">' + escHtml(initials) + '</div>' +
+      '<div class="active-order-body">' +
+        '<div class="active-order-title">' + escHtml(item.workTitle || 'Serviço') + '</div>' +
+        '<div class="active-order-client">Cliente: ' + escHtml(item.clientName || '—') + '</div>' +
+      '</div>' +
+      '<div class="active-order-right">' +
+        '<span class="order-item-status ' + stClass + '">' + escHtml(stLabel) + '</span>' +
+        '<div class="active-order-price">' + price + '</div>' +
+        '<a href="chatScreen.html?orderItemId=' + item.id + '" class="btn-chat-item">💬 Chat</a>' +
+      '</div>';
+
+    list.appendChild(card);
+  });
+}
+
 /* ── Client: orders ───────────────────────────────────────────────── */
 
 var METHOD_LABELS = {
-  pix:    '⚡ PIX',
-  card:   '💳 Cartão de Crédito',
-  boleto: '📄 Boleto Bancário'
+  PIX:     '⚡ PIX',
+  CARTAO:  '💳 Cartão de Crédito',
+  BALANCE: '💰 Saldo OneFreela'
 };
 
-var STATUS_LABELS = {
-  NOT_PAID:  'Aguardando',
-  PAID:      'Pago',
-  REFUNDED:  'Reembolsado',
-  FAILED:    'Pagamento falhou'
+var ORDER_STATUS_LABELS = {
+  NOT_PAID: 'Aguardando Pagamento',
+  PAID:     'Pago',
+  REFUNDED: 'Reembolsado',
+  FAILED:   'Pagamento falhou'
 };
 
-var STATUS_CLASSES = {
-  NOT_PAID:  'order-status-not-paid',
-  PAID:      'order-status-paid',
-  REFUNDED:  'order-status-refunded',
-  FAILED:    'order-status-failed'
+var ORDER_STATUS_CLASSES = {
+  NOT_PAID: 'order-status-not-paid',
+  PAID:     'order-status-paid',
+  REFUNDED: 'order-status-refunded',
+  FAILED:   'order-status-failed'
 };
 
-function loadOrders() {
-  var orders = [];
+var ITEM_STATUS_LABELS = {
+  PENDING_DELIVERY:          'Aguardando Entrega',
+  PENDING_DELIVERY_REVISION: 'Aguardando Revisão',
+  ADJUSTMENT_REQUEST:        'Revisão Solicitada',
+  ON_DISPUTE:                'Em Disputa',
+  FROZEN:                    'Congelado',
+  COMPLETED:                 'Concluído',
+  REFUNDED:                  'Reembolsado'
+};
+
+var ITEM_STATUS_CLASSES = {
+  PENDING_DELIVERY:          'item-status-pending',
+  PENDING_DELIVERY_REVISION: 'item-status-review',
+  ADJUSTMENT_REQUEST:        'item-status-adjust',
+  ON_DISPUTE:                'item-status-dispute',
+  FROZEN:                    'item-status-frozen',
+  COMPLETED:                 'item-status-done',
+  REFUNDED:                  'item-status-refunded'
+};
+
+async function loadOrders() {
+  var list = document.getElementById('ordersList');
+  if (list) list.innerHTML = '<div class="works-loading">Carregando pedidos...</div>';
+
   try {
-    orders = JSON.parse(localStorage.getItem('of_orders') || '[]');
+    var res = await fetch(API_BASE + '/order/myOrders', { headers: authHeader() });
+
+    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    ordersData = await res.json();
+    renderOrders(ordersData);
   } catch (e) {
-    orders = [];
+    if (list) list.innerHTML = '<div class="works-error">Erro ao carregar pedidos.</div>';
   }
-  renderOrders(orders);
 }
 
 function renderOrders(orders) {
-  ordersData = orders;
-
   var list  = document.getElementById('ordersList');
   var badge = document.getElementById('ordersBadge');
 
   if (badge) {
-    badge.textContent = orders.length;
+    badge.textContent   = orders.length;
     badge.style.display = orders.length > 0 ? '' : 'none';
   }
 
@@ -339,50 +510,204 @@ function renderOrders(orders) {
   list.innerHTML = '';
 
   orders.forEach(function (order, idx) {
-    var statusClass = STATUS_CLASSES[order.status] || 'order-status-not-paid';
-    var statusLabel = STATUS_LABELS[order.status]  || order.status;
-    var methodLabel = METHOD_LABELS[order.method]  || order.method;
+    var statusClass = ORDER_STATUS_CLASSES[order.status] || 'order-status-not-paid';
+    var statusLabel = ORDER_STATUS_LABELS[order.status]  || order.status;
+    var methodLabel = METHOD_LABELS[order.paymentMethod] || order.paymentMethod || '—';
+    var isPaid      = order.status === 'PAID';
 
     var itemsHtml = '';
     if (order.items && order.items.length) {
       itemsHtml = '<div class="order-items-list">';
       order.items.forEach(function (item) {
-        var amt   = item.amount > 1 ? ' × ' + item.amount : '';
-        var price = item.price != null ? formatPrice(item.price * (item.amount || 1)) : '—';
-        itemsHtml += '<div class="order-item-row">' +
-          '<span class="order-item-title">' + (item.title || 'Serviço') + amt + '</span>' +
-          '<span class="order-item-price">' + price + '</span>' +
-        '</div>';
+        var amt        = item.amount > 1 ? ' × ' + item.amount : '';
+        var price      = formatPrice(item.totalPrice);
+        var stClass    = ITEM_STATUS_CLASSES[item.status] || 'item-status-pending';
+        var stLabel    = ITEM_STATUS_LABELS[item.status]  || item.status;
+        var chatBtn    = isPaid
+          ? '<a href="chatScreen.html?orderItemId=' + item.id + '" class="btn-chat-item">💬 Chat</a>'
+          : '';
+        var freelancer = item.freelancerName
+          ? '<div class="order-freelancer">Freelancer: ' + escHtml(item.freelancerName) + '</div>'
+          : '';
+
+        itemsHtml +=
+          '<div class="order-item-row">' +
+            '<div style="flex:1;min-width:0">' +
+              '<div class="order-item-title">' + escHtml(item.workTitle || 'Serviço') + amt + '</div>' +
+              freelancer +
+            '</div>' +
+            '<span class="order-item-status ' + stClass + '">' + stLabel + '</span>' +
+            '<span class="order-item-price">' + price + '</span>' +
+            chatBtn +
+          '</div>';
       });
       itemsHtml += '</div>';
     }
-
-    var totalHtml = order.total != null ? formatPrice(order.total) : '—';
 
     var canPay     = order.status === 'NOT_PAID' || order.status === 'FAILED';
     var payBtnHtml = canPay
       ? '<div class="order-pay-action"><button class="btn-pay-order" onclick="openPaymentModal(' + idx + ')">Realizar Pagamento</button></div>'
       : '';
 
+    var dateStr = order.createdAt
+      ? new Date(order.createdAt).toLocaleDateString('pt-BR')
+      : '—';
+
     var card = document.createElement('div');
     card.className = 'order-card';
     card.innerHTML =
       '<div class="order-card-header">' +
         '<div class="order-card-meta">' +
-          '<div class="order-id">' + order.orderId + '</div>' +
-          '<div class="order-date">' + order.date + '</div>' +
+          '<div class="order-id">Pedido #' + order.id + '</div>' +
+          '<div class="order-date">' + dateStr + '</div>' +
         '</div>' +
         '<span class="order-status-badge ' + statusClass + '">' + statusLabel + '</span>' +
       '</div>' +
       itemsHtml +
       '<div class="order-footer">' +
         '<span class="order-method-tag">' + methodLabel + '</span>' +
-        '<span class="order-total-val">Total: ' + totalHtml + '</span>' +
+        '<span class="order-total-val">Total: ' + formatPrice(order.totalPrice) + '</span>' +
       '</div>' +
       payBtnHtml;
 
     list.appendChild(card);
   });
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* ── Client: minhas denúncias ─────────────────────────────────────── */
+
+var myReports          = [];
+var myReportsFilter     = 'all';
+
+var REPORT_NATURE_LABELS = {
+  USER_BEHAVIOR:         'Comportamento de usuário',
+  FRAUD:                 'Fraude',
+  INAPPROPRIATE_CONTENT: 'Conteúdo inadequado',
+  PAYMENT:               'Problema de pagamento',
+  SERVICE:               'Problema com serviço',
+  SECURITY:              'Segurança',
+  OTHER:                 'Outro'
+};
+
+var REPORT_STATUS_LABELS = {
+  PENDING:      'Pendente',
+  UNDER_REVIEW: 'Em análise',
+  RESOLVED:     'Resolvida',
+  REJECTED:     'Rejeitada'
+};
+
+var REPORT_FILTER_CONFIG = [
+  { id: 'all',          label: 'Todas' },
+  { id: 'PENDING',      label: 'Pendentes' },
+  { id: 'UNDER_REVIEW', label: 'Em análise' },
+  { id: 'RESOLVED',     label: 'Resolvidas' },
+  { id: 'REJECTED',     label: 'Rejeitadas' }
+];
+
+function buildReportsFilterButtons() {
+  var wrap = document.getElementById('reportsFilterWrap');
+  if (!wrap) return;
+  wrap.innerHTML = REPORT_FILTER_CONFIG.map(function (f) {
+    return '<button class="rf-btn ' + (myReportsFilter === f.id ? 'active' : '') + '" data-filter="' + f.id + '">' + f.label + '</button>';
+  }).join('');
+
+  wrap.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-filter]');
+    if (!btn) return;
+    myReportsFilter = btn.dataset.filter;
+    wrap.querySelectorAll('.rf-btn').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderMyReports();
+  });
+}
+
+async function loadMyReports() {
+  var list = document.getElementById('myReportsList');
+  if (list) list.innerHTML = '<div class="reports-loading">Carregando denúncias...</div>';
+
+  try {
+    var res = await fetch(API_BASE + '/reports/myReports', { headers: authHeader() });
+    if (!res.ok) throw new Error();
+    myReports = await res.json();
+    renderMyReports();
+
+    var badge = document.getElementById('myReportsBadge');
+    if (badge) {
+      badge.textContent   = myReports.length;
+      badge.style.display = myReports.length > 0 ? '' : 'none';
+    }
+  } catch (e) {
+    if (list) list.innerHTML = '<div class="reports-loading" style="color:#ef4444">Erro ao carregar denúncias.</div>';
+  }
+}
+
+function renderMyReports() {
+  var list = document.getElementById('myReportsList');
+  if (!list) return;
+
+  var visible = myReportsFilter === 'all'
+    ? myReports
+    : myReports.filter(function (r) { return r.status === myReportsFilter; });
+
+  if (!visible.length) {
+    list.innerHTML =
+      '<div class="reports-empty">' +
+        '<div class="reports-empty-icon">📋</div>' +
+        '<div class="reports-empty-title">' + (myReportsFilter === 'all' ? 'Nenhuma denúncia registrada' : 'Nenhuma denúncia com este status') + '</div>' +
+        '<div class="reports-empty-sub">' + (myReportsFilter === 'all' ? 'Denuncie um serviço a partir da página dele para começar.' : 'Altere o filtro para ver outras denúncias.') + '</div>' +
+      '</div>';
+    return;
+  }
+
+  list.innerHTML = visible
+    .slice()
+    .sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); })
+    .map(tplMyReportCard)
+    .join('');
+}
+
+function tplMyReportCard(r) {
+  var natureLbl  = REPORT_NATURE_LABELS[r.nature] || r.nature;
+  var statusLbl  = REPORT_STATUS_LABELS[r.status] || r.status;
+  var createdAt  = r.createdAt  ? fmtReportDate(r.createdAt)  : '—';
+  var reviewedAt = r.reviewedAt ? ' · Analisada em ' + fmtReportDate(r.reviewedAt) : '';
+  var workHtml   = r.workTitle ? '<div class="report-card-work">🚩 Serviço: ' + escHtml(r.workTitle) + '</div>' : '';
+
+  var adminNotesHtml = r.adminNotes
+    ? '<div class="report-admin-notes"><div class="report-admin-notes-label">Notas do administrador</div>' + escHtml(r.adminNotes) + '</div>'
+    : '';
+
+  var attachCount = (r.attachments && r.attachments.length)
+    ? '<span style="font-size:11px;color:var(--muted2)">📎 ' + r.attachments.length + ' anexo' + (r.attachments.length > 1 ? 's' : '') + '</span>'
+    : '';
+
+  return (
+    '<div class="report-card">' +
+      '<div class="report-card-top">' +
+        '<div>' +
+          '<div class="report-card-title">' + escHtml(r.title) + '</div>' +
+          '<div class="report-card-nature">' + natureLbl + '</div>' +
+          workHtml +
+        '</div>' +
+        '<span class="rs-badge rs-' + r.status + '">' + statusLbl + '</span>' +
+      '</div>' +
+      '<div class="report-card-desc">' + escHtml(r.description) + '</div>' +
+      adminNotesHtml +
+      '<div class="report-card-footer">' +
+        '<span class="report-card-date">Registrada em ' + createdAt + reviewedAt + '</span>' +
+        attachCount +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function fmtReportDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 /* ── Client: payment modal ───────────────────────────────────────────── */
@@ -392,23 +717,31 @@ function openPaymentModal(orderIdx) {
   if (!order) return;
   payingOrderIdx = orderIdx;
 
-  const isPix = (order.paymentMethod || '').toUpperCase() !== 'CARTAO';
+  var method = (order.paymentMethod || '').toUpperCase();
+  var isPix      = method === 'PIX';
+  var isCard     = method === 'CARTAO';
+  var isBalance  = method === 'BALANCE';
+
+  var pillClass   = isPix ? 'pix' : isCard ? 'card' : 'balance';
+  var pillLabel   = isPix ? '⚡ PIX' : isCard ? '💳 Cartão de Crédito' : '💰 Saldo OneFreela';
 
   const pill = document.getElementById('pmMethodPill');
   if (pill) {
-    pill.className   = 'pm-method-pill ' + (isPix ? 'pix' : 'card');
-    pill.textContent = isPix ? '⚡ PIX' : '💳 Cartão de Crédito';
+    pill.className   = 'pm-method-pill ' + pillClass;
+    pill.textContent = pillLabel;
   }
 
-  const pixForm  = document.getElementById('pmPixForm');
-  const cardForm = document.getElementById('pmCardForm');
-  if (pixForm)  pixForm.style.display  = isPix ? '' : 'none';
-  if (cardForm) cardForm.style.display = isPix ? 'none' : '';
+  const pixForm     = document.getElementById('pmPixForm');
+  const cardForm    = document.getElementById('pmCardForm');
+  const balanceForm = document.getElementById('pmBalanceForm');
+  if (pixForm)     pixForm.style.display     = isPix     ? '' : 'none';
+  if (cardForm)    cardForm.style.display     = isCard    ? '' : 'none';
+  if (balanceForm) balanceForm.style.display  = isBalance ? '' : 'none';
 
   const totalRow = document.getElementById('pmTotalRow');
   const totalVal = document.getElementById('pmTotalVal');
   if (totalRow) totalRow.style.display = '';
-  if (totalVal && order.total != null) totalVal.textContent = formatPrice(order.total);
+  if (totalVal && order.totalPrice != null) totalVal.textContent = formatPrice(order.totalPrice);
 
   ['pmPixCpf', 'pmCardNumber', 'pmCardName', 'pmCardExpiry', 'pmCardCvv', 'pmCardCpf'].forEach(function (id) {
     const el = document.getElementById(id);
@@ -450,10 +783,15 @@ async function submitPayment() {
   btn.textContent = 'PROCESSANDO...';
   clearPmMsg();
 
-  const isPix = (order.paymentMethod || '').toUpperCase() !== 'CARTAO';
+  const method    = (order.paymentMethod || '').toUpperCase();
+  const isPix     = method === 'PIX';
+  const isBalance = method === 'BALANCE';
   let endpoint, body;
 
-  if (isPix) {
+  if (isBalance) {
+    endpoint = '/payment/makePaymentBalance/' + order.id;
+    body     = null;
+  } else if (isPix) {
     const cpf = document.getElementById('pmPixCpf').value.trim();
     if (!cpf) {
       showPmMsg('Informe o CPF do pagador.', 'error');
@@ -462,7 +800,7 @@ async function submitPayment() {
       return;
     }
     endpoint = '/payment/makePaymentPix';
-    body = { orderId: order.backendOrderId ?? null, cpf };
+    body = { orderId: order.id, cpf };
   } else {
     const cardNumber = document.getElementById('pmCardNumber').value.trim().replace(/\s/g, '');
     const cardName   = document.getElementById('pmCardName').value.trim();
@@ -487,22 +825,17 @@ async function submitPayment() {
     const expirationDate = parts[1] + '-' + parts[0].padStart(2, '0') + '-01';
 
     endpoint = '/payment/makePaymentCard';
-    body = { orderId: order.backendOrderId || null, cardNumber, name: cardName, expirationDate, cvv, cpf };
-  }
-
-  if (!body.orderId) {
-    showPmMsg('Pedido sem ID de backend — o endpoint POST /order/createOrder precisa retornar o objeto do pedido com o campo "id" para que o pagamento possa ser processado.', 'error');
-    btn.disabled    = false;
-    btn.textContent = 'CONFIRMAR PAGAMENTO';
-    return;
+    body = { orderId: order.id, cardNumber, name: cardName, expirationDate, cvv, cpf };
   }
 
   try {
-    const res = await fetch(API_BASE + endpoint, {
+    var fetchOpts = {
       method:  'POST',
-      headers: { ...authHeader(), 'Content-Type': 'application/json' },
-      body:    JSON.stringify(body)
-    });
+      headers: isBalance ? authHeader() : Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+    };
+    if (!isBalance) fetchOpts.body = JSON.stringify(body);
+
+    const res = await fetch(API_BASE + endpoint, fetchOpts);
 
     if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
 
@@ -517,20 +850,8 @@ async function submitPayment() {
       return;
     }
 
-    const payment  = await res.json().catch(function () { return {}; });
-    let   newStatus = 'NOT_PAID';
-    if (payment.status === 'SUCCESS') newStatus = 'PAID';
-    if (payment.status === 'FAILED')  newStatus = 'FAILED';
-
-    const stored = JSON.parse(localStorage.getItem('of_orders') || '[]');
-    const oidx   = stored.findIndex(function (o) { return o.orderId === order.orderId; });
-    if (oidx !== -1) {
-      stored[oidx].status = newStatus;
-      localStorage.setItem('of_orders', JSON.stringify(stored));
-    }
-
     closePaymentModal();
-    loadOrders();
+    await loadOrders();
   } catch (e) {
     console.error('submitPayment:', e);
     showPmMsg('Erro de conexão ao processar pagamento.', 'error');

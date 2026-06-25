@@ -1,5 +1,7 @@
 package br.unicesumar.onefreela.entity;
 
+import br.unicesumar.onefreela.enums.ReportNature;
+import br.unicesumar.onefreela.enums.ReportStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,6 +30,10 @@ public class Report {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by_id")
     private User reviewedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "work_id")
+    private Work work;
 
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReportAttachment> attachments = new ArrayList<>();
@@ -135,6 +141,14 @@ public class Report {
 
     public void setAttachments(List<ReportAttachment> attachments) {
         this.attachments = attachments;
+    }
+
+    public Work getWork() {
+        return work;
+    }
+
+    public void setWork(Work work) {
+        this.work = work;
     }
 
     public Report() {}

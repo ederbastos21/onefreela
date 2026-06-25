@@ -14,6 +14,8 @@ public class ReportRegisterDTO {
     @NotBlank(message = "descrição não pode ser vazia")
     private String description;
 
+    private Long workId;
+
     public String getNature() {
         return nature;
     }
@@ -36,6 +38,14 @@ public class ReportRegisterDTO {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Long getWorkId() {
+        return workId;
+    }
+
+    public void setWorkId(Long workId) {
+        this.workId = workId;
     }
 
     public ReportRegisterDTO() {}

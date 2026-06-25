@@ -1,5 +1,7 @@
 package br.unicesumar.onefreela.dto;
 
+import br.unicesumar.onefreela.enums.ErrorCode;
+
 import java.util.List;
 
 public class ErrorResponse {

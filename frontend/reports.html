@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Denúncias</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .reports-layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+    @media (max-width: 860px) { .reports-layout { grid-template-columns: 1fr; } }
+
+    /* ── Form card ── */
+    .report-form-card {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: var(--rc);
+      padding: 28px;
+      position: sticky;
+      top: 88px;
+    }
+    .report-form-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 1px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .report-form-sub {
+      font-size: 12px;
+      color: var(--muted2);
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+
+    /* ── Reports list ── */
+    .reports-list-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+  </style>
+  <script>(function(){document.documentElement.setAttribute("data-theme",localStorage.getItem("of_theme")||"dark");})()</script>
+</head>
+<body>
+
+  <nav class="nav-app">
+    <div class="nav-left">
+      <a href="index.html" class="nav-logo">
+        <div class="nav-logo-icon">OF</div>
+        <div class="nav-logo-text">One<span>Freela</span></div>
+      </a>
+      <div class="nav-sep"></div>
+      <a href="exploreFreelancers.html" class="nav-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Explorar serviços
+      </a>
+    </div>
+    <div class="nav-right">
+      <a href="cartScreen.html" class="nav-icon-btn" title="Carrinho">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </a>
+      <a href="favorites.html" class="nav-icon-btn" id="navFavoritesLink" title="Favoritos" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </a>
+      <div class="nav-icon-btn" id="notifBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div class="nav-icon-btn" title="Mensagens" onclick="goToChat()" style="cursor:pointer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="nav-user">
+        <div class="nav-user-name" id="navUserName"></div>
+        <div class="nav-user-role" id="navUserRole"></div>
+      </div>
+      <a href="profile.html" class="nav-avatar" id="navAvatar"></a>
+      <a href="adminScreen.html" id="adminAreaBtn" class="nav-admin-btn">Área do admin</a>
+    </div>
+  </nav>
+
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-title">Notificações</div>
+  </div>
+
+  <div class="app-page">
+    <div class="container">
+
+      <div class="section-header" style="margin-bottom:28px">
+        <h1 class="section-title" style="font-size:22px;font-weight:700">Central de Denúncias</h1>
+        <p style="font-size:13px;color:var(--muted2);margin-top:4px">
+          Reporte comportamentos inadequados, fraudes ou problemas que exijam análise administrativa.
+        </p>
+      </div>
+
+      <div class="reports-layout">
+
+        <!-- ── Form ── -->
+        <div class="report-form-card">
+          <div class="report-form-title">Nova Denúncia</div>
+          <div class="report-form-sub">Preencha com o máximo de detalhes para agilizar a análise.</div>
+
+          <div class="form-field">
+            <label class="form-label" for="rNature">Natureza <span class="req">*</span></label>
+            <div class="form-input-wrap" id="rNatureWrap">
+              <select id="rNature">
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+            <div class="field-error" id="rNatureErr">Selecione a natureza da denúncia.</div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="rTitle">Título <span class="req">*</span></label>
+            <div class="form-input-wrap" id="rTitleWrap">
+              <input id="rTitle" type="text" placeholder="Resumo em uma linha..." maxlength="100" />
+            </div>
+            <div class="field-error" id="rTitleErr">Título obrigatório.</div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="rDesc">Descrição <span class="req">*</span></label>
+            <div class="form-input-wrap" id="rDescWrap">
+              <textarea id="rDesc" rows="5" placeholder="Descreva detalhadamente o ocorrido..." maxlength="2000"></textarea>
+            </div>
+            <div class="field-error" id="rDescErr">Descrição obrigatória (mín. 20 caracteres).</div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Anexos <span style="color:var(--muted);font-weight:400;text-transform:none">(opcional)</span></label>
+            <label class="attach-label" for="rFiles">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              Clique para anexar arquivos
+            </label>
+            <input id="rFiles" type="file" multiple accept="image/*,.pdf,.txt" style="display:none" />
+            <div class="attach-preview" id="attachPreview"></div>
+          </div>
+
+          <button class="btn-submit-report" id="submitReportBtn" onclick="submitReport()">Registrar Denúncia</button>
+          <div class="form-feedback" id="formFeedback"></div>
+        </div>
+
+        <!-- ── List ── -->
+        <div>
+          <div class="reports-list-header">
+            <div class="reports-list-title">Minhas Denúncias</div>
+            <div class="reports-filter-wrap" id="reportsFilterWrap"></div>
+          </div>
+          <div id="reportsList"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="auth.js"></script>
+  <script src="main.js"></script>
+  <script src="reports.js"></script>
+</body>
+</html>

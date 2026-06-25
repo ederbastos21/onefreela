@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script>(function(){document.documentElement.setAttribute("data-theme",localStorage.getItem("of_theme")||"dark");})()</script>
 </head>
 <body>
 
@@ -26,6 +27,9 @@
         <div class="nav-right">
       <a href="cartScreen.html" class="nav-icon-btn" title="Carrinho">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </a>
+      <a href="favorites.html" class="nav-icon-btn" id="navFavoritesLink" title="Favoritos" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       </a>
       <div class="nav-icon-btn" id="notifBtn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -67,6 +71,10 @@
 
           <div class="service-meta">
             <span class="meta-cat" id="serviceCat">Design & Arte</span>
+            <button class="btn-report-flag" id="reportServiceBtn" onclick="openReportModal()" title="Denunciar este serviço" style="display:none">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              Denunciar
+            </button>
           </div>
 
           <!-- GALERIA -->
@@ -123,7 +131,10 @@
                 <button class="qty-btn" onclick="changeQty(1)">+</button>
               </div>
 
-              <button class="btn-buy" onclick="buyNow()">CONTRATAR AGORA</button>
+              <button class="btn-fav" id="favBtn" onclick="toggleServiceFavorite()" title="Adicionar aos favoritos">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                Favoritar
+              </button>
               <button class="btn-cart" id="cartBtn" onclick="addToCart()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                 Adicionar ao carrinho
@@ -152,6 +163,54 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- Modal: denunciar serviço -->
+  <div class="auth-overlay" id="reportModal">
+    <div class="auth-modal" style="max-width:480px">
+      <button class="btn-auth-close" onclick="closeReportModal()">×</button>
+      <h2 class="auth-modal-title">🚩 DENUNCIAR SERVIÇO</h2>
+      <p style="font-size:12px;color:var(--muted2);margin:-6px 0 18px;line-height:1.5">
+        Conte o que está errado com <strong id="reportModalWorkTitle">este serviço</strong>. Nossa equipe vai analisar.
+      </p>
+
+      <div class="form-field">
+        <label class="form-label" for="srNature">Natureza <span class="req">*</span></label>
+        <div class="form-input-wrap" id="srNatureWrap">
+          <select id="srNature"></select>
+        </div>
+        <div class="field-error" id="srNatureErr">Selecione a natureza da denúncia.</div>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="srTitle">Título <span class="req">*</span></label>
+        <div class="form-input-wrap" id="srTitleWrap">
+          <input id="srTitle" type="text" placeholder="Resumo em uma linha..." maxlength="100" />
+        </div>
+        <div class="field-error" id="srTitleErr">Título obrigatório (mín. 5 caracteres).</div>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="srDesc">Descrição <span class="req">*</span></label>
+        <div class="form-input-wrap" id="srDescWrap">
+          <textarea id="srDesc" rows="4" placeholder="Descreva detalhadamente o problema..." maxlength="2000"></textarea>
+        </div>
+        <div class="field-error" id="srDescErr">Descrição obrigatória (mín. 20 caracteres).</div>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label">Anexos <span style="color:var(--muted);font-weight:400;text-transform:none">(opcional)</span></label>
+        <label class="attach-label" for="srFiles">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          Clique para anexar arquivos
+        </label>
+        <input id="srFiles" type="file" multiple accept="image/*,.pdf,.txt" style="display:none" />
+        <div class="attach-preview" id="srAttachPreview"></div>
+      </div>
+
+      <div class="form-feedback" id="srFeedback"></div>
+      <button class="btn-submit-report" id="srSubmitBtn" onclick="submitServiceReport()">Registrar Denúncia</button>
+    </div>
+  </div>
 
   <script src="auth.js"></script>
   <script src="main.js"></script>

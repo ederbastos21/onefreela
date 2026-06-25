@@ -1,8 +1,8 @@
 package br.unicesumar.onefreela.dto;
 
 import br.unicesumar.onefreela.entity.Report;
-import br.unicesumar.onefreela.entity.ReportNature;
-import br.unicesumar.onefreela.entity.ReportStatus;
+import br.unicesumar.onefreela.enums.ReportNature;
+import br.unicesumar.onefreela.enums.ReportStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,6 +22,8 @@ public class ReportResponse {
     private LocalDateTime updatedAt;
     private LocalDateTime reviewedAt;
     private List<ReportAttachmentResponse> attachments;
+    private Long workId;
+    private String workTitle;
 
     public static ReportResponse fromEntity(Report report) {
         ReportResponse response = new ReportResponse();
@@ -44,7 +46,12 @@ public class ReportResponse {
             response.reviewedById = report.getReviewedBy().getId();
             response.reviewedByName = report.getReviewedBy().getName();
         }
-        
+
+        if (report.getWork() != null) {
+            response.workId = report.getWork().getId();
+            response.workTitle = report.getWork().getTitle();
+        }
+
         response.attachments = report.getAttachments().stream().map(ReportAttachmentResponse::fromEntity).toList();
         return response;
     }
@@ -103,6 +110,14 @@ public class ReportResponse {
 
     public List<ReportAttachmentResponse> getAttachments() {
         return attachments;
+    }
+
+    public Long getWorkId() {
+        return workId;
+    }
+
+    public String getWorkTitle() {
+        return workTitle;
     }
 
     public ReportResponse() {}

@@ -3,6 +3,7 @@ package br.unicesumar.onefreela.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.List;
 
 public class WorkUpdateDTO {
 
@@ -51,4 +52,14 @@ public class WorkUpdateDTO {
     }
 
     public WorkUpdateDTO() {}
+
+    private List<WorkAdditionalDTO> additionals;
+
+    public List<WorkAdditionalDTO> getAdditionals() {
+        return additionals;
+    }
+    
+    public void setAdditionals(List<WorkAdditionalDTO> additionals) {
+        this.additionals = additionals;
+    }
 }

@@ -1,10 +1,10 @@
 package br.unicesumar.onefreela.dto;
 
 import br.unicesumar.onefreela.entity.Work;
-import br.unicesumar.onefreela.entity.WorkStatus;
-
+import br.unicesumar.onefreela.enums.WorkStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class WorkResponse {
 
@@ -18,6 +18,11 @@ public class WorkResponse {
     private LocalDateTime updatedAt;
     private Long ownerId;
     private String ownerName;
+    private String adminNotes;
+    private LocalDateTime reviewedAt;
+    private Long reviewedById;
+    private String reviewedByName;
+    private List<WorkAdditionalResponse> additionals;
 
     public static WorkResponse fromEntity(Work w){
         WorkResponse r = new WorkResponse();
@@ -33,6 +38,15 @@ public class WorkResponse {
             r.ownerId = w.getOwner().getId();
             r.ownerName = w.getOwner().getName();
         }
+        r.adminNotes = w.getAdminNotes();
+        r.reviewedAt = w.getReviewedAt();
+
+        if (w.getReviewedBy() != null){
+            r.reviewedById = w.getReviewedBy().getId();
+            r.reviewedByName = w.getReviewedBy().getName();
+        }
+
+        r.additionals = w.getAdditionals().stream().map(WorkAdditionalResponse::fromEntity).toList();
         return r;
     }
 
@@ -114,6 +128,46 @@ public class WorkResponse {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getAdminNotes() {
+        return adminNotes;
+    }
+
+    public void setAdminNotes(String adminNotes) {
+        this.adminNotes = adminNotes;
+    }
+
+    public LocalDateTime getReviewedAt() {
+        return reviewedAt;
+    }
+
+    public void setReviewedAt(LocalDateTime reviewedAt) {
+        this.reviewedAt = reviewedAt;
+    }
+
+    public Long getReviewedById() {
+        return reviewedById;
+    }
+
+    public void setReviewedById(Long reviewedById) {
+        this.reviewedById = reviewedById;
+    }
+
+    public String getReviewedByName() {
+        return reviewedByName;
+    }
+
+    public void setReviewedByName(String reviewedByName) {
+        this.reviewedByName = reviewedByName;
+    }
+
+    public List<WorkAdditionalResponse> getAdditionals() {
+        return additionals;
+    }
+
+    public void setAdditionals(List<WorkAdditionalResponse> additionals) {
+        this.additionals = additionals;
     }
 
     public WorkResponse() {}
