@@ -8,11 +8,6 @@ let detailUserId  = null;
 let allWorks        = [];
 let currentWorksFilter = 'all';
 
-let allCarts = [];
-
-let allOrders         = [];
-let currentOrdersFilter = 'all';
-
 let allReports         = [];
 let currentReportsFilter = 'all';
 let reviewingReportId    = null;
@@ -34,8 +29,6 @@ function initAdmin() {
   }
   loadUsers();
   loadWorks();
-  loadCarts();
-  loadOrders();
   loadReports();
   loadDisputes();
 }
@@ -77,9 +70,6 @@ function updateStats() {
 
   var statWorks = document.getElementById('statWorks');
   if (statWorks) statWorks.textContent = allWorks.length || '—';
-
-  var statOrders = document.getElementById('statOrders');
-  if (statOrders) statOrders.textContent = allOrders.length || '—';
 
   var statReportsPending = document.getElementById('statReportsPending');
   if (statReportsPending) {
@@ -628,126 +618,6 @@ async function deleteWork(workId) {
 document.getElementById('workReviewModal').addEventListener('click', function (e) {
   if (e.target === this) closeWorkReviewModal();
 });
-
-/* ── Carts ───────────────────────────────────────────────────────── */
-
-async function loadCarts() {
-  var list = document.getElementById('adminCartList');
-  if (list) list.innerHTML = '<p class="admin-list-empty" style="padding:24px;text-align:center;color:var(--muted2)">Gestão de carrinhos não disponível via API.</p>';
-}
-
-function renderCarts() {
-  var list    = document.getElementById('adminCartList');
-  var countEl = document.getElementById('adminCartsCount');
-
-  if (countEl) {
-    countEl.textContent = allCarts.length + ' carrinho' + (allCarts.length !== 1 ? 's' : '') + ' cadastrado' + (allCarts.length !== 1 ? 's' : '');
-  }
-
-  list.innerHTML = '';
-
-  if (allCarts.length === 0) {
-    list.innerHTML = '<p class="admin-list-empty">Nenhum carrinho encontrado.</p>';
-    return;
-  }
-
-  allCarts.forEach(function (c) {
-    var items     = (c.cartItemList && c.cartItemList.length) ? c.cartItemList.length : 0;
-    var totalAmt  = 0;
-    if (c.cartItemList) {
-      c.cartItemList.forEach(function (i) { totalAmt += (i.amount || 0); });
-    }
-
-    var row = document.createElement('div');
-    row.className = 'admin-cart-row';
-    row.innerHTML =
-      '<div class="admin-cart-icon">' +
-        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' +
-      '</div>' +
-      '<div class="admin-cart-info">' +
-        '<div class="admin-cart-id">Carrinho #' + c.id + '</div>' +
-        '<div class="admin-cart-sub">' + items + ' item' + (items !== 1 ? 's' : '') + ' · ' + totalAmt + ' unidade' + (totalAmt !== 1 ? 's' : '') + '</div>' +
-      '</div>';
-
-    list.appendChild(row);
-  });
-}
-
-/* ── Orders ──────────────────────────────────────────────────────── */
-
-async function loadOrders() {
-  var list = document.getElementById('adminOrderList');
-  if (list) list.innerHTML = '<p class="admin-list-empty" style="padding:24px;text-align:center;color:var(--muted2)">Gestão de pedidos não disponível via API.</p>';
-}
-
-function setOrdersFilter(filter) {
-  currentOrdersFilter = filter;
-  document.querySelectorAll('#pedidos .filter-btn').forEach(function (b) { b.classList.remove('active'); });
-  var map = { all: 'filterOrdersAll', NOT_PAID: 'filterOrdersNotPaid', PAID: 'filterOrdersPaid', REFUNDED: 'filterOrdersRefunded' };
-  var btn = document.getElementById(map[filter]);
-  if (btn) btn.classList.add('active');
-  renderOrders();
-}
-
-function filterOrders() { renderOrders(); }
-
-function getFilteredOrders() {
-  var query = (document.getElementById('searchOrdersInput').value || '').toLowerCase().trim();
-  return allOrders.filter(function (o) {
-    var matchFilter = currentOrdersFilter === 'all' ? true : o.status === currentOrdersFilter;
-    var userName    = (o.user && o.user.name)  ? o.user.name.toLowerCase()  : '';
-    var userEmail   = (o.user && o.user.email) ? o.user.email.toLowerCase() : '';
-    var matchSearch = !query || userName.includes(query) || userEmail.includes(query);
-    return matchFilter && matchSearch;
-  });
-}
-
-var ORDER_STATUS_LABEL = { NOT_PAID: 'Não pago', PAID: 'Pago', REFUNDED: 'Reembolsado' };
-
-function renderOrders() {
-  var list     = document.getElementById('adminOrderList');
-  var countEl  = document.getElementById('adminOrdersCount');
-  var filtered = getFilteredOrders();
-
-  if (countEl) {
-    countEl.textContent = filtered.length + ' pedido' + (filtered.length !== 1 ? 's' : '') + ' encontrado' + (filtered.length !== 1 ? 's' : '');
-  }
-
-  list.innerHTML = '';
-
-  if (filtered.length === 0) {
-    list.innerHTML = '<p class="admin-list-empty">Nenhum pedido encontrado.</p>';
-    return;
-  }
-
-  filtered.forEach(function (o) {
-    var statusKey   = (o.status || 'NOT_PAID').toLowerCase();
-    var statusLabel = ORDER_STATUS_LABEL[o.status] || o.status || '—';
-    var userName    = (o.user && o.user.name)  ? o.user.name  : '—';
-    var userEmail   = (o.user && o.user.email) ? o.user.email : '';
-    var total       = o.totalPrice != null ? 'R$ ' + Number(o.totalPrice).toFixed(2).replace('.', ',') : '—';
-    var date        = o.createdAt || '—';
-    var items       = (o.orderItemlist && o.orderItemlist.length) ? o.orderItemlist.length : 0;
-
-    var row = document.createElement('div');
-    row.className = 'admin-order-row';
-    row.innerHTML =
-      '<div class="admin-user-avatar" style="cursor:default">' +
-        OFAuth.getInitials(userName) +
-      '</div>' +
-      '<div class="admin-order-info">' +
-        '<div class="admin-order-id">Pedido #' + o.id + ' · ' + userName + '</div>' +
-        '<div class="admin-order-meta">' + (userEmail || '') + (items ? ' · ' + items + ' item' + (items !== 1 ? 's' : '') : '') + '</div>' +
-      '</div>' +
-      '<div class="admin-user-meta">' +
-        '<span class="admin-badge admin-badge-order-' + statusKey + '">' + statusLabel + '</span>' +
-        '<span class="admin-user-date">' + total + '</span>' +
-        '<span class="admin-user-date">' + date + '</span>' +
-      '</div>';
-
-    list.appendChild(row);
-  });
-}
 
 /* ── Reports ─────────────────────────────────────────────────────── */
 

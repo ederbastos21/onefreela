@@ -21,19 +21,14 @@ public class AdminController {
     private final AuthService authService;
     private final UserService userService;
     private final WorkService workService;
-    private final CartService cartService;
-    private final OrderService orderService;
     private final ReportService reportService;
     private final DisputeService disputeService;
 
     public AdminController(AuthService authService, UserService userService, WorkService workService,
-                           CartService cartService, OrderService orderService, ReportService reportService,
-                           DisputeService disputeService) {
+                           ReportService reportService, DisputeService disputeService) {
         this.authService = authService;
         this.userService = userService;
         this.workService = workService;
-        this.cartService = cartService;
-        this.orderService = orderService;
         this.reportService = reportService;
         this.disputeService = disputeService;
     }

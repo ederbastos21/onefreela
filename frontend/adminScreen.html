@@ -91,32 +91,28 @@
     .btn-detail-delete { flex: 1; background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.25); border-radius: var(--radius); padding: 10px; color: #ef4444; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; cursor: pointer; transition: all .15s; font-family: inherit; }
     .btn-detail-delete:hover { background: rgba(239,68,68,.12); border-color: #ef4444; }
 
-    /* ── Works / Carts / Orders rows ────────────────── */
-    .admin-work-row, .admin-cart-row, .admin-order-row {
+    /* ── Works rows ────────────────────────────────── */
+    .admin-work-row {
       background: var(--card2); border: 1px solid var(--border); border-radius: var(--rc);
       padding: 14px 18px; display: flex; align-items: center; gap: 14px; margin-bottom: 8px; transition: border-color .15s;
     }
-    .admin-work-row:last-child, .admin-cart-row:last-child, .admin-order-row:last-child { margin-bottom: 0; }
-    .admin-work-row:hover, .admin-cart-row:hover, .admin-order-row:hover { border-color: var(--border2); }
+    .admin-work-row:last-child { margin-bottom: 0; }
+    .admin-work-row:hover { border-color: var(--border2); }
 
     .admin-work-icon { width: 38px; height: 38px; border-radius: 8px; background: rgba(255,255,255,.06); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--muted2); }
     .admin-work-icon.status-active { background: var(--gdim); color: var(--green); border-color: rgba(127,255,0,.2); }
     .admin-work-icon.status-inactive { background: rgba(239,68,68,.08); color: #ef4444; border-color: rgba(239,68,68,.2); }
 
-    .admin-work-info, .admin-order-info { flex: 1; min-width: 0; }
-    .admin-work-title, .admin-order-id { font-size: 14px; font-weight: 700; color: var(--text); }
-    .admin-work-meta, .admin-order-meta { font-size: 12px; color: var(--muted2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .admin-work-info { flex: 1; min-width: 0; }
+    .admin-work-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .admin-work-meta { font-size: 12px; color: var(--muted2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .admin-badge-work-active   { background: var(--gdim); color: var(--green); border: 1px solid rgba(127,255,0,.2); }
     .admin-badge-work-inactive { background: rgba(239,68,68,.08); color: #ef4444; border: 1px solid rgba(239,68,68,.2); }
+    /* admin-badge-order-* reaproveitadas pelos badges de status de Denúncias */
     .admin-badge-order-not_paid { background: rgba(234,179,8,.1); color: #eab308; border: 1px solid rgba(234,179,8,.25); }
     .admin-badge-order-paid     { background: var(--gdim); color: var(--green); border: 1px solid rgba(127,255,0,.2); }
     .admin-badge-order-refunded { background: rgba(239,68,68,.08); color: #ef4444; border: 1px solid rgba(239,68,68,.2); }
-
-    .admin-cart-icon { width: 38px; height: 38px; border-radius: 8px; background: rgba(255,255,255,.06); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--muted2); }
-    .admin-cart-info { flex: 1; min-width: 0; }
-    .admin-cart-id   { font-size: 14px; font-weight: 700; color: var(--text); }
-    .admin-cart-sub  { font-size: 12px; color: var(--muted2); margin-top: 2px; }
   </style>
   <script>(function(){document.documentElement.setAttribute("data-theme",localStorage.getItem("of_theme")||"dark");})()</script>
 </head>
@@ -156,16 +152,6 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
         Serviços
         <span class="nav-item-badge" id="worksBadge" style="display:none">0</span>
-      </a>
-      <a href="#carrinhos" class="nav-item">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        Carrinhos
-        <span class="nav-item-badge" id="cartsBadge" style="display:none">0</span>
-      </a>
-      <a href="#pedidos" class="nav-item">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-        Pedidos
-        <span class="nav-item-badge" id="ordersBadge" style="display:none">0</span>
       </a>
       <a href="#denuncias" class="nav-item">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -242,15 +228,6 @@
           </div>
           <div class="stat-card">
             <div class="stat-card-top">
-              <span class="stat-card-label">Pedidos</span>
-              <div class="stat-card-icon stat-icon-client">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-              </div>
-            </div>
-            <div class="stat-card-value" id="statOrders">—</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-top">
               <span class="stat-card-label">Denúncias Pendentes</span>
               <div class="stat-card-icon" style="background:rgba(239,68,68,.1);color:#ef4444;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -308,35 +285,6 @@
           </div>
           <div class="admin-count" id="adminWorksCount"></div>
           <div id="adminWorkList"></div>
-        </div>
-      </div>
-
-      <!-- Carts management -->
-      <div id="carrinhos" class="section-block reveal">
-        <div class="block-title">Gerenciamento de Carrinhos</div>
-        <div class="card-box">
-          <div class="admin-count" id="adminCartsCount"></div>
-          <div id="adminCartList"></div>
-        </div>
-      </div>
-
-      <!-- Orders management -->
-      <div id="pedidos" class="section-block reveal">
-        <div class="block-title">Gerenciamento de Pedidos</div>
-        <div class="card-box">
-          <div class="admin-toolbar">
-            <input type="text" class="admin-search" id="searchOrdersInput"
-              placeholder="Buscar por usuário..."
-              oninput="filterOrders()" />
-            <div class="admin-filter-wrap">
-              <button class="filter-btn active" id="filterOrdersAll"      onclick="setOrdersFilter('all')">Todos</button>
-              <button class="filter-btn"         id="filterOrdersNotPaid" onclick="setOrdersFilter('NOT_PAID')">Não pago</button>
-              <button class="filter-btn"         id="filterOrdersPaid"    onclick="setOrdersFilter('PAID')">Pago</button>
-              <button class="filter-btn"         id="filterOrdersRefunded" onclick="setOrdersFilter('REFUNDED')">Reembolsado</button>
-            </div>
-          </div>
-          <div class="admin-count" id="adminOrdersCount"></div>
-          <div id="adminOrderList"></div>
         </div>
       </div>
 
