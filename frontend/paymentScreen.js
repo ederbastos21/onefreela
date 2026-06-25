@@ -165,6 +165,24 @@ const METHOD_DISPLAY = {
 const METHOD_MAP = { pix: 'PIX', card: 'CARTAO', boleto: 'PIX', balance: 'BALANCE' };
 
 async function confirmPayment() {
+  // --- Validar campos ANTES de qualquer chamada de API ---
+  if (currentMethod === 'pix') {
+    const cpf = (document.getElementById('psPixCpf').value || '').replace(/\D/g, '');
+    if (!cpf) { showToast('Informe o CPF do pagador.'); return; }
+  } else if (currentMethod === 'card') {
+    const cardNumber = (document.getElementById('psCardNumber').value || '').trim();
+    const name       = (document.getElementById('psCardName').value   || '').trim();
+    const expiryStr  = (document.getElementById('psCardExpiry').value || '').trim();
+    const cvv        = (document.getElementById('psCvv').value        || '').trim();
+    const cpf        = (document.getElementById('psCardCpf').value    || '').replace(/\D/g, '');
+    if (!cardNumber || !name || !expiryStr || !cvv || !cpf) {
+      showToast('Preencha todos os campos do cartão.'); return;
+    }
+    if (!expiryStr.match(/^\d{2}\/\d{4}$/)) {
+      showToast('Validade inválida. Use o formato MM/AAAA.'); return;
+    }
+  }
+
   const btn          = document.getElementById('confirmBtn');
   const originalText = btn.textContent;
   btn.textContent    = 'PROCESSANDO...';
@@ -173,126 +191,97 @@ async function confirmPayment() {
 
   const paymentMethod = METHOD_MAP[currentMethod] || 'PIX';
 
-  try {
-    const cartItemIds = (cartSnapshot || []).map(function (item) { return item.id; });
+  function resetBtn() {
+    btn.textContent   = originalText;
+    btn.disabled      = false;
+    btn.style.opacity = '1';
+  }
 
-    const res = await fetch(API_BASE + '/order/createOrder', {
+  try {
+    // 1. Criar pedido
+    const cartItemIds = (cartSnapshot || []).map(function (item) { return item.id; });
+    const orderRes = await fetch(API_BASE + '/order/createOrder', {
       method:  'POST',
-      headers: {
-        'Authorization': OFAuth.getToken(),
-        'Content-Type':  'application/json'
-      },
+      headers: { 'Authorization': OFAuth.getToken(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ cartItemIds, additionalsByCartItem: {}, paymentMethod })
     });
 
-    if (res.status === 401 || res.status === 403) { OFAuth.logout(); return; }
-
-    if (!res.ok) {
+    if (orderRes.status === 401 || orderRes.status === 403) { OFAuth.logout(); return; }
+    if (!orderRes.ok) {
       let msg = 'Erro ao criar pedido.';
       try {
-        const data = await res.json();
-        if (Array.isArray(data.errors) && data.errors.length) {
-          msg = data.errors.map(e => e.message).join(' • ');
-        }
+        const data = await orderRes.json();
+        if (Array.isArray(data.errors) && data.errors.length) msg = data.errors.map(e => e.message).join(' • ');
       } catch (_) {}
       showToast(msg);
-      btn.textContent   = originalText;
-      btn.disabled      = false;
-      btn.style.opacity = '1';
+      resetBtn();
       return;
     }
 
-    // Try to capture the backend-assigned order ID for payment processing
     let backendOrderId = null;
     try {
-      const text   = await res.text();
-      const parsed = JSON.parse(text);
-      if (parsed && typeof parsed === 'object' && (parsed.id || parsed.orderId)) {
-        backendOrderId = Number(parsed.id || parsed.orderId) || null;
-      }
+      const parsed = await orderRes.json();
+      if (parsed && (parsed.id || parsed.orderId)) backendOrderId = Number(parsed.id || parsed.orderId) || null;
     } catch (_) {}
 
-    // Process payment based on selected method
-    let paymentCallOk = false;
-    if (backendOrderId) {
-      try {
-        if (currentMethod === 'balance') {
-          const r = await fetch(API_BASE + '/payment/makePaymentBalance/' + backendOrderId, {
-            method: 'POST', headers: { 'Authorization': OFAuth.getToken() }
-          });
-          paymentCallOk = r.ok;
-
-        } else if (currentMethod === 'pix') {
-          const cpf = (document.getElementById('psPixCpf').value || '').replace(/\D/g, '');
-          const r = await fetch(API_BASE + '/payment/makePaymentPix', {
-            method: 'POST',
-            headers: { 'Authorization': OFAuth.getToken(), 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId: backendOrderId, cpf })
-          });
-          paymentCallOk = r.ok;
-
-        } else if (currentMethod === 'card') {
-          const cardNumber = (document.getElementById('psCardNumber').value || '').replace(/\s/g, '');
-          const name       = document.getElementById('psCardName').value || '';
-          const expiryStr  = document.getElementById('psCardExpiry').value || '';
-          const cvv        = document.getElementById('psCvv').value || '';
-          const cpf        = (document.getElementById('psCardCpf').value || '').replace(/\D/g, '');
-          const expMatch   = expiryStr.match(/^(\d{2})\/(\d{4})$/);
-          const expirationDate = expMatch ? (expMatch[2] + '-' + expMatch[1] + '-01') : null;
-          if (cardNumber && name && expirationDate && cvv && cpf) {
-            const r = await fetch(API_BASE + '/payment/makePaymentCard', {
-              method: 'POST',
-              headers: { 'Authorization': OFAuth.getToken(), 'Content-Type': 'application/json' },
-              body: JSON.stringify({ orderId: backendOrderId, cardNumber, name, expirationDate, cvv, cpf })
-            });
-            paymentCallOk = r.ok;
-          }
-        }
-      } catch (_) {}
+    if (!backendOrderId) {
+      showToast('Erro ao obter ID do pedido. Verifique seus pedidos e tente novamente.');
+      resetBtn();
+      return;
     }
 
-    /* build order record */
-    const rand      = Math.floor(Math.random() * 90000) + 10000;
-    const orderId   = '#OF-' + new Date().getFullYear() + '-' + rand;
-    const orderDate = new Date().toLocaleDateString('pt-BR');
-
-    const savedItems = [];
-    let   total      = 0;
-    if (cartSnapshot && cartSnapshot.length) {
-      cartSnapshot.forEach(item => {
-        const work  = item._work;
-        const price = work ? Number(work.price) : 0;
-        savedItems.push({
-          title:    work ? (work.title    || 'Serviço') : 'Serviço',
-          category: work ? (work.category || '')        : '',
-          price,
-          amount:   item.amount || 1
-        });
-        total += price * (item.amount || 1);
+    // 2. Processar pagamento imediatamente
+    let paymentRes;
+    if (currentMethod === 'balance') {
+      paymentRes = await fetch(API_BASE + '/payment/makePaymentBalance/' + backendOrderId, {
+        method: 'POST', headers: { 'Authorization': OFAuth.getToken() }
+      });
+    } else if (currentMethod === 'pix') {
+      const cpf = (document.getElementById('psPixCpf').value || '').replace(/\D/g, '');
+      paymentRes = await fetch(API_BASE + '/payment/makePaymentPix', {
+        method: 'POST',
+        headers: { 'Authorization': OFAuth.getToken(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: backendOrderId, cpf })
+      });
+    } else {
+      const cardNumber     = (document.getElementById('psCardNumber').value || '').replace(/\s/g, '');
+      const name           = (document.getElementById('psCardName').value   || '').trim();
+      const expiryStr      = (document.getElementById('psCardExpiry').value || '').trim();
+      const cvv            = (document.getElementById('psCvv').value        || '').trim();
+      const cpf            = (document.getElementById('psCardCpf').value    || '').replace(/\D/g, '');
+      const expMatch       = expiryStr.match(/^(\d{2})\/(\d{4})$/);
+      const expirationDate = expMatch ? (expMatch[2] + '-' + expMatch[1] + '-01') : null;
+      paymentRes = await fetch(API_BASE + '/payment/makePaymentCard', {
+        method: 'POST',
+        headers: { 'Authorization': OFAuth.getToken(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: backendOrderId, cardNumber, name, expirationDate, cvv, cpf })
       });
     }
 
-    const orderRecord = {
-      orderId,
-      backendOrderId,
-      method:        currentMethod,
-      paymentMethod,
-      date:          orderDate,
-      timestamp:     Date.now(),
-      status:        paymentCallOk ? 'PAID' : 'NOT_PAID',
-      items:         savedItems,
-      total
-    };
+    if (!paymentRes.ok) {
+      let msg = 'Erro ao processar pagamento.';
+      try {
+        const data = await paymentRes.json();
+        if (Array.isArray(data.errors) && data.errors.length) msg = data.errors.map(e => e.message).join(' • ');
+      } catch (_) {}
+      showToast(msg);
+      resetBtn();
+      return;
+    }
 
-    const orders = JSON.parse(localStorage.getItem('of_orders') || '[]');
-    orders.unshift(orderRecord);
-    localStorage.setItem('of_orders', JSON.stringify(orders));
+    // 3. Sucesso — montar confirmação
     localStorage.removeItem('of_cart_workmap');
 
-    /* show inline success */
-    document.getElementById('preOrderState').style.display   = 'none';
-    document.getElementById('orderSuccessState').style.display = '';
+    const rand      = Math.floor(Math.random() * 90000) + 10000;
+    const orderId   = '#OF-' + new Date().getFullYear() + '-' + rand;
+    const orderDate = new Date().toLocaleDateString('pt-BR');
+    let   total     = 0;
+    (cartSnapshot || []).forEach(item => {
+      if (item._work) total += Number(item._work.price) * (item.amount || 1);
+    });
 
+    document.getElementById('preOrderState').style.display    = 'none';
+    document.getElementById('orderSuccessState').style.display = '';
     document.getElementById('successOrderId').textContent = orderId;
     document.getElementById('successDate').textContent    = orderDate;
     document.getElementById('successMethod').textContent  = METHOD_DISPLAY[currentMethod] || currentMethod;
@@ -301,9 +290,7 @@ async function confirmPayment() {
   } catch (e) {
     console.error('confirmPayment:', e);
     showToast('Erro de conexão ao realizar pedido.');
-    btn.textContent   = originalText;
-    btn.disabled      = false;
-    btn.style.opacity = '1';
+    resetBtn();
   }
 }
 
