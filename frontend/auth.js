@@ -220,6 +220,9 @@
       var adminBtn = document.getElementById('adminAreaBtn');
       if (adminBtn && this.isAdmin()) adminBtn.style.display = 'flex';
 
+      var favLink = document.getElementById('navFavoritesLink');
+      if (favLink && type !== 'freelancer') favLink.style.display = 'flex';
+
       var navLogo = document.querySelector('.nav-logo');
       if (navLogo) navLogo.setAttribute('href', 'exploreFreelancers.html');
 

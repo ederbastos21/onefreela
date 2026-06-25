@@ -94,7 +94,7 @@ function render(favorites) {
     const color = workColor(w.ownerId || w.id);
     const ini   = getInitials(w.ownerName);
     const emoji = catEmoji(w.category);
-    const tag   = w.category ? `<span class="fl-tag">${w.category}</span>` : '';
+    const badge = w.category ? `<span class="fl-banner-badge">${w.category}</span>` : '';
     const name  = w.ownerName || 'Freelancer';
     const price = formatPrice(w.price);
     const desc  = truncate(w.description, 85);
@@ -109,17 +109,17 @@ function render(favorites) {
       <div class="fl-banner" style="background:${bg}">
         <span style="position:relative;z-index:1">${emoji}</span>
         <div class="fl-banner-overlay"></div>
+        ${badge}
         <button class="fl-heart liked" title="Remover dos favoritos" onclick="removeFavorite(${w.id}, this.closest('.fl-card'));event.stopPropagation()">♥</button>
       </div>
       <div class="fl-card-body">
-        <div class="fl-mini-profile">
-          <div class="fl-mini-avatar" style="background:${color}">${ini}</div>
-          <span class="fl-mini-name">${name}</span>
-        </div>
         <div class="fl-ad-title">${w.title}</div>
         <div class="fl-work-desc">${desc}</div>
-        <div class="fl-tags">${tag}</div>
         <div class="fl-footer">
+          <div class="fl-mini-profile">
+            <div class="fl-mini-avatar" style="background:${color}">${ini}</div>
+            <span class="fl-mini-name">${name}</span>
+          </div>
           <div class="fl-price">${price}</div>
         </div>
       </div>`;

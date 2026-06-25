@@ -119,6 +119,7 @@ function render(data) {
     const ini    = getInitials(w.ownerName);
     const emoji  = catEmoji(w.category);
     const tag    = w.category ? `<span class="fl-tag">${w.category}</span>` : '';
+    const badge  = w.category ? `<span class="fl-banner-badge">${w.category}</span>` : '';
     const lk     = liked.has(w.id);
     const name   = w.ownerName || 'Freelancer';
     const price  = formatPrice(w.price);
@@ -133,17 +134,17 @@ function render(data) {
       <div class="fl-banner" style="background:${bg}">
         <span style="position:relative;z-index:1">${emoji}</span>
         <div class="fl-banner-overlay"></div>
-        <button class="fl-heart${lk ? ' liked' : ''}" data-wid="${w.id}" onclick="toggleLike(event,${w.id},this)">♥</button>
+        ${badge}
+        <button class="fl-heart${lk ? ' liked' : ''}" data-wid="${w.id}" title="${lk ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}" onclick="toggleLike(event,${w.id},this)">♥</button>
       </div>
       <div class="fl-card-body">
-        <div class="fl-mini-profile">
-          <div class="fl-mini-avatar" style="background:${color}">${ini}</div>
-          <span class="fl-mini-name">${name}</span>
-        </div>
         <div class="fl-ad-title">${w.title}</div>
         <div class="fl-work-desc">${desc}</div>
-        <div class="fl-tags">${tag}</div>
         <div class="fl-footer">
+          <div class="fl-mini-profile">
+            <div class="fl-mini-avatar" style="background:${color}">${ini}</div>
+            <span class="fl-mini-name">${name}</span>
+          </div>
           <div class="fl-price">${price}</div>
         </div>
       </div>`;
@@ -168,7 +169,7 @@ function render(data) {
       </div>
       <div class="fl-list-price-col">
         <div class="fl-list-price">${price}</div>
-        <button class="fl-list-heart${lk ? ' liked' : ''}" data-wid="${w.id}" onclick="toggleLike(event,${w.id},this)">♥</button>
+        <button class="fl-list-heart${lk ? ' liked' : ''}" data-wid="${w.id}" title="${lk ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}" onclick="toggleLike(event,${w.id},this)">♥</button>
       </div>`;
     list.appendChild(lc);
   });
@@ -204,13 +205,17 @@ async function toggleLike(e, id, btn) {
   if (liked.has(id)) {
     await fetch(`${API_BASE}/favorites/${id}`, { method: 'DELETE', headers: { Authorization: token } });
     liked.delete(id);
-    btn.classList.remove('liked');
-    document.querySelectorAll(`.fl-heart[data-wid="${id}"], .fl-list-heart[data-wid="${id}"]`).forEach(b => b.classList.remove('liked'));
+    document.querySelectorAll(`.fl-heart[data-wid="${id}"], .fl-list-heart[data-wid="${id}"]`).forEach(b => {
+      b.classList.remove('liked');
+      b.title = 'Adicionar aos favoritos';
+    });
   } else {
     await fetch(`${API_BASE}/favorites/${id}`, { method: 'POST', headers: { Authorization: token } });
     liked.add(id);
-    btn.classList.add('liked');
-    document.querySelectorAll(`.fl-heart[data-wid="${id}"], .fl-list-heart[data-wid="${id}"]`).forEach(b => b.classList.add('liked'));
+    document.querySelectorAll(`.fl-heart[data-wid="${id}"], .fl-list-heart[data-wid="${id}"]`).forEach(b => {
+      b.classList.add('liked');
+      b.title = 'Remover dos favoritos';
+    });
   }
 }
 
