@@ -102,6 +102,11 @@
       </div>
 
       <div class="chat-input-area" id="chatInputArea">
+        <div id="freelancerAttachWarn" style="display:none;align-items:flex-start;gap:10px;padding:8px 12px;margin-bottom:6px;background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25);border-radius:8px;font-size:12px;color:#ca8a04;line-height:1.45">
+          <svg style="flex-shrink:0;margin-top:1px" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span><strong>Atenção:</strong> o clipe 📎 envia arquivos comuns na conversa — isso <em>não</em> registra uma entrega. Para concluir o serviço, use o botão de <strong>entrega</strong> ⬆.</span>
+        </div>
+        <div id="chatFilesPreview" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:6px"></div>
         <div class="quick-replies" id="quickReplies">
           <button class="quick-reply" onclick="useQuick(this)">Pode enviar o arquivo?</button>
           <button class="quick-reply" onclick="useQuick(this)">Preciso de mais detalhes</button>
@@ -110,9 +115,10 @@
         </div>
         <div class="chat-input-row">
           <div class="chat-input-left">
-            <button class="chat-input-attach" title="Anexar arquivo">
+            <button class="chat-input-attach" id="chatAttachBtn" title="Anexar arquivo">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
             </button>
+            <input type="file" id="chatFiles" multiple style="display:none" />
             <button class="chat-input-attach btn-attach-delivery" id="btnAttachDelivery" title="Enviar entrega">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </button>

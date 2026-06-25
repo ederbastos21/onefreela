@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OneFreela — Perfil do Freelancer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Hero ─────────────────────────────────────────── */
+    .fp-hero {
+      background: var(--card2);
+      border-bottom: 1px solid var(--border);
+      padding: 40px 0 36px;
+      margin-bottom: 40px;
+    }
+    .fp-hero-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .fp-avatar {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+      border: 2px solid rgba(127,255,0,.3);
+      background: var(--gdim);
+      color: var(--green);
+    }
+    .fp-hero-info { flex: 1; min-width: 0; }
+    .fp-name {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .fp-role {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-top: 4px;
+    }
+    .fp-stats {
+      display: flex;
+      gap: 28px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .fp-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .fp-stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      letter-spacing: .5px;
+      color: var(--text);
+      line-height: 1;
+    }
+    .fp-stat-label {
+      font-size: 11px;
+      color: var(--muted2);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .fp-stat-sep {
+      width: 1px;
+      height: 36px;
+      background: var(--border);
+      align-self: center;
+    }
+    .fp-rating-soon {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      font-style: italic;
+    }
+
+    /* ── Services section ─────────────────────────────── */
+    .fp-section-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+    .fp-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+    }
+    .fp-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted2);
+      font-size: 14px;
+    }
+    .fp-loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted2);
+      font-size: 14px;
+    }
+    .fp-error {
+      text-align: center;
+      padding: 60px 20px;
+      color: #ef4444;
+      font-size: 14px;
+    }
+
+    /* ── Service card (same pattern as explore) ───────── */
+    .fp-card {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: var(--rc);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color .2s, transform .2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .fp-card:hover { border-color: rgba(127,255,0,.25); transform: translateY(-3px); }
+    .fp-card-banner {
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      position: relative;
+    }
+    .fp-card-banner-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.35) 100%);
+    }
+    .fp-card-cat {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: .4px;
+    }
+    .fp-card-body {
+      padding: 14px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .fp-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .fp-card-desc {
+      font-size: 12px;
+      color: var(--muted2);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+    .fp-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .fp-card-price {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--green);
+    }
+    .fp-card-btn {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: var(--radius);
+      background: var(--gdim);
+      color: var(--green);
+      border: 1px solid rgba(127,255,0,.2);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s;
+    }
+    .fp-card-btn:hover { background: rgba(127,255,0,.15); }
+
+    /* ── Not found ────────────────────────────────────── */
+    .fp-not-found {
+      text-align: center;
+      padding: 80px 20px;
+    }
+    .fp-not-found-icon { font-size: 48px; margin-bottom: 16px; }
+    .fp-not-found-title { font-size: 18px; font-weight: 700; color: var(--muted2); margin-bottom: 8px; }
+    .fp-not-found-sub { font-size: 13px; color: var(--muted); }
+  </style>
+  <script>(function(){document.documentElement.setAttribute("data-theme",localStorage.getItem("of_theme")||"dark");})()</script>
+</head>
+<body>
+
+  <nav class="nav-app">
+    <div class="nav-left">
+      <a href="exploreFreelancers.html" class="nav-logo">
+        <div class="nav-logo-icon">OF</div>
+        <div class="nav-logo-text">One<span>Freela</span></div>
+      </a>
+      <div class="nav-sep"></div>
+      <a href="exploreFreelancers.html" class="nav-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Explorar serviços
+      </a>
+    </div>
+    <div class="nav-right">
+      <a href="cartScreen.html" class="nav-icon-btn" title="Carrinho">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </a>
+      <a href="favorites.html" class="nav-icon-btn" id="navFavoritesLink" title="Favoritos" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </a>
+      <div class="nav-icon-btn" id="notifBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div class="nav-icon-btn" title="Mensagens" onclick="goToChat()" style="cursor:pointer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="nav-user">
+        <div class="nav-user-name" id="navUserName"></div>
+        <div class="nav-user-role" id="navUserRole"></div>
+      </div>
+      <a href="profile.html" class="nav-avatar" id="navAvatar"></a>
+      <button id="navNovoServico" class="nav-new-service-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Serviço
+      </button>
+      <a href="adminScreen.html" id="adminAreaBtn" class="nav-admin-btn">Área do admin</a>
+    </div>
+  </nav>
+
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-title">Notificações</div>
+  </div>
+
+  <!-- Hero: rendered by JS -->
+  <div id="fpHero" style="display:none" class="fp-hero">
+    <div class="fp-hero-inner">
+      <div class="fp-avatar" id="fpAvatar"></div>
+      <div class="fp-hero-info">
+        <div class="fp-name" id="fpName"></div>
+        <div class="fp-role">Freelancer</div>
+        <div class="fp-stats">
+          <div class="fp-stat">
+            <div class="fp-stat-value" id="fpServicesCount">—</div>
+            <div class="fp-stat-label">Serviços ativos</div>
+          </div>
+          <div class="fp-stat-sep"></div>
+          <div class="fp-stat">
+            <div class="fp-stat-value" id="fpCategoriesCount">—</div>
+            <div class="fp-stat-label">Categorias</div>
+          </div>
+          <div class="fp-stat-sep"></div>
+          <div class="fp-stat">
+            <div class="fp-stat-value">—</div>
+            <div class="fp-stat-label">Avaliação média</div>
+            <div class="fp-rating-soon">em breve</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-page" id="fpBody">
+    <div class="container" style="max-width:1100px">
+      <div id="fpLoading" class="fp-loading">Carregando perfil...</div>
+      <div id="fpNotFound" class="fp-not-found" style="display:none">
+        <div class="fp-not-found-icon">🔍</div>
+        <div class="fp-not-found-title">Freelancer não encontrado</div>
+        <div class="fp-not-found-sub">O perfil que você buscou não existe ou foi removido.</div>
+      </div>
+      <div id="fpContent" style="display:none">
+        <div class="fp-section-title" id="fpSectionTitle"></div>
+        <div class="fp-grid" id="fpGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+  <script src="main.js"></script>
+  <script src="freelancerProfile.js"></script>
+</body>
+</html>

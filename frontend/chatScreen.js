@@ -15,6 +15,7 @@ var allItems           = [];
 var currentItemId       = null;
 var lastMessages        = [];
 var selectedDelivFiles  = [];
+var selectedChatFiles   = [];
 var pollTimer           = null;
 
 function authHdr() {
@@ -218,6 +219,9 @@ function selectConversation(itemId) {
 
   var input = document.getElementById('msgInput');
   if (input) { input.disabled = false; input.placeholder = 'Digite sua mensagem...'; }
+
+  var warn = document.getElementById('freelancerAttachWarn');
+  if (warn && IS_FREELANCER) warn.style.display = 'flex';
 
   var item = findItem(itemId);
   updateServiceBar(item);
@@ -493,13 +497,17 @@ async function sendMsg() {
   if (!currentItemId) return;
   var input = document.getElementById('msgInput');
   var text  = input.value.trim();
-  if (!text) return;
+  if (!text && !selectedChatFiles.length) return;
 
   input.value = '';
   input.style.height = 'auto';
 
   var form = new FormData();
-  form.append('content', text);
+  form.append('content', text || ' ');
+  selectedChatFiles.forEach(function (f) { form.append('files', f); });
+
+  selectedChatFiles = [];
+  renderChatFilesPreview();
 
   try {
     var res = await fetch(API_BASE + '/chat/orderItem/' + currentItemId + '/message', {
@@ -509,6 +517,25 @@ async function sendMsg() {
     });
     if (res.ok) await loadMessages(currentItemId, true);
   } catch (e) {}
+}
+
+function renderChatFilesPreview() {
+  var preview = document.getElementById('chatFilesPreview');
+  if (!preview) return;
+  if (!selectedChatFiles.length) { preview.innerHTML = ''; preview.style.display = 'none'; return; }
+  preview.style.display = 'flex';
+  preview.innerHTML = selectedChatFiles.map(function (f, i) {
+    return '<div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);font-size:11px;color:var(--muted2);max-width:200px">' +
+      '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(f.name) + '</span>' +
+      '<span style="cursor:pointer;color:#ef4444;font-size:13px;flex-shrink:0" data-idx="' + i + '">×</span>' +
+    '</div>';
+  }).join('');
+  preview.querySelectorAll('[data-idx]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      selectedChatFiles.splice(Number(btn.dataset.idx), 1);
+      renderChatFilesPreview();
+    });
+  });
 }
 
 function useQuick(btn) {
@@ -654,6 +681,23 @@ document.getElementById('deliveryModal').addEventListener('click', function (e) 
 });
 
 document.querySelector('.btn-attach-delivery').addEventListener('click', openDeliveryModal);
+
+/* ── Regular file attachment ──────────────────────────────────────── */
+
+document.getElementById('chatAttachBtn').addEventListener('click', function () {
+  if (!currentItemId) return;
+  document.getElementById('chatFiles').click();
+});
+
+document.getElementById('chatFiles').addEventListener('change', function () {
+  Array.from(this.files).forEach(function (f) {
+    if (!selectedChatFiles.find(function (x) { return x.name === f.name && x.size === f.size; })) {
+      selectedChatFiles.push(f);
+    }
+  });
+  this.value = '';
+  renderChatFilesPreview();
+});
 
 /* ── Refuse delivery modal (papel cliente) ────────────────────────── */
 

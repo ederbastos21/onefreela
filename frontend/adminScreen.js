@@ -265,21 +265,24 @@ function renderUsers() {
     var uid       = u.id;
 
     var row = document.createElement('div');
-    row.className = 'admin-user-row';
+    row.className = 'admin-user-row' + (u.blocked ? ' is-blocked' : '');
     row.innerHTML =
       '<div class="admin-user-avatar ' + avatarMod + '" onclick="openDetailModal(' + uid + ')">' + initials + '</div>' +
       '<div class="admin-user-info" onclick="openDetailModal(' + uid + ')">' +
-        '<div class="admin-user-name">'  + (u.name  || 'Sem nome') + '</div>' +
-        '<div class="admin-user-email">' + (u.email || '—')        + '</div>' +
+        '<div class="admin-user-name-row">' +
+          '<span class="admin-user-name">' + (u.name || 'Sem nome') + '</span>' +
+          '<span class="admin-badge admin-badge-' + roleKey + '">' + roleLabel + '</span>' +
+        '</div>' +
+        '<div class="admin-user-sub">' +
+          '<span class="admin-user-email">' + (u.email || '—') + '</span>' +
+          '<span class="admin-user-date">'  + dateText          + '</span>' +
+        '</div>' +
       '</div>' +
-      '<div class="admin-user-meta">' +
-        '<span class="admin-badge admin-badge-' + roleKey + '">' + roleLabel + '</span>' +
-        (u.verified ? '<span class="admin-badge admin-badge-verified">Verificado</span>' : '') +
-        (u.blocked  ? '<span class="admin-badge admin-badge-blocked">Bloqueado</span>'    : '') +
-        '<span class="admin-user-date">' + dateText + '</span>' +
+      '<div class="admin-user-state">' +
+        (u.blocked ? '<span class="admin-badge admin-badge-blocked">Bloqueado</span>' : '') +
       '</div>' +
       '<div class="admin-user-actions">' +
-        '<button class="btn-row"            onclick="openEditModal('   + uid + ')">Editar</button>' +
+        '<button class="btn-row"               onclick="openEditModal('   + uid + ')">Editar</button>' +
         '<button class="btn-row btn-row-danger" onclick="toggleBlockUser(' + uid + ')">' + (u.blocked ? 'Desbloquear' : 'Bloquear') + '</button>' +
       '</div>';
 
@@ -315,7 +318,6 @@ function openDetailModal(userId) {
   var badgesEl = document.getElementById('detailBadges');
   badgesEl.innerHTML =
     '<span class="admin-badge admin-badge-' + roleKey + '">' + roleLabel + '</span>' +
-    (u.verified ? '<span class="admin-badge admin-badge-verified">Verificado</span>' : '') +
     (u.blocked  ? '<span class="admin-badge admin-badge-blocked">Bloqueado</span>'    : '');
 
   var toggleBtn = document.getElementById('detailToggleAdminBtn');
@@ -570,13 +572,6 @@ var WORK_STATUS_LABELS = {
   BLOCKED:        'Bloqueado'
 };
 
-var WORK_STATUS_BADGE = {
-  ACTIVE:         'admin-badge-order-paid',
-  INACTIVE:       'admin-badge-work-inactive',
-  PENDING_REVIEW: 'admin-badge-order-not_paid',
-  REJECTED:       'admin-badge-order-refunded',
-  BLOCKED:        'admin-badge-blocked'
-};
 
 function setWorksFilter(filter) {
   currentWorksFilter = filter;
@@ -636,37 +631,61 @@ function renderWorks() {
   var wPageItems = filtered.slice(wStart, wStart + ADMIN_PAGE_SIZE);
 
   wPageItems.forEach(function (w) {
-    var statusLbl  = WORK_STATUS_LABELS[w.status] || w.status;
-    var badgeCls   = WORK_STATUS_BADGE[w.status]  || 'admin-badge';
     var isPending  = w.status === 'PENDING_REVIEW';
     var isBlocked  = w.status === 'BLOCKED';
-    var pauseLabel = w.status === 'ACTIVE' ? 'Pausar' : 'Reativar';
-    var ownerName  = (w.owner && w.owner.name) ? w.owner.name : '—';
-    var price      = w.price != null ? 'R$ ' + Number(w.price).toFixed(2).replace('.', ',') : '—';
-    var date       = w.createdAt ? w.createdAt.split('T')[0] : '—';
+    var isActive   = w.status === 'ACTIVE';
+
+    var statusLbl = WORK_STATUS_LABELS[w.status] || w.status;
+    var iconMod   = isPending ? 'is-pending' : (isBlocked ? 'is-blocked' : (isActive ? 'is-active' : 'is-inactive'));
+    var badgeMod  = isPending ? 'admin-badge-work-pending'
+                  : isBlocked ? 'admin-badge-work-blocked'
+                  : isActive  ? 'admin-badge-work-active'
+                  : w.status === 'REJECTED' ? 'admin-badge-work-rejected'
+                  : 'admin-badge-work-inactive';
+    var rowMod    = isPending ? 'status-pending' : (isBlocked ? 'status-blocked' : '');
+
+    var ownerName = (w.owner && w.owner.name) ? w.owner.name : '—';
+    var price     = w.price != null ? 'R$ ' + Number(w.price).toFixed(2).replace('.', ',') : '—';
+    var date      = w.createdAt ? new Date(w.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+    // Slot A: ação primária (Revisar / Pausar / Reativar / hidden)
+    var slotA = isPending
+      ? '<button class="btn-row" onclick="openWorkReviewModal(' + w.id + ')">Revisar</button>'
+      : !isBlocked
+        ? '<button class="btn-row" onclick="pauseWork(' + w.id + ')">' + (isActive ? 'Pausar' : 'Reativar') + '</button>'
+        : '<button class="btn-row" style="visibility:hidden" tabindex="-1">—</button>';
+
+    // Slot B: bloquear / desbloquear / hidden
+    var slotB = isBlocked
+      ? '<button class="btn-row" onclick="unblockWork(' + w.id + ')">Desbloquear</button>'
+      : !isPending
+        ? '<button class="btn-row btn-row-danger" onclick="blockWork(' + w.id + ')">Bloquear</button>'
+        : '<button class="btn-row" style="visibility:hidden" tabindex="-1">—</button>';
+
+    // Slot C: excluir (sempre visível)
+    var slotC = '<button class="btn-row btn-row-danger" onclick="deleteWork(' + w.id + ')">Excluir</button>';
 
     var row = document.createElement('div');
-    row.className = 'admin-user-row';
+    row.className = 'admin-work-row ' + rowMod;
     row.innerHTML =
-      '<div class="admin-work-icon">' +
+      '<div class="admin-work-icon ' + iconMod + '">' +
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>' +
       '</div>' +
-      '<div class="admin-user-info">' +
-        '<div class="admin-user-name">' + escHtmlAdmin(w.title || 'Sem título') + '</div>' +
-        '<div class="admin-user-email">' + escHtmlAdmin(w.category || '—') + ' · ' + escHtmlAdmin(ownerName) + '</div>' +
-      '</div>' +
-      '<div class="admin-user-meta">' +
-        '<span class="admin-badge ' + badgeCls + '">' + statusLbl + '</span>' +
-        '<span class="admin-user-date">' + price + '</span>' +
-        '<span class="admin-user-date">' + date + '</span>' +
-        '<div class="admin-user-actions">' +
-          (isPending ? '<button class="btn-row" onclick="openWorkReviewModal(' + w.id + ')">Revisar</button>' : '') +
-          (!isPending && !isBlocked ? '<button class="btn-row" onclick="pauseWork(' + w.id + ')">' + pauseLabel + '</button>' : '') +
-          (!isPending && !isBlocked ? '<button class="btn-row btn-row-danger" onclick="blockWork(' + w.id + ')">Bloquear</button>' : '') +
-          (isBlocked ? '<button class="btn-row" onclick="unblockWork(' + w.id + ')">Desbloquear</button>' : '') +
-          '<button class="btn-row btn-row-danger" onclick="deleteWork(' + w.id + ')">Excluir</button>' +
+      '<div class="admin-work-info">' +
+        '<div class="admin-work-title-row">' +
+          '<span class="admin-work-title">' + escHtmlAdmin(w.title || 'Sem título') + '</span>' +
+          '<span class="admin-badge ' + badgeMod + '" style="flex-shrink:0">' + statusLbl + '</span>' +
         '</div>' +
-      '</div>';
+        '<div class="admin-work-sub">' +
+          '<span>' + escHtmlAdmin(w.category || '—') + '</span>' +
+          '<span class="admin-work-sub-sep">·</span>' +
+          '<span>' + escHtmlAdmin(ownerName) + '</span>' +
+          '<span class="admin-work-sub-sep">·</span>' +
+          '<span>' + date + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="admin-work-price">' + price + '</div>' +
+      '<div class="admin-work-actions">' + slotA + slotB + slotC + '</div>';
 
     list.appendChild(row);
   });
