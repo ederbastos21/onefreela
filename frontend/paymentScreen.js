@@ -259,13 +259,15 @@ async function confirmPayment() {
     }
 
     if (!paymentRes.ok) {
-      let msg = 'Erro ao processar pagamento.';
+      let msg = 'Não foi possível processar o pagamento.';
       try {
         const data = await paymentRes.json();
         if (Array.isArray(data.errors) && data.errors.length) msg = data.errors.map(e => e.message).join(' • ');
       } catch (_) {}
-      showToast(msg);
-      resetBtn();
+      localStorage.removeItem('of_cart_workmap');
+      document.getElementById('preOrderState').style.display    = 'none';
+      document.getElementById('pendingPaymentMsg').textContent  = msg;
+      document.getElementById('orderPendingState').style.display = '';
       return;
     }
 

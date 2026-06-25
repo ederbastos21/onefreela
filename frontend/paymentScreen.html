@@ -312,6 +312,31 @@
         </div>
       </div>
 
+      <!-- PENDING STATE (order created but payment failed) -->
+      <div id="orderPendingState" style="display:none">
+        <div class="order-success-wrap">
+          <div class="order-success-icon" style="background:rgba(234,179,8,.12);border-color:rgba(234,179,8,.3)">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div class="order-success-title" style="color:#eab308">PEDIDO CRIADO</div>
+          <p class="order-success-sub">
+            Seu pedido foi registrado, mas o pagamento não foi processado.<br>
+            <span id="pendingPaymentMsg" style="color:#eab308;font-weight:600"></span>
+          </p>
+          <p class="order-success-sub" style="margin-top:8px">
+            Acesse <strong>Meus Pedidos</strong> no seu perfil para concluir o pagamento quando quiser.
+          </p>
+          <div class="order-success-actions">
+            <a href="profile.html#pedidos" class="btn-primary">VER MEUS PEDIDOS</a>
+            <a href="exploreFreelancers.html" class="btn-secondary">CONTINUAR EXPLORANDO</a>
+          </div>
+        </div>
+      </div>
+
       <!-- SUCCESS STATE (hidden until order is placed) -->
       <div id="orderSuccessState" style="display:none">
         <div class="order-success-wrap">
