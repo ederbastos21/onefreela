@@ -1277,10 +1277,10 @@ footer {
 
 .msg { display: flex; gap: 10px; }
 .msg.mine { flex-direction: row-reverse; }
-.msg-content { min-width: 0; max-width: 100%; }
+.msg-content { min-width: 0; max-width: min(480px, 80%); }
 
 .msg-bubble {
-  max-width: min(480px, 80%);
+  max-width: 100%;
   padding: 11px 15px;
   border-radius: 16px;
   font-size: 13px;
